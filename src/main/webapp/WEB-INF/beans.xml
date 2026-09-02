@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Activa CDI (inyeccion de dependencias) en este WAR.
+
+    bean-discovery-mode="all" hace que el contenedor considere bean a toda
+    clase del proyecto, sin exigir que cada una lleve una anotacion de alcance.
+    Es la opcion mas simple de explicar y suficiente para el tamano de este TP.
+-->
+<beans xmlns="https://jakarta.ee/xml/ns/jakartaee"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee
+                           https://jakarta.ee/xml/ns/jakartaee/beans_3_0.xsd"
+       version="3.0"
+       bean-discovery-mode="all">
+</beans>

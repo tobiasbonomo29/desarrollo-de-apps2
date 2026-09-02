@@ -1,0 +1,40 @@
+# ---- Compilacion / Maven ----
+target/
+*.war
+*.jar
+*.class
+pom.xml.versionsBackup
+dependency-reduced-pom.xml
+.mvn/wrapper/maven-wrapper.jar
+
+# ---- IntelliJ IDEA ----
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# ---- Eclipse ----
+.classpath
+.project
+.settings/
+.factorypath
+bin/
+
+# ---- VS Code ----
+.vscode/
+
+# ---- NetBeans ----
+nbproject/private/
+nbbuild/
+nbdist/
+
+# ---- Sistema operativo ----
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# ---- Logs y temporales ----
+*.log
+*.tmp
+*.bak

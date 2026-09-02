@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.mediconecta</groupId>
+    <artifactId>mediconecta-turnos</artifactId>
+    <version>1.0.0</version>
+    <packaging>war</packaging>
+
+    <name>MediConecta - Componente Gestion de Turnos</name>
+    <description>Entrega 1 del TP Integrador de Desarrollo de Aplicaciones II</description>
+
+    <properties>
+        <!-- UTF-8 en todo el proyecto: es obligatorio para que el mensaje
+             "Hola desde el contenedor" con signos de apertura salga bien. -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <maven.compiler.release>17</maven.compiler.release>
+    </properties>
+
+    <dependencies>
+        <!-- Unica dependencia del proyecto: la API completa de Jakarta EE 10.
+             Scope "provided" porque las implementaciones (RESTEasy para JAX-RS,
+             Weld para CDI, el contenedor de EJB) ya las aporta WildFly.
+             Si la empaquetaramos dentro del WAR habria clases duplicadas
+             y el despliegue fallaria. -->
+        <dependency>
+            <groupId>jakarta.platform</groupId>
+            <artifactId>jakarta.jakartaee-api</artifactId>
+            <version>10.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <!-- El nombre del WAR define el context root en WildFly.
+             Resultado: http://localhost:8080/mediconecta/... -->
+        <finalName>mediconecta</finalName>
+
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.4.0</version>
+                <configuration>
+                    <!-- No usamos web.xml: la configuracion de JAX-RS esta
+                         en la clase AplicacionRest con @ApplicationPath. -->
+                    <failOnMissingWebXml>false</failOnMissingWebXml>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
