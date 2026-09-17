@@ -172,8 +172,19 @@ if ($altaConAdmin.Codigo -eq 201) {
     $dispPaciente = Invocar -Metodo PUT -Ruta "/api/profesionales/$idNuevo/disponibilidad" -Cuerpo $franjas -Sesion $paciente
     Probar "Definir disponibilidad con rol PACIENTE devuelve 403" ($dispPaciente.Codigo -eq 403) "codigo=$($dispPaciente.Codigo)"
 
-    $dispMedico = Invocar -Metodo PUT -Ruta "/api/profesionales/$idNuevo/disponibilidad" -Cuerpo $franjas -Sesion $medico
-    Probar "Definir disponibilidad con rol MEDICO devuelve 200" ($dispMedico.Codigo -eq 200) "codigo=$($dispMedico.Codigo) $($dispMedico.Texto)"
+    $dispRecepcion = Invocar -Metodo PUT -Ruta "/api/profesionales/$idNuevo/disponibilidad" -Cuerpo $franjas -Sesion $recepcion
+    Probar "RECEPCION puede definir la disponibilidad de cualquier profesional" ($dispRecepcion.Codigo -eq 200) "codigo=$($dispRecepcion.Codigo) $($dispRecepcion.Texto)"
+
+    $dispMedicoAjeno = Invocar -Metodo PUT -Ruta "/api/profesionales/$idNuevo/disponibilidad" -Cuerpo $franjas -Sesion $medico
+    Probar "Un MEDICO no puede definir la disponibilidad de otro profesional" ($dispMedicoAjeno.Codigo -eq 400) "codigo=$($dispMedicoAjeno.Codigo)"
+
+    $miPerfil = Invocar -Metodo GET -Ruta "/api/profesionales/mi-perfil" -Sesion $medico
+    Probar "GET /api/profesionales/mi-perfil devuelve la ficha del medico logueado" ($miPerfil.Codigo -eq 200 -and $miPerfil.Datos.nombre -like "*Fernandez*") "codigo=$($miPerfil.Codigo) $($miPerfil.Texto)"
+
+    if ($miPerfil.Codigo -eq 200) {
+        $dispMedicoPropio = Invocar -Metodo PUT -Ruta "/api/profesionales/$($miPerfil.Datos.id)/disponibilidad" -Cuerpo $miPerfil.Datos.disponibilidades -Sesion $medico
+        Probar "Un MEDICO si puede definir su propia disponibilidad" ($dispMedicoPropio.Codigo -eq 200) "codigo=$($dispMedicoPropio.Codigo) $($dispMedicoPropio.Texto)"
+    }
 }
 
 # ============================================================ PROFESIONALES ==
@@ -300,7 +311,7 @@ Probar "El cuerpo JSON de la Entrega 1 sigue funcionando (201)" ($formatoViejo.C
 $idCreado = $creado.Datos.id
 
 $cancelarPaciente = Invocar -Metodo PUT -Ruta "/api/turnos/$idCreado/cancelar" -Sesion $paciente
-Probar "Cancelar un turno con rol PACIENTE devuelve 403" ($cancelarPaciente.Codigo -eq 403) "codigo=$($cancelarPaciente.Codigo)"
+Probar "Un PACIENTE no puede cancelar el turno de otro paciente (400)" ($cancelarPaciente.Codigo -eq 400) "codigo=$($cancelarPaciente.Codigo)"
 
 $cancelado = Invocar -Metodo PUT -Ruta "/api/turnos/$idCreado/cancelar" -Sesion $recepcion
 Probar "PUT /api/turnos/{id}/cancelar cancela el turno" ($cancelado.Codigo -eq 200 -and $cancelado.Datos.estado -eq "CANCELADO") "codigo=$($cancelado.Codigo) estado=$($cancelado.Datos.estado)"
@@ -312,6 +323,92 @@ $reutilizado = Invocar -Metodo POST -Ruta "/api/turnos" -Cuerpo $pedido -Sesion 
 Probar "El horario de un turno cancelado vuelve a estar libre (201)" ($reutilizado.Codigo -eq 201) "codigo=$($reutilizado.Codigo) $($reutilizado.Texto)"
 if ($reutilizado.Codigo -eq 201) {
     Invocar -Metodo PUT -Ruta "/api/turnos/$($reutilizado.Datos.id)/cancelar" -Sesion $recepcion | Out-Null
+}
+
+# --------------------------------------------------- OWNERSHIP Y ARCHIVADO --
+
+Titulo "OWNERSHIP DE CANCELACION Y ARCHIVADO"
+
+# Un turno de Ana Gomez (la propia ficha del usuario 'paciente') con un
+# profesional que NO es la ficha asociada al usuario 'medico'.
+$traumato = Invocar -Metodo GET -Ruta "/api/profesionales?especialidad=Traumatologia" -Sesion $recepcion
+$profesionalAjenoId = $traumato.Datos[0].id
+$fechaAjena = $null
+$horarioAjeno = $null
+for ($i = 1; $i -le 14; $i++) {
+    $f = (Get-Date).AddDays($i).ToString("yyyy-MM-dd")
+    $r = Invocar -Metodo GET -Ruta "/api/profesionales/$profesionalAjenoId/horarios-libres?fecha=$f" -Sesion $recepcion
+    if ($r.Codigo -eq 200 -and $r.Datos.Count -gt 0) { $horarioAjeno = $r.Datos[0]; break }
+}
+
+$turnoDeAna = Invocar -Metodo POST -Ruta "/api/turnos" -Sesion $recepcion -Cuerpo @{
+    documentoPaciente = "30111222"; profesionalId = $profesionalAjenoId; fechaHora = $horarioAjeno
+}
+Probar "Se crea un turno de Ana Gomez con un profesional que MEDICO no es" ($turnoDeAna.Codigo -eq 201) "codigo=$($turnoDeAna.Codigo) $($turnoDeAna.Texto)"
+
+if ($turnoDeAna.Codigo -eq 201) {
+    $idTurnoAna = $turnoDeAna.Datos.id
+
+    $medicoCancelaAjeno = Invocar -Metodo PUT -Ruta "/api/turnos/$idTurnoAna/cancelar" -Sesion $medico
+    Probar "Un MEDICO no puede cancelar un turno fuera de su agenda (400)" ($medicoCancelaAjeno.Codigo -eq 400) "codigo=$($medicoCancelaAjeno.Codigo)"
+
+    $pacienteCancelaPropio = Invocar -Metodo PUT -Ruta "/api/turnos/$idTurnoAna/cancelar" -Sesion $paciente
+    Probar "Un PACIENTE puede cancelar su propio turno (200)" ($pacienteCancelaPropio.Codigo -eq 200 -and $pacienteCancelaPropio.Datos.estado -eq "CANCELADO") "codigo=$($pacienteCancelaPropio.Codigo) $($pacienteCancelaPropio.Texto)"
+
+    $archivarPaciente = Invocar -Metodo PUT -Ruta "/api/turnos/$idTurnoAna/archivar" -Sesion $paciente
+    Probar "Un PACIENTE no puede archivar turnos (403)" ($archivarPaciente.Codigo -eq 403) "codigo=$($archivarPaciente.Codigo)"
+
+    $archivarMedico = Invocar -Metodo PUT -Ruta "/api/turnos/$idTurnoAna/archivar" -Sesion $medico
+    Probar "Un MEDICO no puede archivar turnos (403)" ($archivarMedico.Codigo -eq 403) "codigo=$($archivarMedico.Codigo)"
+
+    $agendaAntesDeArchivar = Invocar -Metodo GET -Ruta "/api/turnos" -Sesion $recepcion
+    $estaEnAgenda = $false
+    foreach ($t in $agendaAntesDeArchivar.Datos) { if ($t.id -eq $idTurnoAna) { $estaEnAgenda = $true } }
+    Probar "El turno cancelado todavia aparece en la agenda antes de archivar" $estaEnAgenda
+
+    $archivado = Invocar -Metodo PUT -Ruta "/api/turnos/$idTurnoAna/archivar" -Sesion $recepcion
+    Probar "RECEPCION puede archivar un turno cancelado (200)" ($archivado.Codigo -eq 200 -and $archivado.Datos.archivado -eq $true) "codigo=$($archivado.Codigo) $($archivado.Texto)"
+
+    $archivarDeNuevo = Invocar -Metodo PUT -Ruta "/api/turnos/$idTurnoAna/archivar" -Sesion $recepcion
+    Probar "Archivar dos veces devuelve 400" ($archivarDeNuevo.Codigo -eq 400) "codigo=$($archivarDeNuevo.Codigo)"
+
+    $agendaDespuesDeArchivar = Invocar -Metodo GET -Ruta "/api/turnos" -Sesion $recepcion
+    $yaNoEstaEnAgenda = $true
+    foreach ($t in $agendaDespuesDeArchivar.Datos) { if ($t.id -eq $idTurnoAna) { $yaNoEstaEnAgenda = $false } }
+    Probar "El turno archivado desaparece de la agenda general" $yaNoEstaEnAgenda
+
+    $historialAna = Invocar -Metodo GET -Ruta "/api/pacientes/30111222/turnos" -Sesion $recepcion
+    $siguePeroCancelado = $false
+    foreach ($t in $historialAna.Datos) { if ($t.id -eq $idTurnoAna -and $t.estado -eq "CANCELADO") { $siguePeroCancelado = $true } }
+    Probar "El turno archivado sigue en el historial del paciente, como CANCELADO" $siguePeroCancelado
+
+    $consultaPorId = Invocar -Metodo GET -Ruta "/api/turnos/$idTurnoAna" -Sesion $recepcion
+    Probar "El turno archivado se puede seguir consultando por id" ($consultaPorId.Codigo -eq 200) "codigo=$($consultaPorId.Codigo)"
+
+    $sinBloquearHorario = Invocar -Metodo POST -Ruta "/api/turnos" -Sesion $recepcion -Cuerpo @{
+        documentoPaciente = $documento; profesionalId = $profesionalAjenoId; fechaHora = $horarioAjeno
+    }
+    Probar "El horario de un turno archivado no queda bloqueado (201)" ($sinBloquearHorario.Codigo -eq 201) "codigo=$($sinBloquearHorario.Codigo) $($sinBloquearHorario.Texto)"
+    if ($sinBloquearHorario.Codigo -eq 201) {
+        Invocar -Metodo PUT -Ruta "/api/turnos/$($sinBloquearHorario.Datos.id)/cancelar" -Sesion $recepcion | Out-Null
+    }
+}
+
+# Un turno con el profesional que SI es la ficha asociada al usuario 'medico'
+# (Dra. Laura Fernandez, Cardiologia), para probar que un MEDICO cancela su
+# propia agenda sin problema.
+$fechaPropia = $null
+for ($i = 1; $i -le 14; $i++) {
+    $f = (Get-Date).AddDays($i).ToString("yyyy-MM-dd")
+    $r = Invocar -Metodo GET -Ruta "/api/profesionales/$profesionalId/horarios-libres?fecha=$f" -Sesion $recepcion
+    if ($r.Codigo -eq 200 -and $r.Datos.Count -gt 0) { $fechaPropia = $r.Datos[0]; break }
+}
+$turnoDeLaura = Invocar -Metodo POST -Ruta "/api/turnos" -Sesion $recepcion -Cuerpo @{
+    documentoPaciente = $documento; profesionalId = $profesionalId; fechaHora = $fechaPropia
+}
+if ($turnoDeLaura.Codigo -eq 201) {
+    $medicoCancelaPropio = Invocar -Metodo PUT -Ruta "/api/turnos/$($turnoDeLaura.Datos.id)/cancelar" -Sesion $medico
+    Probar "Un MEDICO puede cancelar un turno de su propia agenda (200)" ($medicoCancelaPropio.Codigo -eq 200) "codigo=$($medicoCancelaPropio.Codigo) $($medicoCancelaPropio.Texto)"
 }
 
 # ================================================== ASISTENTE STATEFUL =======
