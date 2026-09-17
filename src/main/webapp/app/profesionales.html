@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MediConecta — Profesionales</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body data-pagina="profesionales" data-titulo="Profesionales"
+      data-subtitulo="Equipo médico, especialidades y disponibilidad">
+
+<div class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <div class="contenido">
+        <header class="topbar" id="topbar"></header>
+
+        <main class="vista">
+
+            <section class="card" id="card-alta" hidden>
+                <div class="card__cabecera">
+                    <div>
+                        <h2>Nuevo profesional</h2>
+                        <p>Alta reservada al rol ADMIN.</p>
+                    </div>
+                </div>
+
+                <div id="mensaje-alta" class="aviso" hidden></div>
+
+                <form id="form-alta">
+                    <div class="fila">
+                        <div class="campo">
+                            <label for="nombre">Nombre</label>
+                            <input type="text" id="nombre" required maxlength="120"
+                                   placeholder="Dra. Laura Fernandez">
+                        </div>
+                        <div class="campo">
+                            <label for="especialidad-alta">Especialidad</label>
+                            <input type="text" id="especialidad-alta" required maxlength="80"
+                                   list="lista-especialidades" placeholder="Cardiologia">
+                            <datalist id="lista-especialidades"></datalist>
+                        </div>
+                    </div>
+                    <div class="fila">
+                        <div class="campo">
+                            <label for="matricula">Matrícula</label>
+                            <input type="text" id="matricula" required maxlength="30" placeholder="MP-50123">
+                        </div>
+                        <div class="campo">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" maxlength="120">
+                        </div>
+                    </div>
+                    <div class="acciones acciones--derecha">
+                        <button type="button" class="boton boton--secundario" id="cerrar-alta">Cancelar</button>
+                        <button type="submit" class="boton" id="guardar-alta">Registrar profesional</button>
+                    </div>
+                </form>
+            </section>
+
+            <section class="card" id="card-disponibilidad" hidden>
+                <div class="card__cabecera">
+                    <div>
+                        <h2 id="titulo-disponibilidad">Disponibilidad</h2>
+                        <p>Franjas semanales en las que se puede reservar. Reemplaza la agenda completa.</p>
+                    </div>
+                </div>
+
+                <div id="mensaje-disponibilidad" class="aviso" hidden></div>
+
+                <div id="franjas"></div>
+
+                <div class="acciones" style="margin-top:16px">
+                    <button type="button" class="boton boton--secundario boton--chico" id="agregar-franja">
+                        + Agregar franja
+                    </button>
+                </div>
+
+                <div class="acciones acciones--derecha" style="margin-top:20px">
+                    <button type="button" class="boton boton--secundario" id="cerrar-disponibilidad">Cancelar</button>
+                    <button type="button" class="boton" id="guardar-disponibilidad">Guardar disponibilidad</button>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card__cabecera">
+                    <div>
+                        <h2>Equipo</h2>
+                        <p id="contador">Cargando profesionales...</p>
+                    </div>
+                    <button type="button" class="boton" id="abrir-alta" hidden>+ Nuevo profesional</button>
+                </div>
+
+                <form class="barra-filtros" id="filtros" role="search">
+                    <input type="search" id="busqueda" placeholder="Buscar por nombre o especialidad"
+                           aria-label="Buscar profesionales">
+                    <select id="especialidad" aria-label="Filtrar por especialidad">
+                        <option value="">Todas las especialidades</option>
+                    </select>
+                </form>
+
+                <div id="listado"></div>
+            </section>
+
+        </main>
+    </div>
+</div>
+
+<nav class="nav-inferior" id="nav-inferior"></nav>
+<div id="avisos"></div>
+
+<script type="module" src="../js/profesionales.js"></script>
+</body>
+</html>

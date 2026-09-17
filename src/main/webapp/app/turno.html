@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MediConecta — Detalle del turno</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body data-pagina="turnos" data-titulo="Detalle del turno" data-subtitulo="Información completa de la atención">
+
+<div class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <div class="contenido">
+        <header class="topbar" id="topbar"></header>
+
+        <main class="vista">
+            <section class="columnas">
+                <div class="card">
+                    <div class="card__cabecera">
+                        <div>
+                            <h2 id="titulo">Turno</h2>
+                            <p id="subtitulo"></p>
+                        </div>
+                        <span id="estado"></span>
+                    </div>
+                    <div id="detalle"></div>
+                </div>
+
+                <div class="card">
+                    <div class="card__cabecera">
+                        <div>
+                            <h2>Acciones</h2>
+                            <p>Operaciones disponibles según tu rol.</p>
+                        </div>
+                    </div>
+                    <div id="mensaje" class="aviso aviso--info" hidden></div>
+                    <div class="acciones">
+                        <a class="boton boton--secundario" href="turnos.html">Volver a turnos</a>
+                        <button type="button" class="boton boton--peligro" id="boton-cancelar" disabled>
+                            Cancelar turno
+                        </button>
+                    </div>
+                    <p class="campo__ayuda" style="margin-top:12px" id="nota-permisos"></p>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+
+<nav class="nav-inferior" id="nav-inferior"></nav>
+<div id="avisos"></div>
+
+<script type="module" src="../js/turno-detalle.js"></script>
+</body>
+</html>

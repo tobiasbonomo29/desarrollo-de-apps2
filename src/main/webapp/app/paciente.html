@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MediConecta — Ficha del paciente</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body data-pagina="pacientes" data-titulo="Ficha del paciente" data-subtitulo="Datos de contacto e historial de turnos">
+
+<div class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <div class="contenido">
+        <header class="topbar" id="topbar"></header>
+
+        <main class="vista">
+            <section class="columnas">
+
+                <div>
+                    <div class="card">
+                        <div class="card__cabecera">
+                            <div>
+                                <h2 id="nombre-paciente">Paciente</h2>
+                                <p id="documento-paciente"></p>
+                            </div>
+                            <span id="estado-paciente"></span>
+                        </div>
+                        <div id="mensaje" class="aviso" hidden></div>
+                        <div id="ficha"></div>
+                    </div>
+
+                    <div class="card" style="margin-top:24px">
+                        <div class="card__cabecera">
+                            <div>
+                                <h2>Historial de turnos</h2>
+                                <p>Todos los turnos registrados a nombre del paciente.</p>
+                            </div>
+                        </div>
+                        <div id="historial"></div>
+                    </div>
+                </div>
+
+                <aside class="card" id="card-editar" hidden>
+                    <div class="card__cabecera">
+                        <div>
+                            <h2>Editar datos</h2>
+                            <p>El documento no se puede modificar.</p>
+                        </div>
+                    </div>
+                    <form id="form-editar">
+                        <div class="campo">
+                            <label for="nombre">Nombre y apellido</label>
+                            <input type="text" id="nombre" required maxlength="120">
+                        </div>
+                        <div class="campo">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" maxlength="120">
+                        </div>
+                        <div class="campo">
+                            <label for="telefono">Teléfono</label>
+                            <input type="tel" id="telefono" maxlength="40">
+                        </div>
+                        <div class="campo">
+                            <label for="cobertura">Cobertura</label>
+                            <input type="text" id="cobertura" maxlength="60">
+                        </div>
+                        <div class="campo">
+                            <label for="activo">Estado</label>
+                            <select id="activo">
+                                <option value="true">Activo</option>
+                                <option value="false">Inactivo</option>
+                            </select>
+                        </div>
+                        <div class="acciones acciones--derecha">
+                            <a class="boton boton--secundario" href="pacientes.html">Volver</a>
+                            <button type="submit" class="boton" id="guardar">Guardar cambios</button>
+                        </div>
+                    </form>
+                </aside>
+
+            </section>
+        </main>
+    </div>
+</div>
+
+<nav class="nav-inferior" id="nav-inferior"></nav>
+<div id="avisos"></div>
+
+<script type="module" src="../js/paciente-detalle.js"></script>
+</body>
+</html>

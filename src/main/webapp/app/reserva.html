@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MediConecta — Reserva guiada</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body data-pagina="reserva" data-titulo="Reserva guiada"
+      data-subtitulo="Cuatro pasos: el servidor recuerda cada elección">
+
+<div class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <div class="contenido">
+        <header class="topbar" id="topbar"></header>
+
+        <main class="vista">
+            <section class="columnas">
+
+                <div class="card">
+                    <nav class="pasos" id="pasos" aria-label="Progreso de la reserva"></nav>
+
+                    <div id="mensaje" class="aviso" hidden></div>
+
+                    <div id="paso"></div>
+
+                    <div class="acciones acciones--derecha" style="margin-top:24px" id="acciones"></div>
+                </div>
+
+                <aside class="card resumen">
+                    <div class="card__cabecera">
+                        <div>
+                            <h2>Resumen</h2>
+                            <p>Lo que el servidor recuerda de esta conversación.</p>
+                        </div>
+                    </div>
+
+                    <dl>
+                        <div><dt>Paciente</dt><dd id="r-paciente" class="vacio">Sin iniciar</dd></div>
+                        <div><dt>Especialidad</dt><dd id="r-especialidad" class="vacio">Sin elegir</dd></div>
+                        <div><dt>Profesional</dt><dd id="r-profesional" class="vacio">Sin elegir</dd></div>
+                        <div><dt>Fecha y hora</dt><dd id="r-fecha" class="vacio">Sin elegir</dd></div>
+                    </dl>
+
+                    <div class="nota-servidor" id="nota-conversacion">
+                        Nada de esto viaja en el navegador: cada request solo lleva la cookie de
+                        sesión y el dato nuevo del paso.
+                    </div>
+                </aside>
+
+            </section>
+        </main>
+    </div>
+</div>
+
+<nav class="nav-inferior" id="nav-inferior"></nav>
+<div id="avisos"></div>
+
+<script type="module" src="../js/reserva.js"></script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MediConecta — Pacientes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body data-pagina="pacientes" data-titulo="Pacientes" data-subtitulo="Padrón de pacientes de la clínica">
+
+<div class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <div class="contenido">
+        <header class="topbar" id="topbar"></header>
+
+        <main class="vista">
+
+            <section class="card" id="card-alta" hidden>
+                <div class="card__cabecera">
+                    <div>
+                        <h2>Nuevo paciente</h2>
+                        <p>El documento identifica al paciente y no se puede repetir.</p>
+                    </div>
+                </div>
+
+                <div id="mensaje-alta" class="aviso" hidden></div>
+
+                <form id="form-alta">
+                    <div class="fila">
+                        <div class="campo">
+                            <label for="nombre">Nombre y apellido</label>
+                            <input type="text" id="nombre" required maxlength="120">
+                        </div>
+                        <div class="campo">
+                            <label for="documento">Documento</label>
+                            <input type="text" id="documento" required maxlength="20"
+                                   inputmode="numeric" placeholder="30111222">
+                        </div>
+                    </div>
+                    <div class="fila">
+                        <div class="campo">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" maxlength="120">
+                        </div>
+                        <div class="campo">
+                            <label for="telefono">Teléfono</label>
+                            <input type="tel" id="telefono" maxlength="40">
+                        </div>
+                    </div>
+                    <div class="campo">
+                        <label for="cobertura">Cobertura</label>
+                        <input type="text" id="cobertura" maxlength="60" placeholder="OSDE 210">
+                    </div>
+                    <div class="acciones acciones--derecha">
+                        <button type="button" class="boton boton--secundario" id="cerrar-alta">Cancelar</button>
+                        <button type="submit" class="boton" id="guardar">Registrar paciente</button>
+                    </div>
+                </form>
+            </section>
+
+            <section class="card">
+                <div class="card__cabecera">
+                    <div>
+                        <h2>Pacientes</h2>
+                        <p id="contador">Cargando padrón...</p>
+                    </div>
+                    <button type="button" class="boton" id="abrir-alta" hidden>+ Nuevo paciente</button>
+                </div>
+
+                <form class="barra-filtros" id="filtros" role="search">
+                    <input type="search" id="busqueda" placeholder="Buscar por nombre o documento"
+                           aria-label="Buscar pacientes">
+                </form>
+
+                <div id="listado"></div>
+            </section>
+
+        </main>
+    </div>
+</div>
+
+<nav class="nav-inferior" id="nav-inferior"></nav>
+<div id="avisos"></div>
+
+<script type="module" src="../js/pacientes.js"></script>
+</body>
+</html>

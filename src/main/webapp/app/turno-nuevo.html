@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MediConecta — Nuevo turno</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body data-pagina="turnos" data-titulo="Nuevo turno" data-subtitulo="Agendá una atención en un solo paso">
+
+<div class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <div class="contenido">
+        <header class="topbar" id="topbar"></header>
+
+        <main class="vista">
+            <form id="form-turno">
+                <section class="columnas">
+
+                    <div class="card">
+                        <div id="mensaje" class="aviso" hidden></div>
+
+                        <fieldset>
+                            <legend>Paciente</legend>
+                            <div class="campo">
+                                <label for="paciente">Paciente</label>
+                                <select id="paciente" required>
+                                    <option value="">Seleccioná un paciente</option>
+                                </select>
+                                <span class="campo__ayuda" id="ayuda-paciente">
+                                    Los pacientes salen del padrón del componente Gestión de Pacientes.
+                                </span>
+                            </div>
+                        </fieldset>
+
+                        <fieldset>
+                            <legend>Atención</legend>
+                            <div class="fila">
+                                <div class="campo">
+                                    <label for="especialidad">Especialidad</label>
+                                    <select id="especialidad" required>
+                                        <option value="">Seleccioná una especialidad</option>
+                                    </select>
+                                </div>
+                                <div class="campo">
+                                    <label for="profesional">Profesional</label>
+                                    <select id="profesional" required disabled>
+                                        <option value="">Elegí primero la especialidad</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="campo">
+                                <label for="motivo">Motivo de la consulta (opcional)</label>
+                                <input type="text" id="motivo" maxlength="200"
+                                       placeholder="Por ejemplo: control anual">
+                            </div>
+                        </fieldset>
+
+                        <fieldset>
+                            <legend>Fecha y hora</legend>
+                            <div class="campo">
+                                <label for="fecha">Fecha</label>
+                                <input type="date" id="fecha" required disabled>
+                            </div>
+                            <div class="campo">
+                                <label>Horarios disponibles</label>
+                                <div id="horarios">
+                                    <p class="campo__ayuda">Elegí profesional y fecha para ver los horarios libres.</p>
+                                </div>
+                            </div>
+                            <div id="disponible" class="aviso aviso--exito" hidden></div>
+                        </fieldset>
+
+                        <div class="acciones acciones--derecha">
+                            <a class="boton boton--secundario" href="turnos.html">Cancelar</a>
+                            <button type="submit" class="boton" id="confirmar" disabled>Confirmar turno</button>
+                        </div>
+                    </div>
+
+                    <aside class="card resumen">
+                        <div class="card__cabecera">
+                            <div>
+                                <h2>Resumen</h2>
+                                <p>Se completa a medida que elegís.</p>
+                            </div>
+                        </div>
+                        <dl>
+                            <div><dt>Paciente</dt><dd id="r-paciente" class="vacio">Sin seleccionar</dd></div>
+                            <div><dt>Especialidad</dt><dd id="r-especialidad" class="vacio">Sin seleccionar</dd></div>
+                            <div><dt>Profesional</dt><dd id="r-profesional" class="vacio">Sin seleccionar</dd></div>
+                            <div><dt>Fecha y hora</dt><dd id="r-fecha" class="vacio">Sin seleccionar</dd></div>
+                        </dl>
+                        <p class="nota-servidor">
+                            El alta pasa por <code>FachadaReservas</code>, que coordina los tres
+                            componentes stateless y aplica las reglas en el servidor.
+                        </p>
+                    </aside>
+
+                </section>
+            </form>
+        </main>
+    </div>
+</div>
+
+<nav class="nav-inferior" id="nav-inferior"></nav>
+<div id="avisos"></div>
+
+<script type="module" src="../js/turno-nuevo.js"></script>
+</body>
+</html>

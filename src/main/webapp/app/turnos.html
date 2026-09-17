@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MediConecta — Turnos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body data-pagina="turnos" data-titulo="Turnos" data-subtitulo="Agenda completa de la clínica">
+
+<div class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <div class="contenido">
+        <header class="topbar" id="topbar"></header>
+
+        <main class="vista">
+            <section class="card">
+                <div class="card__cabecera">
+                    <div>
+                        <h2>Agenda</h2>
+                        <p id="contador">Cargando turnos...</p>
+                    </div>
+                    <a class="boton" href="turno-nuevo.html">+ Nuevo turno</a>
+                </div>
+
+                <form class="barra-filtros" id="filtros" role="search">
+                    <input type="search" id="busqueda" placeholder="Buscar por paciente, profesional o documento"
+                           aria-label="Buscar turnos">
+                    <select id="estado" aria-label="Filtrar por estado">
+                        <option value="">Todos los estados</option>
+                        <option value="PROGRAMADO">Programados</option>
+                        <option value="ATENDIDO">Atendidos</option>
+                        <option value="CANCELADO">Cancelados</option>
+                    </select>
+                    <select id="especialidad" aria-label="Filtrar por especialidad">
+                        <option value="">Todas las especialidades</option>
+                    </select>
+                </form>
+
+                <div id="listado"></div>
+            </section>
+        </main>
+    </div>
+</div>
+
+<nav class="nav-inferior" id="nav-inferior"></nav>
+<div id="avisos"></div>
+
+<script type="module" src="../js/turnos.js"></script>
+</body>
+</html>
