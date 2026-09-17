@@ -6,7 +6,7 @@
  */
 
 import { api } from './api.js';
-import { iniciarLayout, reportar } from './layout.js';
+import { iniciarLayout, tieneRol, reportar } from './layout.js';
 import { esc, etiquetaEstado, fecha, hora, mostrarCargando, mostrarVacio, mostrarError } from './ui.js';
 
 let turnos = [];
@@ -82,7 +82,11 @@ function cargarEspecialidades() {
 }
 
 async function iniciar() {
-    await iniciarLayout();
+    const sesion = await iniciarLayout();
+
+    if (tieneRol(sesion, 'RECEPCION', 'ADMIN')) {
+        document.getElementById('boton-nuevo-turno').hidden = false;
+    }
 
     const listado = document.getElementById('listado');
     mostrarCargando(listado, 'Cargando turnos...');

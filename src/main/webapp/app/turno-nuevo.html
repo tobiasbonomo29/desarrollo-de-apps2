@@ -18,6 +18,14 @@
         <header class="topbar" id="topbar"></header>
 
         <main class="vista">
+            <div id="sin-permiso" class="card" hidden>
+                <h2>No podés crear turnos directos</h2>
+                <p class="campo__ayuda" style="margin:8px 0 20px">
+                    Esta opción está disponible para recepción y administración.
+                </p>
+                <a class="boton boton--secundario" href="turnos.html">Volver a turnos</a>
+            </div>
+
             <form id="form-turno">
                 <section class="columnas">
 
@@ -32,7 +40,7 @@
                                     <option value="">Seleccioná un paciente</option>
                                 </select>
                                 <span class="campo__ayuda" id="ayuda-paciente">
-                                    Los pacientes salen del padrón del componente Gestión de Pacientes.
+                                    Elegí el paciente para este turno.
                                 </span>
                             </div>
                         </fieldset>
@@ -94,10 +102,6 @@
                             <div><dt>Profesional</dt><dd id="r-profesional" class="vacio">Sin seleccionar</dd></div>
                             <div><dt>Fecha y hora</dt><dd id="r-fecha" class="vacio">Sin seleccionar</dd></div>
                         </dl>
-                        <p class="nota-servidor">
-                            El alta pasa por <code>FachadaReservas</code>, que coordina los tres
-                            componentes stateless y aplica las reglas en el servidor.
-                        </p>
                     </aside>
 
                 </section>

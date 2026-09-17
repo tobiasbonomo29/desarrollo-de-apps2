@@ -60,8 +60,12 @@ function dibujarAgenda(contenedor, resumen) {
         + '</div>';
 }
 
-async function panelEquipo() {
+async function panelEquipo(sesion) {
     document.getElementById('panel-equipo').hidden = false;
+
+    if (tieneRol(sesion, 'RECEPCION', 'ADMIN')) {
+        document.getElementById('boton-nuevo-turno').hidden = false;
+    }
 
     const resumen = await api.tablero();
 
@@ -74,7 +78,7 @@ async function panelEquipo() {
     const proximos = document.getElementById('proximos');
     if (resumen.proximosTurnos.length === 0) {
         mostrarVacio(proximos, 'No hay turnos próximos',
-            'Cargá el primero desde el botón Nuevo turno.');
+            'Cuando se agende el primero vas a verlo acá.');
     } else {
         proximos.innerHTML = tablaTurnos(resumen.proximosTurnos);
     }
@@ -129,7 +133,7 @@ async function iniciar() {
 
     try {
         if (tieneRol(sesion, 'RECEPCION', 'MEDICO', 'ADMIN')) {
-            await panelEquipo();
+            await panelEquipo(sesion);
         } else {
             await panelPaciente();
         }

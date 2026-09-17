@@ -146,6 +146,13 @@ async function cargarHorarios() {
 async function iniciar() {
     const sesion = await iniciarLayout();
 
+    // MEDICO no crea turnos directos: solo recepcion y administracion.
+    if (tieneRol(sesion, 'MEDICO') && !tieneRol(sesion, 'RECEPCION', 'ADMIN')) {
+        $('sin-permiso').hidden = false;
+        $('form-turno').hidden = true;
+        return;
+    }
+
     try {
         await cargarPacientes(sesion);
         await cargarEspecialidades();

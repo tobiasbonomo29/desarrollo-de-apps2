@@ -30,7 +30,7 @@
                                 <h2>Próximos turnos</h2>
                                 <p>Los siguientes turnos programados de la clínica.</p>
                             </div>
-                            <a class="boton boton--chico" href="turno-nuevo.html">+ Nuevo turno</a>
+                            <a class="boton boton--chico" href="turno-nuevo.html" id="boton-nuevo-turno" hidden>+ Nuevo turno</a>
                         </div>
                         <div id="proximos"></div>
                     </div>
@@ -54,9 +54,12 @@
                         <div class="card__cabecera">
                             <div>
                                 <h2>Mis turnos</h2>
-                                <p>Historial y turnos programados a tu nombre.</p>
+                                <p>Tus próximos turnos y tu historial.</p>
                             </div>
-                            <a class="boton boton--chico" href="reserva.html">Reservar turno</a>
+                            <div class="acciones">
+                                <a class="boton boton--secundario boton--chico" href="mis-turnos.html">Ver todos</a>
+                                <a class="boton boton--chico" href="reserva.html">Reservar turno</a>
+                            </div>
                         </div>
                         <div id="mis-turnos"></div>
                     </div>

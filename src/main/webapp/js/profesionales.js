@@ -15,8 +15,16 @@ const $ = (id) => document.getElementById(id);
 let profesionales = [];
 let turnosDeHoy = new Map();
 let puedeVerAgenda = false;
-let puedeEditarAgenda = false;
+let puedeEditarCualquiera = false;
+let miProfesionalId = null;
 let profesionalEnEdicion = null;
+
+function puedeEditar(profesional) {
+    if (puedeEditarCualquiera) {
+        return true;
+    }
+    return miProfesionalId !== null && profesional.id === miProfesionalId;
+}
 
 /* ----------------------------- Listado ----------------------------- */
 
@@ -36,7 +44,7 @@ function tarjeta(profesional) {
         ? '<span class="etiqueta etiqueta--activo">Activo</span>'
         : '<span class="etiqueta etiqueta--inactivo">Inactivo</span>';
 
-    let turnosHoy = 'Agenda no visible para tu rol';
+    let turnosHoy = 'Agenda no disponible';
     if (puedeVerAgenda) {
         const cantidad = turnosDeHoy.get(profesional.id) || 0;
         turnosHoy = cantidad === 0
@@ -44,9 +52,9 @@ function tarjeta(profesional) {
             : cantidad + (cantidad === 1 ? ' turno hoy' : ' turnos hoy');
     }
 
-    const boton = puedeEditarAgenda
+    const boton = puedeEditar(profesional)
         ? '<button type="button" class="boton boton--secundario boton--chico" data-id="'
-          + esc(profesional.id) + '">Disponibilidad</button>'
+          + esc(profesional.id) + '">Editar disponibilidad</button>'
         : '';
 
     return '<article class="profesional">'
@@ -264,13 +272,23 @@ async function iniciar() {
     const sesion = await iniciarLayout();
 
     puedeVerAgenda = tieneRol(sesion, 'RECEPCION', 'MEDICO', 'ADMIN');
-    puedeEditarAgenda = tieneRol(sesion, 'MEDICO', 'ADMIN');
+    puedeEditarCualquiera = tieneRol(sesion, 'RECEPCION', 'ADMIN');
+    const esSoloMedico = tieneRol(sesion, 'MEDICO') && !tieneRol(sesion, 'RECEPCION', 'ADMIN');
 
     if (tieneRol(sesion, 'ADMIN')) {
         prepararAlta();
     }
-    if (puedeEditarAgenda) {
+    if (puedeEditarCualquiera || esSoloMedico) {
         prepararDisponibilidad();
+    }
+
+    if (esSoloMedico) {
+        try {
+            const perfil = await api.miPerfilProfesional();
+            miProfesionalId = perfil.id;
+        } catch (error) {
+            miProfesionalId = null;
+        }
     }
 
     $('filtros').addEventListener('submit', e => e.preventDefault());
