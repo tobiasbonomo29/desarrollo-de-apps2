@@ -77,6 +77,7 @@ public class FabricaTurnos {
         turno.setFechaHora(fechaHora.truncatedTo(ChronoUnit.MINUTES));
         turno.setEstado(EstadoTurno.PROGRAMADO);
         turno.setMotivo(motivo == null || motivo.isBlank() ? null : motivo.trim());
+        turno.setArchivado(false);
         return turno;
     }
 }

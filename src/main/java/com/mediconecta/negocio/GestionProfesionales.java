@@ -4,7 +4,9 @@ import com.mediconecta.datos.RepositorioProfesionales;
 import com.mediconecta.modelo.Disponibilidad;
 import com.mediconecta.modelo.Profesional;
 
+import jakarta.annotation.Resource;
 import jakarta.annotation.security.RolesAllowed;
+import jakarta.ejb.SessionContext;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 
@@ -33,6 +35,9 @@ public class GestionProfesionales {
     @Inject
     private GestionTurnos gestionTurnos;
 
+    @Resource
+    private SessionContext contexto;
+
     @RolesAllowed({Roles.PACIENTE, Roles.RECEPCION, Roles.MEDICO, Roles.ADMIN})
     public List<Profesional> listarProfesionales() {
         return repositorio.listarTodos();
@@ -55,6 +60,17 @@ public class GestionProfesionales {
     public Profesional obtener(Long id) {
         return repositorio.buscarPorId(id)
                 .orElseThrow(() -> NoEncontradoException.profesional(id));
+    }
+
+    /** Ficha de profesional asociada al usuario que tiene la sesion abierta. */
+    @RolesAllowed(Roles.MEDICO)
+    public Profesional miPerfilProfesional() {
+        String usuario = contexto.getCallerPrincipal().getName();
+        return repositorio.listarTodos().stream()
+                .filter(p -> usuario.equals(p.getUsuario()))
+                .findFirst()
+                .orElseThrow(() -> new NoEncontradoException(
+                        "El usuario " + usuario + " no tiene una ficha de profesional asociada."));
     }
 
     /** Alta de profesional. Operacion reservada al rol ADMIN. */
@@ -93,12 +109,16 @@ public class GestionProfesionales {
     /**
      * Reemplaza la agenda semanal de un profesional.
      *
-     * <p>Operacion de MEDICO o ADMIN: es quien atiende (o la administracion)
-     * quien decide en que franjas se puede reservar.</p>
+     * <p>RECEPCION y ADMIN administran la agenda de cualquier profesional. Un
+     * MEDICO solo puede modificar <b>su propia</b> disponibilidad: la
+     * comprobacion de ownership esta en {@link #exigirPropiaAgendaSiEsMedico}.
+     * Los datos estructurales del profesional (nombre, matricula, especialidad)
+     * no se tocan aca; esta operacion es solo sobre las franjas horarias.</p>
      */
-    @RolesAllowed({Roles.MEDICO, Roles.ADMIN})
+    @RolesAllowed({Roles.RECEPCION, Roles.MEDICO, Roles.ADMIN})
     public Profesional definirDisponibilidad(Long profesionalId, List<Disponibilidad> franjas) {
         Profesional profesional = obtener(profesionalId);
+        exigirPropiaAgendaSiEsMedico(profesional);
 
         if (franjas == null || franjas.isEmpty()) {
             throw new ReglaNegocioException("Debe indicar al menos una franja de disponibilidad.");
@@ -111,6 +131,29 @@ public class GestionProfesionales {
             profesional.getDisponibilidades().add(f);
         });
         return repositorio.actualizar(profesional);
+    }
+
+    /**
+     * Si quien llama tiene <b>unicamente</b> el rol MEDICO, exige que el
+     * profesional indicado sea su propia ficha. Sin esta comprobacion, un
+     * medico podria redefinir la disponibilidad de otro cambiando el id de la
+     * URL: la autorizacion declarativa por si sola no distingue de cual
+     * profesional se trata, solo que el rol tenga permiso en general.
+     */
+    private void exigirPropiaAgendaSiEsMedico(Profesional profesional) {
+        if (!esSoloMedico()) {
+            return;
+        }
+        String usuario = contexto.getCallerPrincipal().getName();
+        if (!usuario.equals(profesional.getUsuario())) {
+            throw new ReglaNegocioException("Solo puede modificar su propia disponibilidad.");
+        }
+    }
+
+    private boolean esSoloMedico() {
+        return contexto.isCallerInRole(Roles.MEDICO)
+                && !contexto.isCallerInRole(Roles.RECEPCION)
+                && !contexto.isCallerInRole(Roles.ADMIN);
     }
 
     /**

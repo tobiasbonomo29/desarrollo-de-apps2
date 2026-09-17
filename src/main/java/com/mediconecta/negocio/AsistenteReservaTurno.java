@@ -128,6 +128,7 @@ public class AsistenteReservaTurno implements Serializable {
     /** Paso 0: identifica al paciente y abre la conversacion. */
     public EstadoReserva iniciar(String documentoPaciente) {
         Paciente paciente = gestionPacientes.buscarPorDocumento(documentoPaciente);
+        gestionPacientes.exigirPropioDocumentoSiEsPaciente(paciente.getDocumento());
         this.documentoPaciente = paciente.getDocumento();
         this.nombrePaciente = paciente.getNombre();
         this.especialidad = null;

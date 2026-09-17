@@ -6,7 +6,9 @@ import com.mediconecta.modelo.Paciente;
 import com.mediconecta.modelo.Profesional;
 import com.mediconecta.modelo.Turno;
 
+import jakarta.annotation.Resource;
 import jakarta.annotation.security.RolesAllowed;
+import jakarta.ejb.SessionContext;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 
@@ -35,15 +37,19 @@ public class GestionTurnos {
     @Inject
     private FabricaTurnos fabricaTurnos;
 
+    @Resource
+    private SessionContext contexto;
+
     /**
-     * Agenda completa, ordenada cronologicamente.
+     * Agenda operativa, ordenada cronologicamente.
      *
      * <p>Un PACIENTE no puede verla: solo accede a su propio historial a traves
-     * de {@code GestionPacientes.historialDeTurnos}.</p>
+     * de {@code GestionPacientes.historialDeTurnos}. No incluye los turnos
+     * archivados: para eso esta {@code RepositorioTurnos.listarAgenda}.</p>
      */
     @RolesAllowed({Roles.RECEPCION, Roles.MEDICO, Roles.ADMIN})
     public List<Turno> listarTurnos() {
-        return repositorio.listarTodos();
+        return repositorio.listarAgenda();
     }
 
     @RolesAllowed({Roles.PACIENTE, Roles.RECEPCION, Roles.MEDICO, Roles.ADMIN})
@@ -116,8 +122,12 @@ public class GestionTurnos {
      * puede cancelar uno ya atendido. Al quedar en {@code CANCELADO} su horario
      * vuelve a estar libre, porque {@code existeTurnoVigente} ignora los
      * cancelados.</p>
+     *
+     * <p>Ademas de la autorizacion declarativa, hay ownership: un PACIENTE solo
+     * puede cancelar turnos propios y un MEDICO solo los de su propia agenda.
+     * RECEPCION y ADMIN pueden cancelar cualquiera.</p>
      */
-    @RolesAllowed({Roles.RECEPCION, Roles.MEDICO, Roles.ADMIN})
+    @RolesAllowed({Roles.PACIENTE, Roles.RECEPCION, Roles.MEDICO, Roles.ADMIN})
     public Turno cancelarTurno(Long id) {
         Turno turno = obtenerTurno(id);
 
@@ -128,7 +138,62 @@ public class GestionTurnos {
             throw new ReglaNegocioException("No se puede cancelar un turno que ya fue atendido.");
         }
 
+        exigirPuedeCancelar(turno);
+
         turno.setEstado(EstadoTurno.CANCELADO);
+        return repositorio.actualizar(turno);
+    }
+
+    private void exigirPuedeCancelar(Turno turno) {
+        if (esSoloPaciente()) {
+            String usuario = contexto.getCallerPrincipal().getName();
+            if (!usuario.equals(turno.getPaciente().getUsuario())) {
+                throw new ReglaNegocioException("Solo puede cancelar sus propios turnos.");
+            }
+            return;
+        }
+        if (esSoloMedico()) {
+            String usuario = contexto.getCallerPrincipal().getName();
+            if (!usuario.equals(turno.getProfesional().getUsuario())) {
+                throw new ReglaNegocioException("Solo puede cancelar turnos de su propia agenda.");
+            }
+        }
+        // RECEPCION y ADMIN pueden cancelar cualquier turno, sin restriccion adicional.
+    }
+
+    private boolean esSoloPaciente() {
+        return contexto.isCallerInRole(Roles.PACIENTE)
+                && !contexto.isCallerInRole(Roles.RECEPCION)
+                && !contexto.isCallerInRole(Roles.MEDICO)
+                && !contexto.isCallerInRole(Roles.ADMIN);
+    }
+
+    private boolean esSoloMedico() {
+        return contexto.isCallerInRole(Roles.MEDICO)
+                && !contexto.isCallerInRole(Roles.RECEPCION)
+                && !contexto.isCallerInRole(Roles.ADMIN);
+    }
+
+    /**
+     * Saca un turno cancelado de la agenda operativa sin borrarlo.
+     *
+     * <p>Es un archivado logico: el registro sigue existiendo en la base (sigue
+     * apareciendo en el historial del paciente y se lo puede seguir consultando
+     * por id) pero deja de listarse en {@link #listarTurnos()}. Solo se puede
+     * archivar un turno que ya este {@code CANCELADO}, y no dos veces.</p>
+     */
+    @RolesAllowed({Roles.RECEPCION, Roles.ADMIN})
+    public Turno archivarTurno(Long id) {
+        Turno turno = obtenerTurno(id);
+
+        if (turno.getEstado() != EstadoTurno.CANCELADO) {
+            throw new ReglaNegocioException("Solo se pueden archivar turnos cancelados.");
+        }
+        if (turno.isArchivado()) {
+            throw new ReglaNegocioException("El turno " + id + " ya estaba archivado.");
+        }
+
+        turno.setArchivado(true);
         return repositorio.actualizar(turno);
     }
 }

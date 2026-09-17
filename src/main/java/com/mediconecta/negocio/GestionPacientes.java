@@ -123,19 +123,44 @@ public class GestionPacientes {
     @RolesAllowed({Roles.PACIENTE, Roles.RECEPCION, Roles.MEDICO, Roles.ADMIN})
     public List<Turno> historialDeTurnos(String documento) {
         Paciente paciente = buscarPorDocumento(documento);
+        exigirPropioDocumentoSiEsPaciente(paciente.getDocumento());
+        return gestionTurnos.turnosDePaciente(paciente.getDocumento());
+    }
 
-        if (contexto.isCallerInRole(Roles.PACIENTE)
+    /**
+     * Si quien llama tiene <b>unicamente</b> el rol PACIENTE, exige que el
+     * documento indicado sea el de su propia ficha.
+     *
+     * <p>La usan otros componentes que reservan o cancelan turnos a nombre de un
+     * paciente puntual (la fachada de reservas, el asistente de reserva, la
+     * cancelacion), para que un usuario con rol PACIENTE no pueda operar sobre
+     * la ficha de otro cambiando el documento que envia. Los demas roles no
+     * tienen esta restriccion: pasan sin ninguna comprobacion.</p>
+     *
+     * <p>Necesita su propio {@code @RolesAllowed}: al ser un metodo publico
+     * invocado desde otro EJB ({@code FachadaReservas}, el asistente stateful),
+     * la llamada pasa por el interceptor de seguridad del contenedor igual que
+     * cualquier invocacion externa, y un metodo sin anotacion queda denegado por
+     * defecto en este servidor.</p>
+     */
+    @RolesAllowed({Roles.PACIENTE, Roles.RECEPCION, Roles.MEDICO, Roles.ADMIN})
+    public void exigirPropioDocumentoSiEsPaciente(String documento) {
+        if (!esSoloPaciente()) {
+            return;
+        }
+        String usuario = contexto.getCallerPrincipal().getName();
+        boolean esElPropio = repositorio.listarTodos().stream()
+                .anyMatch(p -> usuario.equals(p.getUsuario()) && p.getDocumento().equals(documento));
+        if (!esElPropio) {
+            throw new ReglaNegocioException("Solo puede operar sobre sus propios turnos.");
+        }
+    }
+
+    private boolean esSoloPaciente() {
+        return contexto.isCallerInRole(Roles.PACIENTE)
                 && !contexto.isCallerInRole(Roles.RECEPCION)
                 && !contexto.isCallerInRole(Roles.MEDICO)
-                && !contexto.isCallerInRole(Roles.ADMIN)) {
-
-            String usuario = contexto.getCallerPrincipal().getName();
-            if (!usuario.equals(paciente.getUsuario())) {
-                throw new ReglaNegocioException("Solo puede consultar su propio historial de turnos.");
-            }
-        }
-
-        return gestionTurnos.turnosDePaciente(paciente.getDocumento());
+                && !contexto.isCallerInRole(Roles.ADMIN);
     }
 
     /** Ficha del paciente asociada al usuario que tiene la sesion abierta. */

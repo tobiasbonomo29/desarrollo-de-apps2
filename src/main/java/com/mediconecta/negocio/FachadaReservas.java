@@ -110,6 +110,10 @@ public class FachadaReservas {
      * esta en el padron), resolver el profesional (por id o, para compatibilidad
      * con la API original, por nombre) y delegar el alta en
      * {@code GestionTurnos}, que es quien valida fecha y superposicion.</p>
+     *
+     * <p>Un usuario con rol PACIENTE solo puede reservar para si mismo: la
+     * comprobacion la hace {@code GestionPacientes}, que es quien conoce la
+     * asociacion entre el usuario autenticado y su ficha.</p>
      */
     @RolesAllowed({Roles.PACIENTE, Roles.RECEPCION, Roles.ADMIN})
     public Turno reservar(SolicitudTurno solicitud) {
@@ -118,6 +122,7 @@ public class FachadaReservas {
         }
 
         Paciente paciente = resolverPaciente(solicitud);
+        gestionPacientes.exigirPropioDocumentoSiEsPaciente(paciente.getDocumento());
         Profesional profesional = resolverProfesional(solicitud);
 
         return gestionTurnos.agendar(paciente, profesional,

@@ -68,4 +68,11 @@ public class RecursoTurnos {
     public Turno cancelar(@PathParam("id") Long id) {
         return gestionTurnos.cancelarTurno(id);
     }
+
+    /** Saca un turno cancelado de la agenda operativa sin borrarlo. */
+    @PUT
+    @Path("/{id}/archivar")
+    public Turno archivar(@PathParam("id") Long id) {
+        return gestionTurnos.archivarTurno(id);
+    }
 }

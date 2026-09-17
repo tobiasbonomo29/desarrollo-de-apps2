@@ -70,13 +70,13 @@ public class CargaDeDatosDemo {
         }
 
         Profesional laura = crearProfesional("Dra. Laura Fernandez", "Cardiologia", "MP-10234",
-                LUNES_A_VIERNES, LocalTime.of(9, 0), LocalTime.of(13, 0), 30);
+                LUNES_A_VIERNES, LocalTime.of(9, 0), LocalTime.of(13, 0), 30, "medico");
         Profesional martin = crearProfesional("Dr. Martin Ruiz", "Traumatologia", "MP-20876",
-                LUNES_A_VIERNES, LocalTime.of(14, 0), LocalTime.of(18, 0), 30);
+                LUNES_A_VIERNES, LocalTime.of(14, 0), LocalTime.of(18, 0), 30, null);
         Profesional sofia = crearProfesional("Dra. Sofia Aguirre", "Pediatria", "MP-30512",
-                LUNES_MIERCOLES_VIERNES, LocalTime.of(9, 0), LocalTime.of(12, 0), 20);
+                LUNES_MIERCOLES_VIERNES, LocalTime.of(9, 0), LocalTime.of(12, 0), 20, null);
         crearProfesional("Dr. Julian Paz", "Clinica Medica", "MP-40199",
-                MARTES_Y_JUEVES, LocalTime.of(10, 0), LocalTime.of(16, 0), 30);
+                MARTES_Y_JUEVES, LocalTime.of(10, 0), LocalTime.of(16, 0), 30, null);
 
         Paciente ana = crearPaciente("Ana Gomez", "30111222", "ana.gomez@mail.com",
                 "11-4455-6677", "OSDE 210", "paciente");
@@ -96,8 +96,9 @@ public class CargaDeDatosDemo {
 
     private Profesional crearProfesional(String nombre, String especialidad, String matricula,
                                          Set<DayOfWeek> dias, LocalTime desde, LocalTime hasta,
-                                         int duracion) {
+                                         int duracion, String usuario) {
         Profesional profesional = new Profesional(nombre, especialidad, matricula);
+        profesional.setUsuario(usuario);
         dias.forEach(dia -> profesional.getDisponibilidades()
                 .add(new Disponibilidad(dia, desde, hasta, duracion)));
         return repositorioProfesionales.guardar(profesional);

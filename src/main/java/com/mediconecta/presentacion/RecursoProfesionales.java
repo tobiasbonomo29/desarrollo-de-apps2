@@ -46,6 +46,13 @@ public class RecursoProfesionales {
         return gestionProfesionales.listarEspecialidades();
     }
 
+    /** Ficha de profesional asociada al usuario que tiene la sesion abierta. */
+    @GET
+    @Path("/mi-perfil")
+    public Profesional miPerfil() {
+        return gestionProfesionales.miPerfilProfesional();
+    }
+
     @GET
     @Path("/{id}")
     public Profesional obtener(@PathParam("id") Long id) {
@@ -64,7 +71,10 @@ public class RecursoProfesionales {
         return Response.created(ubicacion).entity(creado).build();
     }
 
-    /** Redefine la agenda semanal. Reservado a MEDICO y ADMIN. */
+    /**
+     * Redefine la agenda semanal. RECEPCION y ADMIN pueden hacerlo para
+     * cualquier profesional; un MEDICO solo para su propia ficha.
+     */
     @PUT
     @Path("/{id}/disponibilidad")
     public Profesional definirDisponibilidad(@PathParam("id") Long id, List<Disponibilidad> franjas) {
