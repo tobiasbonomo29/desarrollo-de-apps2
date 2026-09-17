@@ -19,6 +19,9 @@ public interface RepositorioProfesionales {
 
     Optional<Profesional> buscarPorMatricula(String matricula);
 
+    /** Profesional asociado a un usuario de WildFly (para el ownership de un MEDICO). */
+    Optional<Profesional> buscarPorUsuario(String usuario);
+
     List<Profesional> listarPorEspecialidad(String especialidad);
 
     /** Especialidades distintas que hoy tienen al menos un profesional activo. */

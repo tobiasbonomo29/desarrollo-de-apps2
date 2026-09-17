@@ -66,6 +66,17 @@ public class Turno {
     @Column(length = 200)
     private String motivo;
 
+    /**
+     * Si el turno se sacó de la agenda operativa.
+     *
+     * <p>Es un archivado lógico, no un borrado: el registro sigue en la base y
+     * sigue apareciendo en el historial del paciente. Solo un turno
+     * {@code CANCELADO} puede archivarse; al hacerlo deja de listarse en la
+     * agenda general ({@code RepositorioTurnos.listarAgenda}).</p>
+     */
+    @Column(nullable = false)
+    private boolean archivado = false;
+
     public Turno() {
     }
 
@@ -123,5 +134,13 @@ public class Turno {
 
     public void setMotivo(String motivo) {
         this.motivo = motivo;
+    }
+
+    public boolean isArchivado() {
+        return archivado;
+    }
+
+    public void setArchivado(boolean archivado) {
+        this.archivado = archivado;
     }
 }

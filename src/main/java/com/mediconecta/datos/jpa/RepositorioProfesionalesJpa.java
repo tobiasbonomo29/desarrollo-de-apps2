@@ -43,6 +43,17 @@ public class RepositorioProfesionalesJpa implements RepositorioProfesionales {
     }
 
     @Override
+    public Optional<Profesional> buscarPorUsuario(String usuario) {
+        if (usuario == null) {
+            return Optional.empty();
+        }
+        return em.createQuery("select p from Profesional p where p.usuario = :usuario", Profesional.class)
+                .setParameter("usuario", usuario)
+                .getResultStream()
+                .findFirst();
+    }
+
+    @Override
     public List<Profesional> listarPorEspecialidad(String especialidad) {
         return em.createQuery(
                         "select p from Profesional p where lower(p.especialidad) = :especialidad "

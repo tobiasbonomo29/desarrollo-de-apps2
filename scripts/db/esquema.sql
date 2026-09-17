@@ -34,8 +34,11 @@ CREATE TABLE IF NOT EXISTS profesionales (
     especialidad VARCHAR(80)  NOT NULL,
     matricula    VARCHAR(30)  NOT NULL UNIQUE,
     email        VARCHAR(120),
-    activo       BOOLEAN      NOT NULL DEFAULT TRUE
+    activo       BOOLEAN      NOT NULL DEFAULT TRUE,
+    usuario      VARCHAR(60)  UNIQUE
 );
+
+COMMENT ON COLUMN profesionales.usuario IS 'Usuario de WildFly asociado; permite que un rol MEDICO administre solo su propia disponibilidad.';
 
 CREATE TABLE IF NOT EXISTS disponibilidades (
     id               BIGSERIAL PRIMARY KEY,
@@ -55,10 +58,12 @@ CREATE TABLE IF NOT EXISTS turnos (
     especialidad   VARCHAR(80) NOT NULL,
     fecha_hora     TIMESTAMP   NOT NULL,
     estado         VARCHAR(20) NOT NULL,
-    motivo         VARCHAR(200)
+    motivo         VARCHAR(200),
+    archivado      BOOLEAN     NOT NULL DEFAULT FALSE
 );
 
 COMMENT ON COLUMN turnos.estado IS 'PROGRAMADO, ATENDIDO o CANCELADO. Lo fija siempre la capa de negocio.';
+COMMENT ON COLUMN turnos.archivado IS 'Archivado logico: solo un turno CANCELADO se puede archivar. Deja de listarse en la agenda pero sigue en el historial del paciente.';
 
 -- Indices que acompanan las consultas que hace la aplicacion.
 CREATE INDEX IF NOT EXISTS ix_turnos_fecha        ON turnos (fecha_hora);

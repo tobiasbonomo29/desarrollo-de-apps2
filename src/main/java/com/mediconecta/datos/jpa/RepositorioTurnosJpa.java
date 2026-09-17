@@ -38,6 +38,13 @@ public class RepositorioTurnosJpa implements RepositorioTurnos {
     }
 
     @Override
+    public List<Turno> listarAgenda() {
+        return em.createQuery(
+                        "select t from Turno t where t.archivado = false order by t.fechaHora", Turno.class)
+                .getResultList();
+    }
+
+    @Override
     public Optional<Turno> buscarPorId(Long id) {
         if (id == null) {
             return Optional.empty();

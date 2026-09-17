@@ -51,6 +51,14 @@ public class RepositorioTurnosEnMemoria implements RepositorioTurnos {
     }
 
     @Override
+    public List<Turno> listarAgenda() {
+        return turnos.values().stream()
+                .filter(t -> !t.isArchivado())
+                .sorted(Comparator.comparing(Turno::getFechaHora))
+                .toList();
+    }
+
+    @Override
     public Optional<Turno> buscarPorId(Long id) {
         return id == null ? Optional.empty() : Optional.ofNullable(turnos.get(id));
     }

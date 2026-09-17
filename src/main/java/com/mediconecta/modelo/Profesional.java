@@ -47,6 +47,17 @@ public class Profesional {
     @Column(nullable = false)
     private boolean activo = true;
 
+    /**
+     * Usuario de WildFly asociado a este profesional (puede ser null).
+     *
+     * <p>Es lo que le permite a un MEDICO ver y modificar su propia
+     * disponibilidad sin poder tocar la de otro: {@code GestionProfesionales}
+     * compara este campo contra el nombre del usuario autenticado. Unico
+     * cuando no es null, igual que {@code Paciente.usuario}.</p>
+     */
+    @Column(unique = true, length = 60)
+    private String usuario;
+
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JoinColumn(name = "profesional_id", nullable = false)
     private List<Disponibilidad> disponibilidades = new ArrayList<>();
@@ -106,6 +117,14 @@ public class Profesional {
 
     public void setActivo(boolean activo) {
         this.activo = activo;
+    }
+
+    public String getUsuario() {
+        return usuario;
+    }
+
+    public void setUsuario(String usuario) {
+        this.usuario = usuario;
     }
 
     public List<Disponibilidad> getDisponibilidades() {

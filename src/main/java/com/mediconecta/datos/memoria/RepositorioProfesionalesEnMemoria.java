@@ -45,6 +45,16 @@ public class RepositorioProfesionalesEnMemoria implements RepositorioProfesional
     }
 
     @Override
+    public Optional<Profesional> buscarPorUsuario(String usuario) {
+        if (usuario == null) {
+            return Optional.empty();
+        }
+        return profesionales.values().stream()
+                .filter(p -> usuario.equals(p.getUsuario()))
+                .findFirst();
+    }
+
+    @Override
     public List<Profesional> listarPorEspecialidad(String especialidad) {
         return profesionales.values().stream()
                 .filter(p -> p.getEspecialidad().equalsIgnoreCase(especialidad))

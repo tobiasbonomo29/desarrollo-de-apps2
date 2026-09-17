@@ -26,6 +26,15 @@ public interface RepositorioTurnos {
     List<Turno> listarTodos();
 
     /**
+     * Agenda operativa: todos los turnos que no fueron archivados.
+     *
+     * <p>Separada de {@link #listarTodos()} porque la agenda general oculta lo
+     * archivado, pero otras consultas (como el historial de un paciente) tienen
+     * que seguir mostrandolo.</p>
+     */
+    List<Turno> listarAgenda();
+
+    /**
      * Busca un turno por su identificador.
      *
      * <p>Devuelve {@link Optional} en lugar de {@code null} para obligar a quien
