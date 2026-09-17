@@ -2,9 +2,26 @@
 <!--
     Activa CDI (inyeccion de dependencias) en este WAR.
 
-    bean-discovery-mode="all" hace que el contenedor considere bean a toda
-    clase del proyecto, sin exigir que cada una lleve una anotacion de alcance.
-    Es la opcion mas simple de explicar y suficiente para el tamano de este TP.
+    bean-discovery-mode="all" hace que el contenedor considere bean a toda clase
+    del proyecto, sin exigir que cada una lleve una anotacion de alcance. Es la
+    opcion mas simple de explicar y suficiente para el tamano de este TP.
+
+    =========================================================================
+    EJECUTAR SIN BASE DE DATOS (plan B)
+    =========================================================================
+    Los repositorios en memoria del paquete datos.memoria estan anotados con
+    @Alternative y por lo tanto DESACTIVADOS: el sistema corre sobre las
+    implementaciones JPA. Para levantar la aplicacion en una maquina sin
+    PostgreSQL hay que hacer dos cosas:
+
+      1) descomentar el bloque de alternativas que esta debajo de este
+         comentario;
+      2) borrar src/main/resources/META-INF/persistence.xml antes de empaquetar
+         (si queda, WildFly intenta crear la unidad de persistencia y el
+         despliegue falla porque no encuentra el datasource).
+
+    Ni la capa de negocio ni la de presentacion cambian una sola linea. Esa es
+    exactamente la ventaja que da el patron DAO / Repository.
 -->
 <beans xmlns="https://jakarta.ee/xml/ns/jakartaee"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -12,4 +29,13 @@
                            https://jakarta.ee/xml/ns/jakartaee/beans_3_0.xsd"
        version="3.0"
        bean-discovery-mode="all">
+
+    <!-- Plan B: descomentar para correr sin base de datos.
+    <alternatives>
+        <class>com.mediconecta.datos.memoria.RepositorioTurnosEnMemoria</class>
+        <class>com.mediconecta.datos.memoria.RepositorioPacientesEnMemoria</class>
+        <class>com.mediconecta.datos.memoria.RepositorioProfesionalesEnMemoria</class>
+    </alternatives>
+    -->
+
 </beans>

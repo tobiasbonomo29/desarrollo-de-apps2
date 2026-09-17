@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Seguridad declarativa de MediConecta.
+
+    Este archivo no configura JAX-RS (eso lo hace AplicacionRest con
+    @ApplicationPath): existe unicamente para declarar QUE esta protegido, QUIEN
+    puede entrar y COMO se pide la identidad. Es la parte "declarativa" de la
+    seguridad: no hay una sola linea de codigo Java que compruebe contrasenas.
+
+    Quien valida las credenciales es WildFly, contra el dominio de seguridad
+    ApplicationDomain (archivos application-users.properties y
+    application-roles.properties de standalone/configuration). Ver el README,
+    seccion "Usuarios de demostracion".
+-->
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee
+                             https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
+         version="6.0">
+
+    <display-name>MediConecta</display-name>
+
+    <!-- 1) Prueba de vida publica. El patron exacto gana sobre /api/*, asi que
+         este recurso queda accesible sin autenticar: es la comprobacion de que
+         el WAR esta desplegado. No tiene auth-constraint a proposito. -->
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>Prueba de vida</web-resource-name>
+            <url-pattern>/api/salud</url-pattern>
+        </web-resource-collection>
+    </security-constraint>
+
+    <!-- 2) Toda la API necesita un usuario autenticado. Que puede hacer cada rol
+         NO se decide aca sino con @RolesAllowed sobre los metodos de negocio:
+         esta restriccion solo garantiza que haya una identidad. -->
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>API de MediConecta</web-resource-name>
+            <url-pattern>/api/*</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
+            <role-name>PACIENTE</role-name>
+            <role-name>RECEPCION</role-name>
+            <role-name>MEDICO</role-name>
+            <role-name>ADMIN</role-name>
+        </auth-constraint>
+    </security-constraint>
+
+    <!-- 3) Las pantallas de la aplicacion. login.html, css y js quedan fuera
+         porque hacen falta justamente para poder iniciar sesion. -->
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>Pantallas de la aplicacion</web-resource-name>
+            <url-pattern>/app/*</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
+            <role-name>PACIENTE</role-name>
+            <role-name>RECEPCION</role-name>
+            <role-name>MEDICO</role-name>
+            <role-name>ADMIN</role-name>
+        </auth-constraint>
+    </security-constraint>
+
+    <!-- Autenticacion por formulario administrada por el contenedor. El
+         formulario de login.html hace POST a j_security_check con los campos
+         j_username y j_password; MediConecta nunca ve la contrasena. -->
+    <login-config>
+        <auth-method>FORM</auth-method>
+        <realm-name>ApplicationRealm</realm-name>
+        <form-login-config>
+            <form-login-page>/login</form-login-page>
+            <form-error-page>/login-error</form-error-page>
+        </form-login-config>
+    </login-config>
+
+    <security-role>
+        <description>Paciente: reserva y consulta sus propios turnos.</description>
+        <role-name>PACIENTE</role-name>
+    </security-role>
+    <security-role>
+        <description>Recepcion: administra la agenda y el padron de pacientes.</description>
+        <role-name>RECEPCION</role-name>
+    </security-role>
+    <security-role>
+        <description>Medico: ve la agenda, cancela turnos y define su disponibilidad.</description>
+        <role-name>MEDICO</role-name>
+    </security-role>
+    <security-role>
+        <description>Administrador: ademas da de alta profesionales.</description>
+        <role-name>ADMIN</role-name>
+    </security-role>
+
+    <session-config>
+        <session-timeout>30</session-timeout>
+        <cookie-config>
+            <http-only>true</http-only>
+        </cookie-config>
+        <tracking-mode>COOKIE</tracking-mode>
+    </session-config>
+
+    <welcome-file-list>
+        <welcome-file>index.html</welcome-file>
+    </welcome-file-list>
+
+</web-app>

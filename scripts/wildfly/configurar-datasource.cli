@@ -1,0 +1,52 @@
+# =============================================================================
+#  MediConecta - datasource de PostgreSQL para WildFly
+# =============================================================================
+#
+#  Se ejecuta con el servidor YA LEVANTADO:
+#
+#      bin\jboss-cli.bat --connect --file=configurar-datasource.cli
+#
+#  Requiere que antes se haya instalado el modulo del driver (lo hace
+#  configurar-wildfly.ps1, o a mano con "module add").
+#
+#  El usuario y la contrasena se pasan como propiedades del sistema para no
+#  dejarlos escritos en un archivo versionado:
+#
+#      jboss-cli.bat --connect ^
+#          -Dmediconecta.db.usuario=mediconecta ^
+#          -Dmediconecta.db.clave=mediconecta ^
+#          --file=configurar-datasource.cli
+# =============================================================================
+
+if (outcome == success) of /subsystem=datasources/jdbc-driver=postgresql:read-resource
+    echo "El driver postgresql ya estaba registrado."
+else
+    /subsystem=datasources/jdbc-driver=postgresql:add( \
+        driver-name=postgresql, \
+        driver-module-name=org.postgresql, \
+        driver-class-name=org.postgresql.Driver, \
+        driver-xa-datasource-class-name=org.postgresql.xa.PGXADataSource)
+end-if
+
+if (outcome == success) of /subsystem=datasources/data-source=MediConectaDS:read-resource
+    echo "El datasource MediConectaDS ya existia: se elimina y se vuelve a crear."
+    /subsystem=datasources/data-source=MediConectaDS:remove
+end-if
+
+/subsystem=datasources/data-source=MediConectaDS:add( \
+    jndi-name="java:/jdbc/MediConectaDS", \
+    driver-name=postgresql, \
+    connection-url="${mediconecta.db.url:jdbc:postgresql://localhost:5432/mediconecta}", \
+    user-name="${mediconecta.db.usuario:mediconecta}", \
+    password="${mediconecta.db.clave:mediconecta}", \
+    min-pool-size=5, \
+    max-pool-size=20, \
+    enabled=true, \
+    use-java-context=true, \
+    background-validation=true, \
+    background-validation-millis=60000, \
+    check-valid-connection-sql="SELECT 1")
+
+/subsystem=datasources/data-source=MediConectaDS:test-connection-in-pool
+
+echo "Datasource java:/jdbc/MediConectaDS listo."
