@@ -1,10 +1,10 @@
 /**
- * Reserva guiada: la pantalla del componente @Stateful.
+ * Reserva de turno, paso a paso.
  *
- * Detalle importante para la defensa: en cada paso este archivo envia UN solo
- * dato (la especialidad, o el profesional, o el horario). Nunca reenvia lo
- * elegido antes. El resumen de la derecha se dibuja con lo que devuelve el
- * servidor, es decir con lo que el EJB stateful recuerda de esta conversacion.
+ * En cada paso este archivo envia UN solo dato (la especialidad, o el
+ * profesional, o el horario): nunca reenvia lo elegido antes. El resumen de la
+ * derecha y el estado del formulario se arman con lo que devuelve el servidor
+ * en cada respuesta.
  */
 
 import { api, contexto } from './api.js';
@@ -13,7 +13,12 @@ import { esc, hora, hoyIso, fechaLarga, mostrarCargando, avisoExito, mensajeEnCa
 
 const $ = (id) => document.getElementById(id);
 
-const NOMBRES = ['Paciente', 'Especialidad', 'Profesional', 'Horario', 'Confirmar'];
+// Los pasos numerados del stepper. La eleccion del paciente (para quien
+// reserva RECEPCION o ADMIN) no cuenta como paso: es previa.
+const NOMBRES = ['Especialidad', 'Profesional', 'Horario', 'Confirmar'];
+
+// Los pasos del backend: SIN_INICIAR=0, ELEGIR_ESPECIALIDAD=1,
+// ELEGIR_PROFESIONAL=2, ELEGIR_HORARIO=3, CONFIRMAR=4, FINALIZADA=5.
 
 let estado = null;
 let sesion = null;
@@ -22,16 +27,23 @@ let fechaElegida = hoyIso();
 /* ----------------------------- Pintado comun ----------------------------- */
 
 function dibujarPasos() {
-    const actual = estado.paso === 0 ? 0 : estado.paso;
-    $('pasos').innerHTML = NOMBRES.map((nombre, indice) => {
-        const numero = indice;
+    const pasos = $('pasos');
+
+    // Paso 0: todavia no se identifico al paciente. No hay stepper numerado.
+    if (estado.paso === 0) {
+        pasos.innerHTML = '';
+        return;
+    }
+
+    pasos.innerHTML = NOMBRES.map((nombre, indice) => {
+        const numeroPaso = indice + 1;
         let clase = 'paso';
-        if (numero < actual) {
+        if (estado.paso > numeroPaso || estado.paso === 5) {
             clase += ' paso--hecho';
-        } else if (numero === actual) {
+        } else if (estado.paso === numeroPaso) {
             clase += ' paso--activo';
         }
-        return '<span class="' + clase + '"><span class="paso__numero">' + (indice + 1)
+        return '<span class="' + clase + '"><span class="paso__numero">' + numeroPaso
             + '</span>' + esc(nombre) + '</span>';
     }).join('');
 }
@@ -49,13 +61,6 @@ function dibujarResumen() {
         celda.textContent = valor || vacio;
         celda.classList.toggle('vacio', !valor);
     });
-
-    $('nota-conversacion').innerHTML =
-        'Conversación <code>' + esc(estado.idConversacion) + '</code> · instancia del EJB '
-        + '<code>' + esc(estado.instancia) + '</code> · paso <code>'
-        + esc(estado.pasoActual) + '</code>.<br>'
-        + 'Nada de esto viaja en el navegador: cada request solo lleva la cookie de sesión '
-        + 'y el dato nuevo del paso.';
 }
 
 function botones(lista) {
@@ -89,22 +94,26 @@ async function ejecutar(accion) {
 async function pasoInicio() {
     const contenedor = $('paso');
 
+    // Un paciente reserva siempre para si mismo: no hace falta que elija nada
+    // ni que confirme quien es, arranca directo en el primer paso.
     if (!tieneRol(sesion, 'RECEPCION', 'ADMIN')) {
-        const ficha = await api.miFicha();
-        contenedor.innerHTML = '<h2>Empecemos</h2>'
-            + '<p class="campo__ayuda" style="margin-bottom:16px">Vas a reservar un turno a tu nombre.</p>'
-            + '<div class="opcion opcion--elegida"><span>' + esc(ficha.nombre)
-            + '<small>DNI ' + esc(ficha.documento) + '</small></span></div>';
-        botones([{
-            texto: 'Comenzar reserva',
-            alHacerClic: () => ejecutar(() => api.reservaIniciar(ficha.documento))
-        }]);
+        mostrarCargando(contenedor, 'Preparando tu reserva...');
+        botones([]);
+        try {
+            const ficha = await api.miFicha();
+            estado = await api.reservaIniciar(ficha.documento);
+            await pintar();
+        } catch (error) {
+            contenedor.innerHTML = '';
+            botones([]);
+            mensajeEnCaja($('mensaje'), error.message, 'error');
+        }
         return;
     }
 
     const pacientes = await api.pacientes();
-    contenedor.innerHTML = '<h2>¿Para qué paciente?</h2>'
-        + '<p class="campo__ayuda" style="margin-bottom:16px">Elegí el paciente del padrón.</p>'
+    contenedor.innerHTML = '<h2>Seleccioná al paciente</h2>'
+        + '<p class="campo__ayuda" style="margin-bottom:16px">Elegí para quién es la reserva.</p>'
         + '<div class="campo"><label for="doc">Paciente</label>'
         + '<select id="doc"><option value="">Seleccioná un paciente</option>'
         + pacientes.map(p => '<option value="' + esc(p.documento) + '">'
@@ -112,7 +121,7 @@ async function pasoInicio() {
         + '</select></div>';
 
     const actualizar = () => botones([{
-        texto: 'Comenzar reserva',
+        texto: 'Continuar',
         deshabilitado: !$('doc').value,
         alHacerClic: () => ejecutar(() => api.reservaIniciar($('doc').value))
     }]);
@@ -126,9 +135,7 @@ async function pasoEspecialidad() {
     mostrarCargando(contenedor, 'Cargando especialidades...');
 
     const especialidades = await api.especialidades();
-    contenedor.innerHTML = '<h2>Paso 1 · Elegí la especialidad</h2>'
-        + '<p class="campo__ayuda" style="margin-bottom:16px">Solo aparecen las especialidades '
-        + 'que hoy tienen profesionales.</p>'
+    contenedor.innerHTML = '<h2>Elegí una especialidad</h2>'
         + '<div class="opciones">'
         + especialidades.map(e => '<button type="button" class="opcion" data-valor="' + esc(e) + '">'
             + esc(e) + '<span aria-hidden="true">›</span></button>').join('')
@@ -151,9 +158,9 @@ async function pasoProfesional() {
     mostrarCargando(contenedor, 'Cargando profesionales...');
 
     const profesionales = await api.profesionales(estado.especialidad);
-    contenedor.innerHTML = '<h2>Paso 2 · Elegí el profesional</h2>'
+    contenedor.innerHTML = '<h2>Elegí un profesional</h2>'
         + '<p class="campo__ayuda" style="margin-bottom:16px">Profesionales de '
-        + esc(estado.especialidad) + ', según lo que el servidor recuerda del paso anterior.</p>'
+        + esc(estado.especialidad) + '.</p>'
         + '<div class="opciones">'
         + profesionales.filter(p => p.activo).map(p =>
             '<button type="button" class="opcion" data-valor="' + esc(p.id) + '">'
@@ -175,10 +182,7 @@ async function pasoProfesional() {
 async function pasoHorario() {
     const contenedor = $('paso');
 
-    contenedor.innerHTML = '<h2>Paso 3 · Elegí el horario</h2>'
-        + '<p class="campo__ayuda" style="margin-bottom:16px">Horarios libres de '
-        + esc(estado.nombreProfesional) + '. La grilla sale de su disponibilidad menos los '
-        + 'turnos ya tomados.</p>'
+    contenedor.innerHTML = '<h2>Elegí un horario disponible</h2>'
         + '<div class="campo" style="max-width:240px"><label for="fecha">Fecha</label>'
         + '<input type="date" id="fecha" min="' + esc(hoyIso()) + '" value="' + esc(fechaElegida) + '"></div>'
         + '<div id="horarios"></div>';
@@ -192,7 +196,9 @@ async function pasoHorario() {
                 caja.innerHTML = '<p class="campo__ayuda">No hay horarios libres ese día. Probá con otra fecha.</p>';
                 return;
             }
-            caja.innerHTML = '<div class="grilla-horarios">'
+            caja.innerHTML = '<p class="campo__ayuda" style="margin-bottom:10px">'
+                + 'Estos son los horarios disponibles para esta fecha.</p>'
+                + '<div class="grilla-horarios">'
                 + horarios.map(h => '<button type="button" class="horario" data-valor="' + esc(h) + '">'
                     + esc(hora(h)) + '</button>').join('') + '</div>';
             caja.querySelectorAll('.horario').forEach(boton => {
@@ -218,9 +224,7 @@ async function pasoHorario() {
 }
 
 function pasoConfirmar() {
-    $('paso').innerHTML = '<h2>Paso 4 · Confirmá la reserva</h2>'
-        + '<p class="campo__ayuda" style="margin-bottom:16px">Revisá los datos. Al confirmar, el '
-        + 'asistente delega el alta en la fachada, que aplica las mismas reglas que el alta directa.</p>'
+    $('paso').innerHTML = '<h2>Revisá los datos antes de confirmar</h2>'
         + '<div class="detalle-datos">'
         + '<div><div class="dato__titulo">Paciente</div><div class="dato__valor">'
         + esc(estado.nombrePaciente) + '</div></div>'
@@ -245,10 +249,8 @@ function pasoConfirmar() {
 function pasoFinalizado() {
     $('paso').innerHTML = '<div class="aviso aviso--exito" style="margin-bottom:20px">'
         + 'Turno #' + esc(estado.turnoId) + ' confirmado para ' + esc(estado.nombrePaciente) + '.</div>'
-        + '<h2>Reserva completada</h2>'
-        + '<p class="campo__ayuda">La conversación se cerró: el contenedor ejecutó el método '
-        + '<code>@Remove</code> del asistente y descartó la instancia. Si empezás otra reserva, '
-        + 'el servidor crea un asistente nuevo (se ve en el identificador de instancia).</p>';
+        + '<h2>Reserva confirmada</h2>'
+        + '<p class="campo__ayuda">Guardamos tu turno. Podés verlo en el detalle o empezar una reserva nueva.</p>';
 
     botones([
         { texto: 'Ver el turno', alHacerClic: () => {
@@ -280,7 +282,7 @@ async function pintar() {
 async function iniciar() {
     sesion = await iniciarLayout();
 
-    mostrarCargando($('paso'), 'Consultando el estado de la reserva...');
+    mostrarCargando($('paso'), 'Preparando la reserva...');
 
     try {
         estado = await api.reservaEstado();
