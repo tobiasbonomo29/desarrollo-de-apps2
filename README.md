@@ -1,294 +1,393 @@
-# MediConecta — Componente "Gestión de Turnos"
+# MediConecta
 
-**Trabajo Práctico Integrador — Desarrollo de Aplicaciones II — Entrega 1**
+**Trabajo Práctico Integrador — Desarrollo de Aplicaciones II — UADE**
+**Entrega Obligatoria N.º 1 (1.er parcial)**
 
-## 1. Descripción
+MediConecta es un sistema de gestión de turnos médicos construido sobre **Jakarta EE 10**
+y desplegado en **WildFly**. Esta entrega contiene cuatro componentes de negocio reales
+(tres *stateless* y uno *stateful*), arquitectura estricta en tres capas, tres patrones de
+diseño, seguridad declarativa con cuatro roles, persistencia con **JPA + PostgreSQL** y una
+interfaz web completa que sigue el prototipo de Figma.
 
-MediConecta es un sistema de salud para la gestión de turnos médicos, pacientes y
-profesionales. El TP completo crece entrega a entrega hasta integrar patrones de diseño,
-seguridad, mensajería asincrónica, SOAP, REST y transacciones.
+| | |
+|---|---|
+| **Aplicación** | <http://localhost:8080/mediconecta/> |
+| **Prueba de vida** | <http://localhost:8080/mediconecta/api/salud> |
+| **Documento de la entrega** | [docs/Entrega_Obligatoria_1.md](docs/Entrega_Obligatoria_1.md) |
+| **Arquitectura y patrones** | [docs/arquitectura.md](docs/arquitectura.md) |
+| **Guion de la defensa** | [docs/guion-defensa.md](docs/guion-defensa.md) |
+| **Preguntas probables** | [docs/preguntas-defensa.md](docs/preguntas-defensa.md) |
 
-Esta **Entrega 1** contiene el **primer componente real del dominio: `GestionTurnos`**,
-implementado como EJB **stateless**, separado en tres capas (presentación / negocio / datos)
-y desplegado en un contenedor real (WildFly).
+---
 
-Qué se puede hacer hoy:
+## 1. Qué hace la aplicación
 
-- verificar que el componente está vivo dentro del contenedor;
-- listar los turnos de la agenda;
-- consultar un turno por su identificador;
-- solicitar un turno nuevo, con las reglas de negocio aplicadas (no se agenda en el pasado
-  ni se pisa un horario ya ocupado del mismo profesional).
+- **Iniciar sesión** con usuarios y roles administrados por el contenedor (PACIENTE,
+  RECEPCION, MEDICO, ADMIN).
+- **Tablero** con turnos del día, pacientes activos, profesionales y turnos pendientes,
+  todo calculado con datos reales de la base.
+- **Turnos**: listar con buscador y filtros, ver el detalle, agendar y **cancelar**.
+- **Pacientes**: padrón con buscador, alta, edición de ficha e historial de turnos.
+- **Profesionales**: listado por especialidad, alta (solo ADMIN) y gestión de la
+  **disponibilidad semanal** (MEDICO o ADMIN).
+- **Reserva guiada en cuatro pasos**, cuyo estado intermedio vive en un EJB `@Stateful`
+  del servidor y no en el navegador.
+- Interfaz **responsive**: barra lateral en escritorio, navegación inferior en teléfono.
 
-La documentación de arquitectura está en [docs/arquitectura.md](docs/arquitectura.md).
+### Componentes implementados
+
+| # | Componente | Tipo | Qué resuelve |
+|---|---|---|---|
+| C1 | `GestionTurnos` | EJB `@Stateless` | Reglas de la agenda: alta, consulta y cancelación de turnos |
+| C2 | `GestionPacientes` | EJB `@Stateless` | Padrón de pacientes e historial de atenciones |
+| C3 | `GestionProfesionales` | EJB `@Stateless` | Profesionales, especialidades, disponibilidad y horarios libres |
+| C4 | `AsistenteReservaTurno` | EJB **`@Stateful`** | Conversación de reserva en cuatro pasos |
+
+Los componentes C5 (Notificaciones / JMS) y C6 (Integración con obras sociales / SOAP)
+están identificados y documentados en [docs/arquitectura.md](docs/arquitectura.md), pero
+**no** se implementan en esta entrega: corresponden a las Entregas 3 y 4.
+
+---
 
 ## 2. Requisitos
 
 | Herramienta | Versión | Nota |
 |---|---|---|
-| JDK | 17 o superior | El proyecto compila con `--release 17`. WildFly se recomienda ejecutarlo con JDK 17 o 21. |
-| Apache Maven | 3.9.x | Ver la nota de instalación más abajo si `mvn` no está en el PATH. |
-| WildFly | **36.0.1.Final** (`wildfly-36.0.1.Final.zip`) | Versión sobre la que este proyecto está probado de punta a punta. Descarga: <https://www.wildfly.org/downloads/> |
+| JDK | 17 o superior | El proyecto compila con `--release 17`. |
+| Apache Maven | 3.9.x | `winget install Apache.Maven` si no está en el PATH. |
+| WildFly | 36.0.1.Final o superior | Versión de referencia del proyecto. Ver la nota de compatibilidad más abajo. |
+| PostgreSQL | 14 o superior | Puede ser una instalación local o el contenedor Docker que trae el proyecto. |
 
-> **Cuál archivo bajar.** WildFly publica dos ZIP por versión: el estándar
-> (`wildfly-36.0.1.Final.zip`, Jakarta EE 10) y `wildfly-preview-…zip`, que adelanta
-> Jakarta EE 11. **Hay que bajar el estándar**, que es el que corresponde a la consigna.
-> Existen versiones más nuevas (41.0.1.Final al momento de escribir esto), pero se fijó
-> 36.0.1.Final para que todo el grupo pruebe sobre lo mismo y porque es la última de la
-> línea Jakarta EE 10.
+> **Nota de compatibilidad — importante y honesta.**
+> El proyecto está escrito contra **Jakarta EE 10** (`jakarta.jakartaee-api:10.0.0`, scope
+> `provided`), que es la plataforma de WildFly 36.0.1.Final. Todo lo que se describe en
+> este README fue **verificado de punta a punta sobre WildFly 41.0.1.Final con JDK 21 y
+> PostgreSQL 16.14**, que es el entorno disponible en la máquina de desarrollo. WildFly 41
+> implementa Jakarta EE 11, que mantiene compatibilidad hacia atrás con las APIs que usa el
+> proyecto (EJB, CDI, JAX-RS, JPA, Servlet y seguridad declarativa). **No se ejecutó sobre
+> WildFly 36.0.1.Final**, así que no se afirma haberlo probado ahí; los pasos son idénticos
+> para las dos versiones.
 
-> **Si `mvn` no está instalado (Windows):** `winget install Apache.Maven` y reabrir la
-> terminal. Alternativa sin instalar nada: IntelliJ IDEA e Eclipse traen Maven embebido y
-> pueden ejecutar el objetivo `clean package` desde el panel de Maven del IDE.
+---
 
-> **Consejo de la cátedra:** descomprimir WildFly en una ruta simple, sin espacios, sin
-> tildes y fuera de OneDrive. Por ejemplo `C:\wildfly-36.0.1.Final`.
+## 3. Puesta en marcha (copiar y pegar)
 
-## 3. Estructura del proyecto
+### Paso 1 — PostgreSQL
 
-```
-mediconecta-turnos/
-├── pom.xml                              WAR, Jakarta EE 10 (provided), Java 17
-├── README.md
-├── docs/
-│   └── arquitectura.md                  capas, stateless, diagrama y decisiones
-└── src/main/
-    ├── java/com/mediconecta/turnos/
-    │   ├── modelo/                      Turno, Paciente, EstadoTurno
-    │   ├── datos/                       RepositorioTurnos (interfaz)
-    │   │                                RepositorioTurnosEnMemoria (implementación)
-    │   ├── negocio/                     GestionTurnos (@Stateless) + excepciones
-    │   └── presentacion/                AplicacionRest, RecursoSalud, RecursoTurnos,
-    │                                    ExceptionMappers, ErrorRespuesta
-    └── webapp/
-        ├── index.html                   página de demostración que consume la API
-        └── WEB-INF/beans.xml            activa CDI
-```
-
-No hay `web.xml`: la configuración de JAX-RS está en la clase `AplicacionRest` con
-`@ApplicationPath("/api")`.
-
-## 4. Pasos para compilar
-
-1. Abrir una terminal en la raíz del proyecto (donde está `pom.xml`).
-2. Verificar la versión de Java:
-   ```
-   java -version
-   ```
-   Debe informar 17 o superior.
-3. Compilar y empaquetar:
-   ```
-   mvn clean package
-   ```
-4. Verificar que se generó el artefacto:
-   ```
-   target/mediconecta.war
-   ```
-   El nombre del WAR (`mediconecta`) es el que define el **context root**, es decir la
-   primera parte de todas las URLs.
-
-## 5. Pasos para desplegar en WildFly
-
-### Opción A — carpeta `deployments` (la más rápida para la demo)
-
-1. Levantar el servidor:
-   - Windows: `C:\wildfly-36.0.1.Final\bin\standalone.bat`
-   - Linux / macOS: `./bin/standalone.sh`
-2. Esperar en la consola la línea `WildFly ... started in ...ms`.
-3. Comprobar que el servidor responde: <http://localhost:8080>
-4. Copiar `target/mediconecta.war` dentro de `C:\wildfly-36.0.1.Final\standalone\deployments\`.
-5. WildFly detecta el archivo y lo despliega solo. En el log tiene que aparecer:
-   ```
-   Deployed "mediconecta.war"
-   ```
-   y en la carpeta `deployments` se crea el archivo marcador `mediconecta.war.deployed`.
-   Si en cambio aparece `mediconecta.war.failed`, ese archivo contiene el motivo del error.
-
-### Opción B — consola de administración (la que muestra la guía de la cátedra)
-
-1. Crear el usuario administrador (una sola vez):
-   - ejecutar `bin\add-user.bat`
-   - elegir `a` (Management User), poner usuario y contraseña, y responder `no` cuando
-     pregunta si es para un proceso remoto.
-2. Levantar el servidor con `bin\standalone.bat`.
-3. Abrir <http://localhost:9990> e iniciar sesión con ese usuario.
-4. Ir a **Deployments → Add → Upload Deployment**, elegir `target/mediconecta.war`,
-   **Next → Finish**.
-5. El despliegue queda listado y habilitado.
-
-### Redesplegar después de un cambio
-
-```
-mvn clean package
-```
-y volver a copiar el WAR a `deployments` (sobrescribiendo), o usar **Deployments → Replace**
-en la consola de administración.
-
-## 6. URLs de prueba
-
-Context root: `mediconecta`.
-
-| # | Método | URL | Qué devuelve |
-|---|---|---|---|
-| 1 | GET | <http://localhost:8080/mediconecta/> | Página de demostración que consume la API. |
-| 2 | GET | <http://localhost:8080/mediconecta/api/salud> | `200` y el texto exacto **¡Hola desde el contenedor!** |
-| 3 | GET | <http://localhost:8080/mediconecta/api/turnos> | `200` y el arreglo JSON con los 3 turnos de ejemplo, ordenados por fecha. |
-| 4 | GET | <http://localhost:8080/mediconecta/api/turnos/1> | `200` y el turno de id 1 en JSON. |
-| 5 | GET | <http://localhost:8080/mediconecta/api/turnos/999> | `404` y `{"error":"No existe un turno con id 999","codigo":404}` |
-| 6 | POST | `http://localhost:8080/mediconecta/api/turnos` | `201 Created`, cabecera `Location: .../api/turnos/{id}` y el turno creado con su `id` y estado `PROGRAMADO`. |
-| 7 | POST | `http://localhost:8080/mediconecta/api/turnos` con fecha pasada | `400` y `{"error":"No se puede agendar un turno en el pasado.","codigo":400}` |
-| 8 | POST | `http://localhost:8080/mediconecta/api/turnos` en un horario ya tomado | `400` y `{"error":"El profesional ... ya tiene un turno en ese horario.","codigo":400}` |
-| 9 | POST | `http://localhost:8080/mediconecta/api/turnos` sin paciente | `400` y `{"error":"El paciente debe tener nombre y documento.","codigo":400}` |
-
-Los puntos 1 a 5 se prueban directamente desde la barra del navegador. Para los POST se usa
-el formulario de la página de demostración, o alguno de estos comandos.
-
-**PowerShell:**
+**Opción A — Docker (la más rápida):**
 
 ```powershell
-$cuerpo = @{
-    paciente     = @{ nombre = "Diego Sosa"; documento = "33222111" }
-    profesional  = "Dr. Martin Ruiz"
-    especialidad = "Traumatologia"
-    fechaHora    = "2026-12-15T10:30"
-} | ConvertTo-Json
-
-Invoke-RestMethod -Uri http://localhost:8080/mediconecta/api/turnos `
-                  -Method Post -ContentType "application/json" -Body $cuerpo
+.\scripts\db\levantar-postgres.ps1
 ```
 
-**curl (Git Bash / Linux / macOS):**
+Crea un contenedor `mediconecta-postgres` con la base `mediconecta`, el usuario
+`mediconecta` y la contraseña `mediconecta`, escuchando en el puerto 5432. Volver a
+ejecutarlo arranca el contenedor existente sin perder datos.
+
+Equivalente a mano:
 
 ```bash
-curl -i -X POST http://localhost:8080/mediconecta/api/turnos \
-     -H "Content-Type: application/json" \
-     -d '{"paciente":{"nombre":"Diego Sosa","documento":"33222111"},
-          "profesional":"Dr. Martin Ruiz",
-          "especialidad":"Traumatologia",
-          "fechaHora":"2026-12-15T10:30"}'
+docker run -d --name mediconecta-postgres -e POSTGRES_DB=mediconecta -e POSTGRES_USER=mediconecta -e POSTGRES_PASSWORD=mediconecta -p 5432:5432 postgres:16-alpine
 ```
 
-Ejemplo de respuesta de `GET /api/turnos`:
+**Opción B — PostgreSQL instalado en la máquina:**
+
+```powershell
+psql -U postgres -f .\scripts\db\crear-base.sql
+```
+
+En los dos casos, **las tablas no hay que crearlas**: Hibernate las crea o actualiza sola
+al desplegar el WAR. El esquema equivalente, por si se quiere revisar o crear a mano, está
+en [`scripts/db/esquema.sql`](scripts/db/esquema.sql).
+
+### Paso 2 — Configurar WildFly
+
+Un solo script deja el servidor listo: instala el driver JDBC como módulo, crea el
+datasource y da de alta los cuatro usuarios de demostración.
+
+```powershell
+.\scripts\wildfly\configurar-wildfly.ps1 -WildFly "C:\wildfly-36.0.1.Final"
+```
+
+El script tiene dos momentos:
+
+1. **Con WildFly apagado** descarga el driver de PostgreSQL y lo instala como módulo
+   `org.postgresql`.
+2. **Con WildFly encendido** crea el datasource `java:/jdbc/MediConectaDS`. Si el servidor
+   todavía no está arriba, levantarlo (`bin\standalone.bat`) y volver a correr el script
+   con `-SoloDatasource`.
+
+Si se prefiere hacerlo a mano, los pasos exactos son:
+
+```powershell
+# 1) Módulo del driver (servidor apagado)
+C:\wildfly-36.0.1.Final\bin\jboss-cli.bat --command="module add --name=org.postgresql --resources=C:\ruta\postgresql-42.7.4.jar --dependencies=jakarta.transaction.api,java.sql,java.logging"
+
+# 2) Datasource (servidor encendido)
+C:\wildfly-36.0.1.Final\bin\jboss-cli.bat --connect --file=scripts\wildfly\configurar-datasource.cli
+
+# 3) Usuarios de demostración
+C:\wildfly-36.0.1.Final\bin\add-user.bat -a -u paciente  -p Demo.2026 -g PACIENTE
+C:\wildfly-36.0.1.Final\bin\add-user.bat -a -u recepcion -p Demo.2026 -g RECEPCION
+C:\wildfly-36.0.1.Final\bin\add-user.bat -a -u medico    -p Demo.2026 -g MEDICO
+C:\wildfly-36.0.1.Final\bin\add-user.bat -a -u admin     -p Demo.2026 -g ADMIN
+```
+
+El archivo `.cli` toma la URL, el usuario y la contraseña de PostgreSQL como propiedades
+del sistema (`-Dmediconecta.db.usuario=...`), con valores por omisión de desarrollo.
+**No hay ninguna credencial de base de datos dentro del código Java versionado.**
+
+### Paso 3 — Compilar
+
+```powershell
+mvn clean package
+```
+
+Genera `target\mediconecta.war`. El nombre del WAR (`<finalName>mediconecta</finalName>`)
+es el que fija el context root, es decir la primera parte de todas las URLs.
+
+### Paso 4 — Desplegar
+
+Copiar el WAR a la carpeta de despliegues:
+
+```powershell
+copy target\mediconecta.war C:\wildfly-36.0.1.Final\standalone\deployments\
+```
+
+En el log tiene que aparecer:
+
+```
+WFLYSRV0010: Deployed "mediconecta.war"
+```
+
+y, la primera vez, la línea del juego de datos de ejemplo:
+
+```
+[DEMO] Juego de datos de ejemplo cargado: 4 profesionales, 4 pacientes, 3 turnos.
+```
+
+La carga de ejemplo es **idempotente**: si la base ya tiene datos no toca nada, así que
+redesplegar no duplica registros.
+
+Alternativa: consola de administración en <http://localhost:9990> →
+**Deployments → Add → Upload Deployment**.
+
+### Paso 5 — Entrar
+
+Abrir <http://localhost:8080/mediconecta/> e iniciar sesión.
+
+---
+
+## 4. Usuarios de demostración
+
+Son **usuarios locales ficticios**, creados únicamente para la defensa. Viven en
+`standalone/configuration/application-users.properties` y
+`application-roles.properties` de WildFly, no en el código del proyecto.
+
+| Usuario | Contraseña | Rol | Qué puede hacer |
+|---|---|---|---|
+| `paciente` | `Demo.2026` | PACIENTE | Ver su ficha y sus turnos, reservar con el asistente guiado |
+| `recepcion` | `Demo.2026` | RECEPCION | Agenda completa, padrón de pacientes, agendar y cancelar turnos |
+| `medico` | `Demo.2026` | MEDICO | Agenda completa, cancelar turnos, definir disponibilidad |
+| `admin` | `Demo.2026` | ADMIN | Todo lo anterior más el alta de profesionales |
+
+El usuario `paciente` está asociado a la ficha de **Ana Gomez (DNI 30111222)** por el campo
+`usuario` de la tabla `pacientes`. Esa asociación es la que permite que, además de la
+autorización declarativa, el sistema verifique que un paciente solo consulte **su propio**
+historial.
+
+---
+
+## 5. API REST
+
+Context root `/mediconecta`, prefijo `/api`. Todos los endpoints exigen sesión iniciada
+**salvo `/api/salud`**, que es público a propósito.
+
+### Salud
+
+| Método | Ruta | Roles | Respuesta |
+|---|---|---|---|
+| GET | `/api/salud` | público | `200` y el texto **¡Hola desde el contenedor!** |
+
+### Sesión
+
+| Método | Ruta | Roles | Respuesta |
+|---|---|---|---|
+| GET | `/api/sesion` | todos | `{"autenticado":true,"usuario":"recepcion","roles":["RECEPCION"]}` |
+| POST | `/api/sesion/logout` | todos | `204` y la sesión invalidada |
+
+### Turnos
+
+| Método | Ruta | Roles | Respuesta |
+|---|---|---|---|
+| GET | `/api/turnos` | RECEPCION, MEDICO, ADMIN | Agenda completa ordenada por fecha |
+| GET | `/api/turnos/{id}` | todos | El turno, o `404` |
+| POST | `/api/turnos` | PACIENTE, RECEPCION, ADMIN | `201` + `Location`, o `400` con la regla incumplida |
+| PUT | `/api/turnos/{id}/cancelar` | RECEPCION, MEDICO, ADMIN | El turno en estado `CANCELADO` |
+
+### Pacientes
+
+| Método | Ruta | Roles | Respuesta |
+|---|---|---|---|
+| GET | `/api/pacientes?q=texto` | RECEPCION, MEDICO, ADMIN | Padrón, filtrado por nombre o documento |
+| GET | `/api/pacientes/mi-ficha` | todos | Ficha del paciente asociado al usuario de la sesión |
+| GET | `/api/pacientes/{documento}` | todos | El paciente, o `404` |
+| POST | `/api/pacientes` | PACIENTE, RECEPCION, ADMIN | `201`, o `400` si el documento se repite |
+| PUT | `/api/pacientes/{documento}` | RECEPCION, ADMIN | El paciente actualizado |
+| GET | `/api/pacientes/{documento}/turnos` | todos | Historial; un PACIENTE solo puede ver el suyo |
+
+### Profesionales
+
+| Método | Ruta | Roles | Respuesta |
+|---|---|---|---|
+| GET | `/api/profesionales` | todos | Todos los profesionales con su disponibilidad |
+| GET | `/api/profesionales?especialidad=Cardiologia` | todos | Los de esa especialidad |
+| GET | `/api/profesionales/especialidades` | todos | Especialidades con profesionales activos |
+| GET | `/api/profesionales/{id}` | todos | El profesional, o `404` |
+| POST | `/api/profesionales` | **ADMIN** | `201`, o `403` si el rol no corresponde |
+| PUT | `/api/profesionales/{id}/disponibilidad` | **MEDICO, ADMIN** | Reemplaza la agenda semanal |
+| GET | `/api/profesionales/{id}/horarios-libres?fecha=aaaa-MM-dd` | todos | Horarios disponibles ese día |
+
+### Reserva guiada (componente `@Stateful`)
+
+| Método | Ruta | Roles | Qué hace |
+|---|---|---|---|
+| GET | `/api/reserva` | PACIENTE, RECEPCION, ADMIN | Estado actual **según lo recuerda el servidor** |
+| POST | `/api/reserva/iniciar` | ídem | Paso 0: identifica al paciente |
+| PUT | `/api/reserva/especialidad` | ídem | Paso 1 |
+| PUT | `/api/reserva/profesional` | ídem | Paso 2 |
+| GET | `/api/reserva/horarios?fecha=…` | ídem | Horarios libres del profesional **ya recordado** |
+| PUT | `/api/reserva/horario` | ídem | Paso 3 |
+| PUT | `/api/reserva/volver` | ídem | Retrocede un paso y olvida lo posterior |
+| POST | `/api/reserva/confirmar` | ídem | Paso 4: crea el turno y cierra la conversación |
+| DELETE | `/api/reserva` | ídem | Abandona la reserva en curso |
+
+### Tablero
+
+| Método | Ruta | Roles | Respuesta |
+|---|---|---|---|
+| GET | `/api/tablero` | RECEPCION, MEDICO, ADMIN | Métricas y próximos turnos, en una sola llamada |
+
+### Formato de los errores
+
+Todos los errores devuelven el mismo cuerpo:
 
 ```json
-[
-  {
-    "id": 1,
-    "paciente": { "nombre": "Ana Gomez", "documento": "30111222" },
-    "profesional": "Dra. Laura Fernandez",
-    "especialidad": "Cardiologia",
-    "fechaHora": "2026-09-03T09:30",
-    "estado": "PROGRAMADO"
-  }
-]
+{ "error": "No se puede agendar un turno en el pasado.", "codigo": 400 }
 ```
 
-> **Estado de verificación.** Los 9 casos de esta tabla, más las validaciones de
-> especialidad faltante y de fecha mal formada, fueron ejecutados contra
-> WildFly 36.0.1.Final con JDK 17: **12 de 12 dan el resultado esperado** y el log del
-> servidor queda sin errores.
+`400` regla de negocio incumplida · `401` sin sesión · `403` rol sin permiso · `404` no existe.
 
-## 7. Cómo demostrarlo en vivo (guion para la defensa)
+### Compatibilidad con la API de la Entrega 1
 
-1. **Antes de empezar** (con la pantalla todavía sin compartir): tener WildFly descomprimido,
-   el proyecto abierto en el IDE y el navegador con las pestañas de las URLs precargadas.
-2. **Compilar delante del docente**: `mvn clean package` y mostrar que aparece
-   `target/mediconecta.war`. Es la prueba de que el WAR se genera en el momento.
-3. **Levantar WildFly**: `standalone.bat` y señalar en el log la línea `started in ...ms`.
-4. **Desplegar**: copiar el WAR a `standalone\deployments\` y mostrar en el log la línea
-   `Deployed "mediconecta.war"`. Alternativa: hacerlo desde <http://localhost:9990>.
-5. **Prueba de vida**: abrir <http://localhost:8080/mediconecta/api/salud> y mostrar
-   **¡Hola desde el contenedor!** Esta es la prueba que pide la guía de la cátedra.
-6. **Mostrar el componente real**: abrir <http://localhost:8080/mediconecta/api/turnos> y
-   mostrar los turnos precargados. Aclarar que ya no es un "hola mundo": los datos vienen del
-   repositorio, pasan por la capa de negocio que los ordena, y la capa de presentación los
-   convierte a JSON.
-7. **Recorrer las capas en el código**, en el orden en que viaja un request:
-   `RecursoTurnos` → `GestionTurnos` → `RepositorioTurnos` (interfaz) →
-   `RepositorioTurnosEnMemoria`. Señalar que el negocio inyecta la **interfaz**, no la
-   implementación.
-8. **Alta correcta**: en <http://localhost:8080/mediconecta/> completar el formulario y
-   solicitar un turno. Mostrar que aparece en la tabla con estado `PROGRAMADO`.
-9. **Mostrar una regla de negocio fallando**: pedir un turno con una fecha del año pasado.
-   La API responde `400` con el mensaje de la regla. Esto demuestra que la validación está
-   en el negocio y no en el navegador.
-10. **Mostrar el 404**: abrir <http://localhost:8080/mediconecta/api/turnos/999>.
-11. **Cerrar** contando qué sigue: 6 componentes identificados en `docs/arquitectura.md`,
-    un componente stateful en la Entrega 2 y JPA reemplazando el repositorio en memoria.
+`POST /api/turnos` sigue aceptando el cuerpo original, con el paciente embebido y el
+profesional por nombre:
 
-## 8. Preguntas probables de la cátedra y sus respuestas
+```json
+{
+  "paciente": { "nombre": "Diego Sosa", "documento": "33222111" },
+  "profesional": "Dr. Martin Ruiz",
+  "especialidad": "Traumatologia",
+  "fechaHora": "2026-12-15T10:30"
+}
+```
 
-**¿Por qué el componente es stateless?**
-Porque `GestionTurnos` no guarda nada entre una invocación y la siguiente: cada llamada
-recibe en sus parámetros todo lo que necesita, resuelve y termina. No hay conversación en
-curso asociada a un cliente. Por eso dos requests del mismo usuario pueden ser atendidos por
-instancias distintas del pool sin ninguna diferencia observable, y el contenedor puede
-reutilizar un pool acotado de instancias en lugar de dedicar una por cliente.
+La interfaz nueva usa la forma corta, que es la recomendada:
 
-**Pero los turnos se guardan en un Map, ¿eso no es estado?**
-Sí, pero es **estado de aplicación** y vive en la capa de datos (`RepositorioTurnosEnMemoria`,
-que sí es `@ApplicationScoped`), igual que mañana viviría en una base de datos. Lo que define
-a un componente como stateless es que no conserve **estado de conversación con un cliente
-particular**, y `GestionTurnos` no conserva ninguno.
+```json
+{ "documentoPaciente": "33222111", "profesionalId": 2, "fechaHora": "2026-12-15T10:30" }
+```
 
-**¿Cuándo tendrían un componente stateful?**
-En la Entrega 2, con el asistente de reserva de turno en varios pasos: elegir especialidad,
-después profesional, después horario y recién al final confirmar. Ahí el servidor necesita
-recordar las elecciones parciales *de ese usuario* entre request y request, y eso es
-exactamente lo que resuelve un `@Stateful`.
+Las dos terminan en el mismo objeto de negocio. El detalle está en `PedidoTurno`.
 
-**¿Qué separa cada capa?**
-Presentación (`presentacion`) habla HTTP y JSON: traduce el pedido, delega y arma la
-respuesta; no valida reglas. Negocio (`negocio`) tiene las reglas del dominio y es el único
-que decide si un turno es válido; no sabe que existe HTTP. Datos (`datos`) sabe cómo se
-guardan y se buscan los turnos; no conoce las reglas. La prueba de que la separación es real
-es que cada capa se puede reemplazar sin tocar las otras dos.
+---
 
-**¿Dónde cambiarían para usar una base de datos?**
-En un solo lugar: se escribe una clase nueva, `RepositorioTurnosJpa`, que implemente la
-interfaz `RepositorioTurnos` usando `EntityManager`, se anota `Turno` con `@Entity` y se
-agregan el `persistence.xml` y el datasource en WildFly. `GestionTurnos` y `RecursoTurnos` no
-cambian ni una línea, porque el negocio depende de la interfaz y no de la implementación.
+## 6. Estructura del proyecto
 
-**¿Por qué eligieron un EJB `@Stateless` y no un bean CDI común?**
-Porque el contenedor le agrega gratis dos cosas que el TP va a necesitar: el pool de
-instancias y, sobre todo, las **transacciones declarativas** (cada método público corre en su
-propia transacción, `REQUIRED` por defecto). En la Entrega 4 eso ya está resuelto sin
-reescribir la clase.
+```
+mediconecta/
+├── pom.xml                                   WAR · Jakarta EE 10 (provided) · Java 17
+├── README.md
+├── docs/
+│   ├── Entrega_Obligatoria_1.md              documento técnico de la entrega
+│   ├── arquitectura.md                       capas, componentes, patrones y decisiones
+│   ├── guion-defensa.md                      recorrido de la demo, paso a paso
+│   ├── preguntas-defensa.md                  preguntas probables y respuestas cortas
+│   └── trello-actualizaciones.md             estado del tablero
+├── scripts/
+│   ├── smoke-test.ps1                        61 pruebas de la API de punta a punta
+│   ├── db/
+│   │   ├── levantar-postgres.ps1             PostgreSQL en Docker
+│   │   ├── crear-base.sql                    base y usuario en un PostgreSQL local
+│   │   └── esquema.sql                       modelo relacional documentado
+│   └── wildfly/
+│       ├── configurar-wildfly.ps1            driver + datasource + usuarios, en un paso
+│       └── configurar-datasource.cli         script de jboss-cli del datasource
+└── src/main/
+    ├── java/com/mediconecta/
+    │   ├── modelo/          Paciente · Profesional · Disponibilidad · Turno · EstadoTurno
+    │   ├── datos/           RepositorioTurnos · RepositorioPacientes · RepositorioProfesionales
+    │   │   ├── jpa/         implementaciones sobre JPA + PostgreSQL (las activas)
+    │   │   └── memoria/     implementaciones en memoria (@Alternative, desactivadas)
+    │   ├── negocio/         GestionTurnos · GestionPacientes · GestionProfesionales
+    │   │                    AsistenteReservaTurno (@Stateful) · FachadaReservas · FabricaTurnos
+    │   │                    Roles · excepciones · carga de datos de ejemplo
+    │   └── presentacion/    recursos JAX-RS · ExceptionMappers · ServletLogin
+    │                        ConversacionDeReserva (puente sesión HTTP ↔ EJB stateful)
+    ├── resources/META-INF/persistence.xml
+    └── webapp/
+        ├── index.html · login.html
+        ├── css/styles.css                    design system del prototipo
+        ├── js/                               módulos ES: api, ui, layout y uno por pantalla
+        ├── app/                              pantallas protegidas
+        └── WEB-INF/web.xml · beans.xml       seguridad declarativa · CDI
+```
 
-**¿Qué patrón de diseño aplicaron?**
-DAO / Repository: `RepositorioTurnos` es la interfaz que aísla el acceso a datos de la lógica
-de negocio. Se eligió porque el enunciado nos obliga a poder cambiar de almacenamiento en la
-próxima entrega. Los otros dos patrones exigidos (Facade y Strategy o Factory) se aplican en
-la Entrega 2, cuando haya varios componentes que coordinar.
+---
 
-**¿Por qué la dependencia de Jakarta EE está en scope `provided`?**
-Porque la implementación la aporta WildFly (RESTEasy, Weld, el contenedor de EJB). Si la
-empaquetáramos dentro del WAR habría clases duplicadas en el classpath y el despliegue
-fallaría.
+## 7. Pruebas
 
-**¿Por qué las excepciones de negocio llevan `@ApplicationException`?**
-Porque sin esa anotación el contenedor de EJB trata cualquier `RuntimeException` como un
-fallo *de sistema*: la envuelve en `EJBException`, escribe un stack trace completo en el log,
-marca la transacción para rollback y descarta la instancia del pool. Pero que alguien pida un
-turno en el pasado no es una falla del sistema, es un resultado de negocio previsto. Con
-`@ApplicationException(rollback = false)` el contenedor la deja pasar tal cual: sin ruido en
-el log y, lo que importa de cara a la Entrega 4, sin rollback de la transacción.
+```powershell
+.\scripts\smoke-test.ps1
+```
 
-**¿Por qué no hay `web.xml`?**
-Porque no hace falta: la clase `AplicacionRest` con `@ApplicationPath("/api")` es la que
-activa y configura JAX-RS. Un `web.xml` recién sería necesario para configurar seguridad
-declarativa, filtros o páginas de error, cosa que llega en la Entrega 2.
+Recorre **61 verificaciones** contra la aplicación desplegada: salud, seguridad por roles,
+turnos (incluyendo fecha pasada, superposición y doble cancelación), pacientes,
+profesionales, horarios libres y los cuatro pasos del asistente stateful. Devuelve código
+de salida 0 si todas pasan.
 
-**¿Qué pasa si reinician WildFly?**
-Se pierden los turnos creados y vuelven a cargarse los 3 de ejemplo, porque el
-almacenamiento es en memoria. Es una limitación conocida y aceptada de esta entrega: se
-decidió no depender de una base de datos externa para que el despliegue no se bloqueara.
+Resultado de la última ejecución sobre WildFly 41.0.1.Final + PostgreSQL 16.14:
+**61 pruebas OK, 0 fallidas**.
 
-## 9. Limitaciones conocidas de esta entrega
+---
 
-- Los datos viven en memoria: se pierden al reiniciar o redesplegar.
-- No hay autenticación ni autorización todavía (llega en la Entrega 2).
-- Sólo se implementa un componente de los seis identificados en `docs/arquitectura.md`.
-- No hay operaciones de modificación ni cancelación de turnos: el alcance de la Entrega 1 es
-  listar, consultar y crear.
+## 8. Ejecutar sin base de datos (plan B)
+
+Si en la máquina donde se va a mostrar el TP no hay forma de levantar PostgreSQL, el
+proyecto puede correr con los repositorios en memoria. Son dos cambios y **no se toca ni
+una línea de la capa de negocio ni de la de presentación**, que es justamente la prueba de
+que el patrón DAO funciona:
+
+1. En `src/main/webapp/WEB-INF/beans.xml`, descomentar el bloque `<alternatives>`.
+2. Borrar `src/main/resources/META-INF/persistence.xml` antes de empaquetar (si queda,
+   WildFly intenta crear la unidad de persistencia y el despliegue falla al no encontrar el
+   datasource).
+
+Los datos se pierden al reiniciar el servidor. Es un plan de contingencia, no el modo
+normal de la entrega.
+
+---
+
+## 9. Limitaciones conocidas
+
+- La carga de datos de ejemplo corre una sola vez, cuando la base está vacía. Para volver
+  al estado inicial: `TRUNCATE turnos, disponibilidades, profesionales, pacientes RESTART IDENTITY CASCADE;`
+  y redesplegar.
+- Un turno ocupa un único horario de inicio; no se modela la duración variable de la
+  atención ni el solapamiento parcial entre turnos de distinta duración.
+- El estado `ATENDIDO` existe en el modelo pero todavía no hay una operación que lo asigne:
+  llega junto con el registro de la atención en una entrega posterior.
+- No hay mensajería (JMS), SOAP ni integración con obras sociales: son las Entregas 3 y 4.
+- Cuando el contenedor rechaza una invocación por rol, WildFly escribe un `EJBAccessException`
+  con stack trace completo en el log. Es ruidoso pero correcto, y de hecho resulta útil
+  durante la defensa para mostrar que quien rechaza es el contenedor y no la aplicación.

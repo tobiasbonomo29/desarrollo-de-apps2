@@ -1,114 +1,71 @@
-# Documento de arquitectura — MediConecta (Entrega 1)
+# Documento de arquitectura — MediConecta
 
-**Materia:** Desarrollo de Aplicaciones II
+**Materia:** Desarrollo de Aplicaciones II — UADE
 **Dominio:** MediConecta — gestión de turnos médicos, pacientes y profesionales
-**Alcance de este documento:** arquitectura del primer componente real, `GestionTurnos`,
-y el mapa de los componentes que se van a construir en las próximas entregas.
+**Alcance:** arquitectura de la Entrega Obligatoria N.º 1 (cuatro componentes implementados)
 
 ---
 
 ## 1. Arquitectura en capas
 
-El sistema se organiza en tres capas con una regla estricta: **cada capa sólo conoce a la que
-está inmediatamente debajo**, y nunca al revés. Presentación depende de negocio, negocio
-depende de datos, y datos no depende de nadie.
-
-### 1.1 Capa de presentación — `com.mediconecta.turnos.presentacion`
-
-**Responsabilidad:** hablar con el mundo exterior. Recibe pedidos HTTP, los traduce al
-lenguaje del negocio, delega, y convierte la respuesta (o el error) en HTTP + JSON.
-
-**Qué hace:**
-
-- `AplicacionRest` activa JAX-RS y fija el prefijo `/api`.
-- `RecursoSalud` expone la prueba de vida del contenedor.
-- `RecursoTurnos` expone listar / obtener / crear turnos.
-- `ManejadorReglaNegocio` y `ManejadorTurnoNoEncontrado` traducen las excepciones del
-  negocio a los códigos HTTP correctos (400 y 404).
-
-**Qué NO hace, a propósito:** no valida reglas del dominio, no ordena resultados y no toca
-el almacenamiento. Si mañana se reemplaza REST por SOAP, el comportamiento del sistema es
-idéntico.
-
-### 1.2 Capa de negocio — `com.mediconecta.turnos.negocio`
-
-**Responsabilidad:** ser el único lugar donde viven las reglas del dominio.
-
-`GestionTurnos` (EJB `@Stateless`) decide:
-
-- que un turno necesita paciente con nombre y documento, profesional y especialidad;
-- que la fecha tiene que ser válida y **futura**;
-- que un profesional no puede tener dos turnos vigentes en el mismo horario;
-- que todo turno nace en estado `PROGRAMADO` (lo fija el negocio, no el cliente, para que
-  nadie pueda crear por HTTP un turno que nazca ya como `ATENDIDO`);
-- que la agenda se lee ordenada cronológicamente.
-
-Cuando una regla no se cumple lanza una excepción propia (`ReglaNegocioException`,
-`TurnoNoEncontradoException`) que **no menciona HTTP**. Eso es lo que permite reutilizar este
-componente tal cual desde un servicio SOAP o desde un consumidor de mensajería en las
-próximas entregas.
-
-**Qué NO hace:** no sabe que existe HTTP ni cómo se guardan los datos.
-
-### 1.3 Capa de datos — `com.mediconecta.turnos.datos`
-
-**Responsabilidad:** guardar y recuperar turnos.
-
-- `RepositorioTurnos` es la **interfaz** (patrón DAO / Repository). Está escrita en términos
-  del dominio: no menciona SQL, ni Map, ni ningún detalle de almacenamiento.
-- `RepositorioTurnosEnMemoria` es la implementación de esta entrega: un
-  `ConcurrentHashMap` con un `AtomicLong` haciendo de secuencia de ids, y tres turnos de
-  ejemplo cargados en `@PostConstruct`.
-
-Es `@ApplicationScoped` porque **el Map es el almacén de datos**: si hubiera una instancia por
-request, cada llamada vería un almacén vacío. Se usan `ConcurrentHashMap` y `AtomicLong`
-porque el contenedor atiende varios requests en paralelo, en hilos distintos, sobre esa misma
-instancia compartida.
-
-### 1.4 Modelo del dominio — `com.mediconecta.turnos.modelo`
-
-`Turno`, `Paciente` y `EstadoTurno` son objetos de datos puros, sin lógica. No forman una
-capa: son el vocabulario común que atraviesa las tres. Por eso pueden viajar libremente entre
-ellas sin generar acoplamiento.
-
----
-
-## 2. Diagrama del componente y sus capas
+El sistema se organiza en tres capas con una regla estricta: **cada capa sólo conoce a la
+que está debajo**, nunca al revés. Presentación depende de negocio, negocio depende de
+datos, y datos no depende de nadie.
 
 ```mermaid
 flowchart TD
-    Navegador["Navegador / cliente REST"]
+    Navegador["Navegador · HTML + CSS + JS modular"]
 
     subgraph WAR["mediconecta.war desplegado en WildFly"]
         direction TB
 
-        subgraph P["Capa de PRESENTACIÓN — traduce HTTP ↔ dominio"]
+        subgraph P["PRESENTACIÓN — traduce HTTP ↔ dominio"]
             direction TB
-            App["AplicacionRest<br/>@ApplicationPath('/api')"]
-            Salud["RecursoSalud<br/>GET /api/salud"]
-            Rec["RecursoTurnos<br/>GET · GET/{id} · POST /api/turnos"]
-            Map["ExceptionMappers<br/>ReglaNegocio → 400<br/>TurnoNoEncontrado → 404"]
+            Rec["RecursoTurnos · RecursoPacientes<br/>RecursoProfesionales · RecursoReserva<br/>RecursoTablero · RecursoSesion · RecursoSalud"]
+            Map["ExceptionMappers<br/>ReglaNegocio → 400 · NoEncontrado → 404<br/>EJBAccessException → 403"]
+            Conv["ConversacionDeReserva<br/>@SessionScoped — puente sesión HTTP ↔ EJB stateful"]
+            Log["ServletLogin<br/>página de login del mecanismo FORM"]
         end
 
-        subgraph N["Capa de NEGOCIO — reglas del dominio"]
-            Gestion["GestionTurnos<br/>@Stateless<br/>listarTurnos · obtenerTurno · crearTurno"]
-        end
-
-        subgraph D["Capa de DATOS — persistencia"]
+        subgraph N["NEGOCIO — reglas del dominio"]
             direction TB
-            Interfaz["«interface»<br/>RepositorioTurnos"]
-            Memoria["RepositorioTurnosEnMemoria<br/>@ApplicationScoped<br/>ConcurrentHashMap"]
-            Jpa["RepositorioTurnosJpa<br/>(Entrega 2 — todavía no existe)"]
+            Fach["FachadaReservas · @Stateless<br/>(Facade)"]
+            GT["GestionTurnos<br/>@Stateless"]
+            GP["GestionPacientes<br/>@Stateless"]
+            GPr["GestionProfesionales<br/>@Stateless"]
+            Asis["AsistenteReservaTurno<br/>@Stateful"]
+            Fab["FabricaTurnos<br/>(Factory)"]
         end
 
-        Modelo["Modelo compartido<br/>Turno · Paciente · EstadoTurno"]
+        subgraph D["DATOS — persistencia"]
+            direction TB
+            Int["«interfaces»<br/>RepositorioTurnos · RepositorioPacientes<br/>RepositorioProfesionales"]
+            Jpa["…Jpa — JPA + PostgreSQL<br/>(activas)"]
+            Mem["…EnMemoria — @Alternative<br/>(desactivadas)"]
+        end
+
+        Modelo["Modelo compartido<br/>Turno · Paciente · Profesional · Disponibilidad · EstadoTurno"]
     end
 
-    Navegador -->|HTTP / JSON| P
-    Rec -->|"@Inject"| Gestion
-    Gestion -->|"@Inject (depende de la interfaz)"| Interfaz
-    Interfaz -.->|implementa| Memoria
-    Interfaz -.->|implementará| Jpa
+    BD[("PostgreSQL<br/>java:/jdbc/MediConectaDS")]
+
+    Navegador -->|HTTP · JSON| P
+    Rec --> Fach
+    Rec --> GT
+    Rec --> GP
+    Rec --> GPr
+    Conv --> Asis
+    Asis --> Fach
+    Fach --> GT
+    Fach --> GP
+    Fach --> GPr
+    GPr -->|horarios ocupados| GT
+    GP -->|historial| GT
+    GT --> Fab
+    N --> Int
+    Int -.->|implementa| Jpa
+    Int -.->|implementa| Mem
+    Jpa --> BD
 
     P -.-> Modelo
     N -.-> Modelo
@@ -117,254 +74,592 @@ flowchart TD
     style P fill:#e3f2fd,stroke:#1c6ea4
     style N fill:#e8f5e9,stroke:#1b7f3b
     style D fill:#fff3e0,stroke:#e08b1c
-    style Jpa stroke-dasharray: 5 5
+    style Mem stroke-dasharray: 5 5
 ```
 
-**Cómo leer el diagrama:** las flechas de dependencia van siempre hacia abajo. La flecha
-clave es la que sale de `GestionTurnos`: apunta a la **interfaz** `RepositorioTurnos`, no a
-`RepositorioTurnosEnMemoria`. Por eso agregar `RepositorioTurnosJpa` en la Entrega 2 no
-obliga a tocar ni el negocio ni la presentación.
+### 1.1 Presentación — `com.mediconecta.presentacion`
 
-### 2.1 Recorrido de un request de alta
+**Responsabilidad:** hablar con el mundo exterior. Recibe pedidos HTTP, los traduce al
+lenguaje del negocio, delega, y convierte la respuesta (o el error) en HTTP + JSON.
 
-```mermaid
-sequenceDiagram
-    actor U as Usuario
-    participant R as RecursoTurnos<br/>(presentación)
-    participant G as GestionTurnos<br/>(negocio)
-    participant D as RepositorioTurnos<br/>(datos)
-    participant M as ManejadorReglaNegocio<br/>(presentación)
+- `AplicacionRest` activa JAX-RS y fija el prefijo `/api`.
+- Los recursos (`RecursoTurnos`, `RecursoPacientes`, `RecursoProfesionales`,
+  `RecursoReserva`, `RecursoTablero`, `RecursoSesion`, `RecursoSalud`) son fachadas
+  delgadas: ninguno tiene un `if` de negocio.
+- Los `ExceptionMapper` traducen las excepciones del dominio a códigos HTTP.
+- `ConversacionDeReserva` es el bean CDI `@SessionScoped` que ata el EJB `@Stateful` a la
+  sesión HTTP. Vive acá y no en negocio porque el alcance de sesión es un concepto web.
+- `ServletLogin` es la página de login del mecanismo FORM del contenedor.
+- `PedidoTurno` y `PasoReserva` son DTO de entrada: acomodan nombres de campos, no deciden
+  nada.
 
-    U->>R: POST /api/turnos { paciente, profesional, fechaHora }
-    R->>G: crearTurno(turno)
-    G->>G: valida datos obligatorios y fecha futura
-    G->>D: existeTurnoDe(profesional, fechaHora)
-    D-->>G: false
+**Qué NO hace, a propósito:** no valida reglas del dominio, no ordena resultados, no toca
+el almacenamiento y no decide quién puede hacer qué.
 
-    alt Todas las reglas se cumplen
-        G->>G: estado = PROGRAMADO
-        G->>D: guardar(turno)
-        D-->>G: turno con id asignado
-        G-->>R: turno creado
-        R-->>U: 201 Created + Location + JSON
-    else Alguna regla falla
-        G-->>M: ReglaNegocioException
-        M-->>U: 400 Bad Request + { error, codigo }
-    end
-```
+### 1.2 Negocio — `com.mediconecta.negocio`
+
+**Responsabilidad:** ser el único lugar donde viven las reglas del dominio y las decisiones
+de autorización.
+
+Cuando una regla no se cumple lanza una excepción propia (`ReglaNegocioException`,
+`NoEncontradoException`) que **no menciona HTTP**. Eso es lo que permitirá exponer el mismo
+negocio por SOAP o consumirlo desde una cola en las próximas entregas sin tocarlo.
+
+Las anotaciones `@RolesAllowed` están acá, sobre los métodos de negocio, y no en los
+recursos REST: así la restricción vale para cualquier forma de invocación.
+
+### 1.3 Datos — `com.mediconecta.datos`
+
+**Responsabilidad:** guardar y recuperar. Tres interfaces escritas en términos del dominio
+(`RepositorioTurnos`, `RepositorioPacientes`, `RepositorioProfesionales`) y dos juegos de
+implementaciones: `datos.jpa` (activo, sobre PostgreSQL) y `datos.memoria`
+(`@Alternative`, desactivado).
+
+Es la única capa que conoce `EntityManager`. No abre ni cierra transacciones: el
+`EntityManager` es *transaction-scoped* y se engancha a la transacción JTA que el contenedor
+abrió al entrar al método del EJB que lo llamó.
+
+### 1.4 Modelo — `com.mediconecta.modelo`
+
+`Turno`, `Paciente`, `Profesional`, `Disponibilidad` y `EstadoTurno` son entidades JPA sin
+lógica de negocio. No forman una capa: son el vocabulario común que atraviesa las tres.
+
+Las relaciones son **unidireccionales** (el turno conoce al paciente y al profesional, no al
+revés), lo que mantiene el JSON libre de ciclos sin necesidad de DTO de salida.
 
 ---
 
-## 3. Justificación: por qué `GestionTurnos` es STATELESS
+## 2. Los seis componentes de MediConecta
 
-`GestionTurnos` está anotado con `@Stateless`, es decir que el contenedor lo trata como un
-EJB de sesión sin estado.
+| # | Componente | Responsabilidad | Tipo | Entrega |
+|---|---|---|---|---|
+| 1 | **GestionTurnos** | Reglas de la agenda: alta, consulta y cancelación | Stateless | **1 · implementado** |
+| 2 | **GestionPacientes** | Padrón de pacientes e historial de atenciones | Stateless | **1 · implementado** |
+| 3 | **GestionProfesionales** | Profesionales, especialidades, disponibilidad y horarios libres | Stateless | **1 · implementado** |
+| 4 | **AsistenteReservaTurno** | Reserva guiada en cuatro pasos | **Stateful** | **1 · implementado** |
+| 5 | **Notificaciones** | Avisos de confirmación y recordatorio al paciente | Stateless + asincrónico (cola y tópico) | 3 |
+| 6 | **IntegracionObrasSociales** | Validación de cobertura contra un sistema legado (SOAP) y un partner moderno (REST) | Stateless (patrón Adapter) | 4 |
 
-**El criterio.** Un componente es stateless cuando **no conserva estado de conversación con
-un cliente entre una invocación y la siguiente**. Es stateful cuando sí lo hace, porque una
+```mermaid
+flowchart LR
+    A["4 · AsistenteReservaTurno<br/>STATEFUL"] --> F["FachadaReservas<br/>(Facade)"]
+    F --> B["1 · GestionTurnos"]
+    F --> C["2 · GestionPacientes"]
+    F --> D["3 · GestionProfesionales"]
+    D -->|horarios ocupados| B
+    C -->|historial| B
+    B -.->|cola / tópico · Entrega 3| E["5 · Notificaciones"]
+    B -.->|SOAP + REST · Entrega 4| G["6 · IntegracionObrasSociales"]
+
+    style A fill:#fce4ec,stroke:#b3266e,stroke-width:2px
+    style F fill:#e3f2fd,stroke:#1c6ea4,stroke-width:2px
+    style B fill:#e8f5e9,stroke:#1b7f3b,stroke-width:2px
+    style E stroke-dasharray: 5 5
+    style G stroke-dasharray: 5 5
+```
+
+`GestionTurnos` está en el centro del sistema: es el componente sobre el que se apoyan
+todos los demás, y por eso fue el primero en implementarse.
+
+---
+
+## 3. Stateless y stateful
+
+### 3.1 El criterio
+
+Un componente es **stateless** cuando no conserva estado de conversación con un cliente
+entre una invocación y la siguiente. Es **stateful** cuando sí lo hace, porque una
 operación del negocio se desarrolla a lo largo de varias llamadas y el servidor tiene que
-recordar lo que ese cliente en particular fue eligiendo.
+recordar lo que *ese* cliente en particular fue eligiendo.
 
-**Por qué este componente cumple el criterio.** Cada una de sus tres operaciones
-(`listarTurnos`, `obtenerTurno`, `crearTurno`) recibe en sus parámetros absolutamente todo lo
-que necesita, resuelve y termina. No hay ningún campo de instancia que guarde resultados
-entre llamadas: el único atributo de la clase es la referencia inyectada al repositorio, que
-es una colaboración, no estado del cliente. En consecuencia:
+### 3.2 Por qué `GestionTurnos`, `GestionPacientes` y `GestionProfesionales` son stateless
+
+Cada uno de sus métodos recibe en sus parámetros todo lo que necesita, resuelve y termina.
+No hay ningún campo de instancia que guarde resultados entre llamadas: los únicos atributos
+son referencias inyectadas a colaboradores, que son colaboración y no estado del cliente.
+En consecuencia:
 
 - el orden de las llamadas no cambia el resultado;
 - dos requests del mismo usuario pueden ser atendidos por **instancias distintas** del pool
   sin ninguna diferencia observable;
 - no hace falta ningún identificador de sesión.
 
-**Qué ganamos.** El contenedor mantiene un pool acotado de instancias y las reutiliza entre
-clientes, en lugar de dedicar una instancia por cliente y tener que replicarla en cluster
-como haría con un `@Stateful`. Eso escala mejor, consume menos memoria y hace que la
-aplicación sea trivialmente balanceable entre varios nodos.
+**Qué ganamos:** el contenedor mantiene un pool acotado de instancias y las reutiliza entre
+clientes, en lugar de dedicar una por cliente y tener que replicarla en cluster como haría
+con un `@Stateful`.
 
-**La objeción esperable, respondida.** "Los turnos se guardan en un Map, entonces hay
-estado". Sí, pero es **estado de aplicación** y vive en la capa de datos, exactamente igual
-que viviría en una base de datos: `RepositorioTurnosEnMemoria` sí es `@ApplicationScoped`
-porque *es* el almacén. Eso no convierte al negocio en stateful, porque ese estado es
-compartido por todos los clientes y no representa la conversación de ninguno en particular.
+**La objeción esperable, respondida.** "Pero los turnos se guardan en algún lado, ¿eso no es
+estado?". Sí, pero es **estado de aplicación**: vive en la base de datos, detrás de la capa
+de datos, y es compartido por todos los clientes. Lo que define a un componente como
+stateless es que no conserve estado *de conversación con un cliente particular*.
 
-### 3.1 Cómo se agregaría un componente stateful (Entrega 2)
+### 3.3 Por qué `AsistenteReservaTurno` es stateful
 
-El TP exige al menos un componente stateful. El candidato natural en MediConecta es el
-**asistente de reserva de turno en varios pasos**:
+Reservar un turno guiado es **una sola operación de negocio repartida en cuatro
+invocaciones**: elegir especialidad, elegir profesional, elegir horario y confirmar. Entre
+una y otra el servidor tiene que recordar lo que ese usuario fue eligiendo.
 
-1. el paciente elige la especialidad;
-2. el sistema le ofrece los profesionales de esa especialidad y él elige uno;
-3. el sistema le ofrece los horarios libres de ese profesional y él elige uno;
-4. recién en el último paso confirma la reserva.
-
-Entre el paso 1 y el paso 4 hay varios requests, y el servidor tiene que recordar las
-elecciones parciales **de ese usuario**. Eso se implementa como `@Stateful`:
+La prueba concreta está en el contrato de la API: `PUT /api/reserva/profesional` recibe
+**únicamente** `{"profesionalId": 1}`. No lleva el paciente ni la especialidad, y sin
+embargo el servidor los conoce. El navegador solo manda la cookie `JSESSIONID`.
 
 ```java
 @Stateful
-public class AsistenteReservaTurno {
+@StatefulTimeout(value = 30, unit = TimeUnit.MINUTES)
+public class AsistenteReservaTurno implements Serializable {
 
-    private String especialidad;     // estado de conversación:
-    private String profesional;      // sobrevive entre llamadas
-    private String fechaHora;        // y es propio de ESTE cliente
-
-    public void elegirEspecialidad(String especialidad) { ... }
-    public void elegirProfesional(String profesional)   { ... }
-    public void elegirHorario(String fechaHora)         { ... }
-
-    @Remove                          // libera la instancia al terminar
-    public Turno confirmar() { ... } // delega en GestionTurnos
+    private String documentoPaciente;   // estado de conversación:
+    private String especialidad;        // sobrevive entre llamadas
+    private Long   profesionalId;       // y es propio de ESTE cliente
+    private LocalDateTime fechaHora;
+    private int paso;
+    ...
 }
 ```
 
 El contraste con `GestionTurnos` es la mejor forma de defender la decisión: el asistente
-tiene campos que representan una conversación en curso, `GestionTurnos` no tiene ninguno.
-Notar además que el asistente **delega la creación final en `GestionTurnos`**: las reglas de
-negocio siguen viviendo en un solo lugar.
+tiene campos que representan una conversación en curso; `GestionTurnos` no tiene ninguno.
 
----
+### 3.4 Cómo se ata la conversación a la sesión HTTP
 
-## 4. Los 6 componentes de negocio de MediConecta
-
-El TP pide identificar y documentar al menos 6 componentes. Están definidos desde ahora para
-que la arquitectura sea coherente entrega a entrega; en la Entrega 1 sólo se **implementa**
-el primero.
-
-| # | Componente | Responsabilidad | Operaciones principales | Tipo | Entrega |
-|---|---|---|---|---|---|
-| 1 | **GestionTurnos** | Reglas de la agenda de turnos | `listarTurnos`, `obtenerTurno`, `crearTurno`, luego `cancelarTurno` | Stateless | **1 (implementado)** |
-| 2 | **GestionPacientes** | Alta y datos de pacientes, historia clínica básica | `registrarPaciente`, `buscarPorDocumento`, `actualizarDatos` | Stateless | 2 |
-| 3 | **GestionProfesionales** | Profesionales, especialidades y sus agendas de disponibilidad | `listarPorEspecialidad`, `definirDisponibilidad`, `horariosLibres` | Stateless | 2 |
-| 4 | **AsistenteReservaTurno** | Reserva guiada en varios pasos | `elegirEspecialidad`, `elegirProfesional`, `elegirHorario`, `confirmar` | **Stateful** | 2 |
-| 5 | **Notificaciones** | Avisos de confirmación y recordatorio al paciente | `notificarConfirmacion`, `notificarRecordatorio` | Stateless + asincrónico (cola y tópico) | 3 |
-| 6 | **IntegracionObrasSociales** | Validación de cobertura contra el sistema legado de la obra social (SOAP) y contra un partner moderno (REST) | `validarCobertura`, `autorizarPractica` | Stateless (patrón Adapter) | 4 |
+Un EJB stateful no se asocia solo a una sesión web: hay que guardar su referencia en algo
+que viva lo mismo que la sesión HTTP. Eso es `ConversacionDeReserva`, un bean CDI
+`@SessionScoped` que CDI asocia a la cookie `JSESSIONID`.
 
 ```mermaid
-flowchart LR
-    A["4 · AsistenteReservaTurno<br/>STATEFUL"] --> B["1 · GestionTurnos<br/>stateless"]
-    B --> C["2 · GestionPacientes"]
-    B --> D["3 · GestionProfesionales"]
-    B -.->|cola / tópico| E["5 · Notificaciones"]
-    B --> F["6 · IntegracionObrasSociales<br/>SOAP + REST"]
+sequenceDiagram
+    actor U as Navegador
+    participant R as RecursoReserva<br/>(presentación)
+    participant C as ConversacionDeReserva<br/>@SessionScoped
+    participant A as AsistenteReservaTurno<br/>@Stateful
+    participant F as FachadaReservas<br/>@Stateless
 
-    style B fill:#e8f5e9,stroke:#1b7f3b,stroke-width:3px
-    style A fill:#fce4ec,stroke:#b3266e
+    U->>R: POST /api/reserva/iniciar {documentoPaciente}
+    R->>C: asistente()
+    C->>A: el contenedor crea la instancia
+    Note over A: @PostConstruct<br/>"el contenedor creó el asistente a3d3c55b"
+    A-->>R: estado (paso ELEGIR_ESPECIALIDAD)
+
+    U->>R: PUT /api/reserva/especialidad {especialidad}
+    R->>C: asistente()
+    C-->>R: la MISMA instancia de esta sesión
+    A->>A: recuerda especialidad
+    A-->>R: estado (paso ELEGIR_PROFESIONAL)
+
+    U->>R: PUT /api/reserva/profesional {profesionalId}
+    Note over U,A: el request NO reenvía la especialidad:<br/>el servidor ya la recuerda
+    A-->>R: estado (paso ELEGIR_HORARIO)
+
+    U->>R: PUT /api/reserva/horario {fechaHora}
+    A-->>R: estado (paso CONFIRMAR)
+
+    U->>R: POST /api/reserva/confirmar
+    A->>F: reservar(SolicitudTurno)
+    F-->>A: Turno creado
+    R->>C: cerrar()
+    C->>A: finalizar()
+    Note over A: @Remove → @PreDestroy<br/>el contenedor descarta la instancia
+    A-->>U: {turnoId, finalizada: true}
 ```
 
-`GestionTurnos` queda en el centro del sistema, y por eso fue el elegido para la Entrega 1:
-es el componente sobre el que se apoyan todos los demás.
+Se inyecta `Instance<AsistenteReservaTurno>` y no el EJB directamente porque hace falta
+poder **destruir** la instancia al terminar la conversación y pedir una nueva para la
+siguiente reserva.
+
+### 3.5 Ciclo de vida administrado por el contenedor
+
+Durante la demostración, el log del servidor muestra las tres marcas:
+
+```
+[STATEFUL] @PostConstruct - el contenedor creo el asistente f851323c (instancia 136b1919)
+[STATEFUL] conversacion f851323c recuerda especialidad=Cardiologia
+[STATEFUL] conversacion f851323c recuerda profesional=Dra. Laura Fernandez
+[STATEFUL] conversacion f851323c confirmada: turno 16
+[STATEFUL] @Remove - fin de la conversacion f851323c en el paso 5
+[STATEFUL] @PreDestroy - el contenedor descarta el asistente f851323c (instancia 136b1919)
+[STATEFUL] @PostConstruct - el contenedor creo el asistente a3d3c55b (instancia 6cb82941)
+```
+
+| Anotación | Quién la invoca | Cuándo | Para qué sirve acá |
+|---|---|---|---|
+| `@PostConstruct` | el contenedor | después de crear la instancia e inyectar sus dependencias | abre la conversación y le asigna identificador |
+| `@Remove` | la aplicación, al terminar | cuando se confirma o se abandona la reserva | le avisa al contenedor que puede descartar el bean |
+| `@PreDestroy` | el contenedor | justo antes de descartar la instancia | deja registro del cierre en el log |
+| `@StatefulTimeout` | el contenedor | si el usuario abandona a mitad de camino | libera la instancia a los 30 minutos sin actividad |
+
+El identificador de instancia (`136b1919`) es el `identityHashCode` del objeto: se muestra
+en la pantalla de reserva y sirve para probar en vivo que, entre paso y paso, es **el mismo
+objeto en el servidor**, y que después de confirmar es **otro distinto**.
 
 ---
 
-## 5. Decisiones técnicas y alternativas descartadas
+## 4. Patrones de diseño
 
-### 5.1 EJB `@Stateless` en lugar de bean CDI `@ApplicationScoped`
+### 4.1 DAO / Repository
 
-**Decisión:** `GestionTurnos` es un EJB `@Stateless`.
-**Por qué:** el contenedor le agrega sin escribir código dos cosas que el TP va a necesitar:
-el pool de instancias y, sobre todo, las **transacciones declarativas** (cada método público
-corre en su propia transacción, `REQUIRED` por defecto). La Entrega 4 exige transacciones en
-un flujo crítico y ya van a estar resueltas sin reescribir la clase.
-**Descartado:** un bean CDI común. Funciona igual de bien hoy, pero obligaría a agregar
-`@Transactional` a mano más adelante y, sobre todo, hace menos evidente la contraposición
-stateless / stateful que la cátedra evalúa explícitamente.
+**Dónde:** `com.mediconecta.datos` — las interfaces `RepositorioTurnos`,
+`RepositorioPacientes` y `RepositorioProfesionales`, con implementaciones en `datos.jpa` y
+`datos.memoria`.
 
-### 5.2 Repositorio en memoria detrás de una interfaz
+**Qué problema resuelve.** La primera versión del sistema guardaba los turnos en un
+`ConcurrentHashMap`. Esta entrega exige migrar a JPA + PostgreSQL. Si la capa de negocio
+hubiera hablado directamente con el `Map` (o ahora con `EntityManager`), cambiar de
+almacenamiento obligaría a reescribir las reglas del dominio, que es precisamente el código
+que no debería tocarse por un motivo de infraestructura.
 
-**Decisión:** interfaz `RepositorioTurnos` + implementación `RepositorioTurnosEnMemoria`.
-**Por qué:** el enunciado pide no depender de una base de datos externa en esta entrega para
-no bloquear el despliegue, pero también pide poder migrar a JPA después sin tocar negocio ni
-presentación. La interfaz es lo que hace posibles las dos cosas a la vez.
-**Descartado:** que `GestionTurnos` guardara los turnos en una lista propia. Sería menos
-código, pero rompería la separación en capas, que es justamente lo que se evalúa, y
-convertiría al componente en stateful sin querer.
-**Costo aceptado:** los datos se pierden al reiniciar WildFly.
+**Cómo lo resuelve.** El negocio inyecta la **interfaz**, nunca la implementación. La
+interfaz está escrita en el lenguaje del dominio: `existeTurnoVigente(profesionalId,
+fechaHora)` en lugar de `select count(*) from ...`.
 
-### 5.3 `fechaHora` como texto ISO-8601 y no como `LocalDateTime`
+**La prueba de que funciona.** La migración de memoria a PostgreSQL se hizo escribiendo tres
+clases nuevas en `datos.jpa`. `GestionTurnos`, `GestionPacientes`, `GestionProfesionales` y
+toda la capa de presentación quedaron **sin un solo cambio** relacionado con la
+persistencia. Las implementaciones en memoria siguen en el repositorio, anotadas
+`@Alternative`, y se pueden reactivar descomentando tres líneas de `beans.xml`.
 
-**Decisión:** el campo se declara `String` con formato `aaaa-MM-ddTHH:mm`.
-**Por qué:** distintos proveedores JSON serializan `LocalDateTime` de forma diferente —
-algunos como el arreglo `[2026,9,10,9,0]` en lugar de una fecha legible—, lo que dependería
-de la configuración del servidor y haría frágil la demo en el navegador. Con texto ISO-8601 la
-salida es idéntica en cualquier contenedor. La capa de negocio igual lo interpreta con
-`LocalDateTime.parse` para poder validar que sea una fecha real y futura, así que no se pierde
-ninguna validación.
-**Descartado:** registrar un `ContextResolver` propio para configurar el serializador. Es la
-solución "correcta", pero acopla el proyecto a una librería concreta (Jackson) y agrega
-complejidad que no aporta nada a lo que esta entrega tiene que demostrar.
-**Cuidado que esto trajo:** si la fecha es texto y la regla de horarios ocupados compara
-textos, `"2026-09-03T09:30"` y `"2026-09-03T09:30:00"` son el mismo instante pero dos cadenas
-distintas, y el sistema no detectaría la superposición. Por eso `Turno.FORMATO_FECHA_HORA`
-define un **formato canónico** (`aaaa-MM-ddTHH:mm`) y `GestionTurnos` reescribe toda fecha a
-ese formato antes de buscar superposiciones y de guardar. Este defecto apareció recién al
-probar la aplicación desplegada, no al compilar.
-**Cuándo se revierte:** en la Entrega 2, con JPA, pasa a ser una columna `LocalDateTime` real
-y el cambio queda contenido en el modelo y la capa de datos.
+**Por qué se eligió.** Porque el enunciado obliga a cambiar de almacenamiento entre
+entregas, y porque la interfaz es lo que hace posible tener las dos implementaciones
+conviviendo.
 
-### 5.4 Excepciones de negocio + `ExceptionMapper`
+**Alternativa descartada.** Que cada componente de negocio recibiera el `EntityManager` y
+escribiera sus propias consultas JPQL. Es menos código al principio, pero mezcla reglas de
+negocio con detalles de persistencia, hace imposible el plan B sin base de datos y obliga a
+tocar el negocio cada vez que cambia una consulta.
 
-**Decisión:** el negocio lanza excepciones propias y la presentación las traduce a HTTP.
-**Por qué:** mantiene al negocio libre de cualquier referencia a HTTP y evita repetir
-`try/catch` en cada método de `RecursoTurnos`. Es lo que permitirá exponer el mismo negocio
-por SOAP en la Entrega 4 sin tocarlo.
-**Descartado:** que `RecursoTurnos` devolviera `Response` con códigos armados a mano después
-de validar. Eso hubiera puesto reglas de negocio en la capa de presentación.
+### 4.2 Facade
 
-**Detalle que hubo que agregar:** ambas excepciones llevan
-`@ApplicationException(rollback = false)`. Sin esa anotación, el contenedor de EJB considera a
-cualquier `RuntimeException` que escape de un método de negocio un fallo *de sistema*: la
-envuelve en `EJBException`, escribe un stack trace completo en el log del servidor, marca la
-transacción para rollback y descarta la instancia del pool. Pero que alguien pida un turno en
-el pasado no es una falla del sistema, es un resultado de negocio previsto. Al declararlas
-excepciones de aplicación, el contenedor las deja pasar tal cual. La respuesta HTTP era
-correcta en los dos casos; la diferencia está en el log (que quedaba lleno de stack traces
-durante una demo normal) y en la semántica transaccional que la Entrega 4 va a necesitar.
+**Dónde:** `com.mediconecta.negocio.FachadaReservas`.
 
-### 5.5 Sin `web.xml`, configuración por anotaciones
+**Qué problema resuelve.** Reservar un turno no es una operación de un solo componente. Hay
+que resolver el paciente (o darlo de alta si es la primera vez), resolver el profesional,
+verificar que la especialidad sea coherente y recién entonces agendar. Si esa coreografía
+viviera en `RecursoTurnos`, la capa de presentación tendría que inyectar y ordenar tres
+componentes de negocio. Y como el asistente stateful hace exactamente lo mismo al
+confirmar, la secuencia quedaría **duplicada en dos lugares** que se irían
+desincronizando: el día que se agregue un paso —por ejemplo validar la cobertura contra la
+obra social en la Entrega 4— habría que acordarse de agregarlo en los dos.
 
-**Decisión:** la clase `AplicacionRest` con `@ApplicationPath("/api")` reemplaza al `web.xml`.
-**Por qué:** menos archivos y la configuración queda al lado del código que configura.
-**Cuándo cambia:** la Entrega 2 va a necesitar `web.xml` para la seguridad declarativa
-(`<security-constraint>`, roles y método de autenticación).
+**Cómo lo resuelve.** La fachada concentra la coordinación. Sus dos clientes —el alta
+directa por REST y el asistente `@Stateful`— llaman a `reservar(SolicitudTurno)` y no saben
+cuántos componentes hay detrás. La misma idea aplica a `resumenDelDia()`: la pantalla de
+inicio se resuelve con **una** llamada en lugar de cuatro.
 
-### 5.6 Context root `mediconecta` vía `<finalName>`
+**El límite que se respetó.** La fachada **coordina pero no decide**. Cada regla la sigue
+aplicando su dueño: `GestionPacientes` valida el padrón, `GestionTurnos` valida fecha futura
+y superposición, `FabricaTurnos` valida la coherencia de la especialidad. Esa es la
+diferencia entre un Facade y un componente que termina siendo el cajón de sastre del
+sistema.
 
-**Decisión:** el WAR se llama `mediconecta.war`, por lo que la URL base es
+**Por qué se eligió.** Porque hay dos clientes distintos para el mismo caso de uso. Con uno
+solo habría sido discutible; con dos, no tenerlo garantizaría la duplicación.
+
+**Alternativa descartada.** Que `GestionTurnos` buscara por su cuenta el paciente y el
+profesional. Parece más simple, pero convierte al componente central del sistema en
+dependiente de los otros dos, genera un grafo de dependencias circular en cuanto
+`GestionPacientes` necesita consultar turnos, y mezcla "reglas del turno" con "coordinación
+del caso de uso".
+
+### 4.3 Factory
+
+**Dónde:** `com.mediconecta.negocio.FabricaTurnos`.
+
+**Qué problema resuelve.** Un `Turno` no queda bien formado con `new Turno()`. Hay que
+fijarle el estado inicial `PROGRAMADO` (y no dejar que lo elija el cliente HTTP, porque si
+no cualquiera podría crear por API un turno que nace ya como `ATENDIDO`), llevar la fecha al
+formato canónico truncado al minuto, y completar la especialidad a partir del profesional
+verificando que sean coherentes.
+
+Ese truncado no es un detalle estético: la regla de superposición compara el momento del
+turno contra los turnos vigentes del profesional. Si un camino de creación dejara los
+segundos, `09:30:00` y `09:30:59` serían instantes distintos para la comparación y el
+sistema dejaría de detectar la superposición. **Este defecto ya existió en la versión
+anterior del proyecto**, cuando la fecha era texto y dos cadenas distintas representaban el
+mismo momento.
+
+Hoy hay **tres caminos** que crean turnos: el alta directa por REST, el asistente stateful
+y la carga de datos de ejemplo. Si cada uno armara el objeto a mano, alcanzaría con que uno
+se olvidara de una invariante para que la regla dejara de funcionar, y el bug no se vería
+hasta la demostración.
+
+**Cómo lo resuelve.** Los tres caminos pasan por `FabricaTurnos.crear(...)`. La invariante
+"todo turno nace PROGRAMADO, con fecha truncada al minuto y con especialidad coherente con
+su profesional" queda garantizada por construcción, en un único método.
+
+**Por qué se eligió.** Porque concentra una invariante que ya se había roto una vez y que
+hoy tiene tres puntos de entrada. Un Factory que solo hiciera `new` sería decorativo; éste
+impide un bug concreto y documentado.
+
+**Alternativa descartada.** Un constructor con muchos parámetros en `Turno`. No evita que
+alguien use el constructor vacío (que JPA necesita que exista), y pondría lógica de validación
+dentro de una entidad que queremos que siga siendo un objeto de datos.
+
+**Por qué no Adapter todavía.** Adapter es el patrón natural para la Entrega 4, donde hay
+que hablar con una obra social por SOAP y con otra por REST detrás de una misma interfaz.
+Implementarlo ahora, sin ningún sistema externo del otro lado, sería crear una clase vacía
+para poder decir que el patrón existe.
+
+---
+
+## 5. Seguridad
+
+### 5.1 Mecanismo
+
+Autenticación **FORM administrada por el contenedor**. El formulario de `login.html` hace
+POST a `j_security_check` con los campos `j_username` y `j_password`; **MediConecta nunca ve
+la contraseña**. Quien las valida es WildFly contra el dominio de seguridad
+`ApplicationDomain`, respaldado por `application-users.properties` y
+`application-roles.properties`.
+
+No hay una sola línea de código Java que compare contraseñas ni que decida qué rol puede
+hacer qué: todo está declarado.
+
+```mermaid
+sequenceDiagram
+    actor U as Navegador
+    participant W as WildFly · Undertow
+    participant S as ServletLogin
+    participant E as Contenedor EJB
+    participant N as GestionProfesionales
+
+    U->>W: GET /app/index.html (sin sesión)
+    W->>S: security-constraint sin identidad → form-login-page
+    S-->>U: 302 a /login.html
+    U->>W: POST j_security_check (usuario, contraseña)
+    W->>W: valida contra ApplicationDomain
+    W-->>U: 302 a la URL que había pedido
+    U->>W: POST /api/profesionales (rol RECEPCION)
+    W->>E: invoca registrarProfesional
+    E->>E: evalúa @RolesAllowed(ADMIN)
+    E-->>W: EJBAccessException
+    W-->>U: 403 {"error":"Su rol no tiene permiso...","codigo":403}
+```
+
+### 5.2 Las dos mitades
+
+| | Qué declara | Dónde | Qué protege |
+|---|---|---|---|
+| **Autenticación** | *quién sos* | `web.xml`: `<login-config>` FORM + `<security-constraint>` sobre `/api/*` y `/app/*` | que exista una identidad válida |
+| **Autorización** | *qué podés hacer* | `@RolesAllowed` sobre los métodos de negocio | cada operación concreta |
+
+La autorización está en la **capa de negocio** a propósito. Si estuviera en los recursos
+REST, valdría solo para HTTP; puesta sobre el EJB, el contenedor la aplica también cuando
+el método se invoque desde el asistente stateful, desde un consumidor de mensajería o desde
+un servicio SOAP.
+
+### 5.3 Matriz de permisos
+
+| Operación | PACIENTE | RECEPCION | MEDICO | ADMIN |
+|---|:--:|:--:|:--:|:--:|
+| Prueba de vida (`/api/salud`) | público | público | público | público |
+| Ver la agenda completa | — | ✔ | ✔ | ✔ |
+| Ver un turno puntual | ✔ | ✔ | ✔ | ✔ |
+| Agendar un turno | ✔ | ✔ | — | ✔ |
+| Cancelar un turno | — | ✔ | ✔ | ✔ |
+| Listar el padrón de pacientes | — | ✔ | ✔ | ✔ |
+| Registrar un paciente | ✔ | ✔ | — | ✔ |
+| Modificar datos de un paciente | — | ✔ | — | ✔ |
+| Ver historial de un paciente | solo el propio | ✔ | ✔ | ✔ |
+| Listar profesionales y horarios libres | ✔ | ✔ | ✔ | ✔ |
+| **Registrar un profesional** | — | — | — | ✔ |
+| **Definir disponibilidad** | — | — | ✔ | ✔ |
+| Tablero de la clínica | — | ✔ | ✔ | ✔ |
+| Reserva guiada | ✔ | ✔ | — | ✔ |
+
+### 5.4 Un caso donde lo declarativo no alcanza
+
+`GET /api/pacientes/{documento}/turnos` está permitido para los cuatro roles, porque un
+paciente tiene que poder ver su historial. Pero "los cuatro roles" no distingue *qué*
+historial: sin más, cualquier paciente podría leer el de otro cambiando el documento de la
+URL.
+
+Por eso `GestionPacientes.historialDeTurnos` combina las dos formas de autorización: la
+declarativa deja pasar al método, y una comprobación **programática** con
+`SessionContext.getCallerPrincipal()` verifica que, si el llamador solo tiene rol PACIENTE,
+el documento pedido sea el de su propia ficha. La asociación entre el usuario de WildFly y
+la ficha está en la columna `usuario` de la tabla `pacientes`.
+
+### 5.5 Por qué FORM y no BASIC
+
+FORM permite usar la pantalla de login del prototipo de Figma, mientras que BASIC obliga al
+diálogo nativo del navegador, que no se puede maquetar. El costo de FORM es que, ante una
+petición sin sesión, el contenedor responde con la página de login en lugar de un `401`, lo
+que confundiría a un cliente JSON.
+
+Se resolvió sin salirse del estándar: `<form-login-page>` no apunta a un HTML sino al
+servlet `ServletLogin`, que mira la petición y responde distinto según quién pregunte. Si
+el cliente pidió JSON (nuestro `fetch` envía `X-Requested-With`, y `curl` envía
+`Accept: application/json`) devuelve **401** con el mismo formato de error que el resto de
+la API; si es un navegador navegando, redirige a la pantalla de login.
+
+Se redirige y no se hace *forward* porque con un forward la barra del navegador seguiría
+mostrando la URL protegida y las rutas relativas de `login.html` (`css/`, `js/`) se
+resolverían mal.
+
+---
+
+## 6. Persistencia
+
+- **Unidad de persistencia:** `mediconectaPU`, declarada en
+  `src/main/resources/META-INF/persistence.xml`, con `transaction-type="JTA"`.
+- **Datasource:** `java:/jdbc/MediConectaDS`, definido **en WildFly**, no en el WAR. Por eso
+  el usuario y la contraseña de PostgreSQL no están en el código versionado.
+- **Esquema:** lo genera Hibernate (`hibernate.hbm2ddl.auto=update`). El DDL equivalente
+  está documentado en `scripts/db/esquema.sql`.
+
+### 6.1 Modelo relacional
+
+```mermaid
+erDiagram
+    PACIENTES ||--o{ TURNOS : "tiene"
+    PROFESIONALES ||--o{ TURNOS : "atiende"
+    PROFESIONALES ||--o{ DISPONIBILIDADES : "define"
+
+    PACIENTES {
+        bigint id PK
+        varchar documento UK "clave de negocio"
+        varchar nombre
+        varchar email
+        varchar telefono
+        varchar cobertura
+        varchar usuario "usuario de WildFly asociado"
+        boolean activo
+    }
+    PROFESIONALES {
+        bigint id PK
+        varchar nombre
+        varchar especialidad
+        varchar matricula UK
+        varchar email
+        boolean activo
+    }
+    DISPONIBILIDADES {
+        bigint id PK
+        bigint profesional_id FK
+        varchar dia_semana
+        time hora_desde
+        time hora_hasta
+        int duracion_minutos
+    }
+    TURNOS {
+        bigint id PK
+        bigint paciente_id FK
+        bigint profesional_id FK
+        varchar especialidad
+        timestamp fecha_hora
+        varchar estado "PROGRAMADO · ATENDIDO · CANCELADO"
+        varchar motivo
+    }
+```
+
+### 6.2 Dónde vive la transacción
+
+En el EJB. Cada método público de un `@Stateless` corre en su propia transacción JTA
+(`REQUIRED` por omisión): el contenedor la abre al entrar y hace *commit* al salir, o
+*rollback* si escapa una excepción de sistema.
+
+Por eso los repositorios nunca llaman a `begin()` ni a `commit()`, y por eso
+`FachadaReservas.reservar()` —que puede dar de alta un paciente y después agendar un
+turno— hace las dos cosas dentro de **una sola transacción**: si el alta del turno falla,
+el paciente tampoco queda registrado.
+
+Las excepciones de negocio llevan `@ApplicationException(rollback = false)` justamente para
+que un resultado previsto (por ejemplo "ese horario ya está tomado") **no** marque la
+transacción para rollback ni ensucie el log con un stack trace.
+
+---
+
+## 7. Decisiones técnicas y alternativas descartadas
+
+### 7.1 EJB `@Stateless` en lugar de bean CDI `@ApplicationScoped`
+
+**Decisión:** los tres componentes de negocio son EJB `@Stateless`.
+**Por qué:** el contenedor agrega sin escribir código el pool de instancias, las
+**transacciones declarativas** y la **seguridad declarativa** (`@RolesAllowed`), que es
+justamente lo que esta entrega necesita.
+**Descartado:** un bean CDI común. Obligaría a agregar `@Transactional` a mano y, sobre
+todo, haría menos evidente la contraposición stateless / stateful que la materia evalúa.
+
+### 7.2 `fechaHora` pasa de texto a `LocalDateTime`
+
+**Decisión:** la fecha del turno es una columna `timestamp` y un `LocalDateTime` en el
+modelo. En la versión anterior era texto.
+**Por qué:** era la deuda declarada del documento de arquitectura anterior. Con texto, la
+comparación de horarios dependía de que todos los caminos escribieran exactamente el mismo
+formato.
+**Cuidado que hubo que tener:** JSON-B serializa `LocalDateTime` en ISO-8601 *con*
+segundos, lo que habría cambiado el contrato de la API respecto de la primera entrega. Se
+anotó el campo con `@JsonbDateFormat("yyyy-MM-dd'T'HH:mm")` para que la salida JSON siga
+siendo **idéntica** a la anterior.
+
+### 7.3 La especialidad es texto y no una entidad
+
+**Decisión:** `Profesional.especialidad` es un `String`.
+**Por qué:** para lo que el sistema necesita hoy —listar, filtrar y agrupar— una tabla de
+especialidades agregaría un join sin aportar ninguna regla.
+**Cuándo cambiaría:** si una especialidad pasara a tener atributos propios (duración
+estándar del turno, requisitos de derivación, cobertura).
+
+### 7.4 Relaciones unidireccionales y sin DTO de salida
+
+**Decisión:** `Turno` conoce a `Paciente` y `Profesional`, pero no al revés; las entidades
+se serializan directamente a JSON.
+**Por qué:** sin relaciones bidireccionales no hay ciclos, así que no hace falta una capa de
+DTO de salida que habría triplicado la cantidad de clases sin aportar nada.
+**Costo aceptado:** el JSON de un turno incluye la ficha completa del paciente y del
+profesional. Para el volumen de este sistema no es un problema.
+**Sí hay DTO de entrada** (`PedidoTurno`, `PasoReserva`), porque ahí sí aportan: permiten
+aceptar el formato viejo y el nuevo de `POST /api/turnos` sin ensuciar el modelo.
+
+### 7.5 El paquete raíz pasó de `com.mediconecta.turnos` a `com.mediconecta`
+
+**Decisión:** el paquete raíz ya no menciona "turnos".
+**Por qué:** con cuatro componentes, tener `com.mediconecta.turnos.modelo.Paciente` daba a
+entender que todo el sistema es el componente de turnos. La estructura interna por capas
+(`modelo`, `datos`, `negocio`, `presentacion`) no cambió.
+
+### 7.6 Frontend sin framework
+
+**Decisión:** HTML semántico, CSS propio y módulos ES nativos. Sin React, sin Tailwind, sin
+Bootstrap, sin dependencias de Node.
+**Por qué:** la materia evalúa Jakarta EE. Un framework de frontend agregaría un paso de
+compilación, cientos de dependencias y una discusión que no aporta a lo que se defiende.
+**Cómo se evitó el archivo gigante:** una página HTML por pantalla y un módulo JS por
+pantalla, más tres módulos compartidos (`api.js`, `ui.js`, `layout.js`). La barra lateral y
+la superior las dibuja `layout.js`, así que no están copiadas en ocho archivos.
+**Cuidado que se tuvo:** todo dato que viene del servidor pasa por `esc()` antes de
+insertarse en HTML, para que un nombre con etiquetas adentro no se interprete como marcado.
+
+### 7.7 Context root `mediconecta` vía `<finalName>`
+
+**Decisión:** el WAR se llama `mediconecta.war`, así que la URL base es
 `http://localhost:8080/mediconecta/`.
 **Por qué:** WildFly usa el nombre del archivo como context root. Fijarlo en el `pom.xml`
-evita que la URL cambie si alguien renombra el proyecto o sube la versión, y hace que todos
-los integrantes prueben exactamente la misma URL.
-**Descartado:** `jboss-web.xml` con `<context-root>`. Cumple lo mismo pero agrega un archivo
-propietario de WildFly, y la idea es mantener el proyecto lo más estándar posible.
+hace que todos los integrantes prueben exactamente la misma URL.
+**Detalle:** el frontend **no** asume ese nombre. `api.js` deduce el context root de la URL
+del propio módulo (`import.meta.url`), así que la aplicación sigue funcionando si el WAR se
+despliega con otro nombre.
 
-### 5.7 Dependencia única con scope `provided`
+### 7.8 Dependencia única con scope `provided`
 
 **Decisión:** sólo `jakarta.platform:jakarta.jakartaee-api:10.0.0`, en scope `provided`.
-**Por qué:** las implementaciones (RESTEasy para JAX-RS, Weld para CDI, el contenedor de EJB)
-ya las aporta WildFly. Empaquetarlas dentro del WAR generaría clases duplicadas en el
-classpath y el despliegue fallaría. Además el WAR pesa unos pocos kilobytes.
-**Descartado:** Spring Boot. Está fuera de la consigna y, además, ocultaría el contenedor
-Jakarta EE que es justamente lo que la materia quiere que se entienda.
+**Por qué:** las implementaciones (RESTEasy, Weld, Hibernate, el contenedor de EJB) las
+aporta WildFly. Empaquetarlas dentro del WAR generaría clases duplicadas en el classpath y
+el despliegue fallaría. El WAR pesa unos 120 kB, casi todo frontend.
 
 ---
 
-## 6. Estado de cumplimiento de la Entrega 1
+## 8. Estado de cumplimiento de la entrega
 
-| Requisito de la guía de la cátedra | Estado |
+| Requisito | Estado |
 |---|---|
-| Proyecto Maven empaquetado como WAR | ✅ |
-| Dependencia `jakarta.jakartaee-api`, `beans.xml` creado | ✅ |
-| `mvn clean package` genera el artefacto | ✅ `target/mediconecta.war` |
-| Desplegado en un contenedor real (WildFly) | ✅ vía `deployments` o consola de administración |
-| Prueba `¡Hola desde el contenedor!` respondiendo | ✅ `GET /api/salud` |
-| Componente real del dominio, no un "hola mundo" | ✅ `GestionTurnos` con reglas de negocio propias |
-| Separación clara en presentación / negocio / datos | ✅ tres paquetes, dependencias en un solo sentido |
-| Justificación stateless / stateful | ✅ sección 3 de este documento |
-| Documentación inicial de arquitectura | ✅ este documento |
-| 6 componentes identificados y documentados | ✅ sección 4 |
-
-Verificado de punta a punta sobre **WildFly 36.0.1.Final con JDK 17**: el servidor arranca, el
-WAR se despliega sin errores (`WFLYSRV0010: Deployed "mediconecta.war"`), y los 12 casos de
-prueba de la API —los 9 de la tabla del README más especialidad faltante, fecha mal formada y
-detección de horario ocupado con distintos formatos de fecha— devuelven el resultado esperado,
-dejando el log del servidor sin errores.
+| Mínimo 3 componentes implementados | ✔ cuatro: C1, C2, C3 y C4 |
+| Al menos un `@Stateless` | ✔ `GestionTurnos`, `GestionPacientes`, `GestionProfesionales`, `FachadaReservas` |
+| Al menos un `@Stateful` real | ✔ `AsistenteReservaTurno`, con estado de conversación verificable |
+| Arquitectura en presentación / negocio / datos | ✔ tres paquetes, dependencias en un solo sentido |
+| Mínimo 3 patrones de diseño | ✔ DAO/Repository, Facade, Factory |
+| Seguridad declarativa con autenticación y roles | ✔ FORM + `@RolesAllowed`, cuatro roles |
+| Cancelación de turnos | ✔ `PUT /api/turnos/{id}/cancelar` |
+| Persistencia JPA + PostgreSQL | ✔ `mediconectaPU` sobre `java:/jdbc/MediConectaDS` |
+| Interfaz acorde al prototipo | ✔ ocho pantallas, responsive |
+| WAR desplegable | ✔ `target/mediconecta.war` |
+| Documentación actualizada | ✔ este documento, README y los tres documentos de defensa |
