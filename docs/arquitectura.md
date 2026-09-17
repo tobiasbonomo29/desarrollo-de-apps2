@@ -453,17 +453,19 @@ un servicio SOAP.
 | Prueba de vida (`/api/salud`) | público | público | público | público |
 | Ver la agenda completa | — | ✔ | ✔ | ✔ |
 | Ver un turno puntual | ✔ | ✔ | ✔ | ✔ |
-| Agendar un turno | ✔ | ✔ | — | ✔ |
-| Cancelar un turno | — | ✔ | ✔ | ✔ |
+| Agendar un turno directo | solo para sí mismo | ✔ | — | ✔ |
+| Cancelar un turno | solo el propio | ✔ | solo de su agenda | ✔ |
+| **Archivar un turno cancelado** | — | ✔ | — | ✔ |
 | Listar el padrón de pacientes | — | ✔ | ✔ | ✔ |
 | Registrar un paciente | ✔ | ✔ | — | ✔ |
 | Modificar datos de un paciente | — | ✔ | — | ✔ |
 | Ver historial de un paciente | solo el propio | ✔ | ✔ | ✔ |
 | Listar profesionales y horarios libres | ✔ | ✔ | ✔ | ✔ |
 | **Registrar un profesional** | — | — | — | ✔ |
-| **Definir disponibilidad** | — | — | ✔ | ✔ |
+| **Definir disponibilidad** | — | ✔ (de cualquiera) | solo la propia | ✔ (de cualquiera) |
+| Ver la propia ficha de profesional (`mi-perfil`) | — | — | ✔ | — |
 | Tablero de la clínica | — | ✔ | ✔ | ✔ |
-| Reserva guiada | ✔ | ✔ | — | ✔ |
+| Reserva guiada | ✔ (para sí mismo) | ✔ | — | ✔ |
 
 ### 5.4 Un caso donde lo declarativo no alcanza
 

@@ -26,11 +26,14 @@ interfaz web completa que sigue el prototipo de Figma.
   RECEPCION, MEDICO, ADMIN).
 - **Tablero** con turnos del día, pacientes activos, profesionales y turnos pendientes,
   todo calculado con datos reales de la base.
-- **Turnos**: listar con buscador y filtros, ver el detalle, agendar y **cancelar**.
+- **Turnos**: listar con buscador y filtros, ver el detalle, agendar, **cancelar** y
+  **archivar** (sacar de la agenda un turno cancelado sin borrar su historial).
+- **Mis turnos**: un PACIENTE consulta y cancela solo sus propios turnos.
 - **Pacientes**: padrón con buscador, alta, edición de ficha e historial de turnos.
 - **Profesionales**: listado por especialidad, alta (solo ADMIN) y gestión de la
-  **disponibilidad semanal** (MEDICO o ADMIN).
-- **Reserva guiada en cuatro pasos**, cuyo estado intermedio vive en un EJB `@Stateful`
+  disponibilidad semanal — RECEPCION y ADMIN sobre cualquier profesional, un MEDICO solo
+  sobre la suya propia.
+- **Reserva guiada en pasos**, cuyo estado intermedio vive en un EJB `@Stateful`
   del servidor y no en el navegador.
 - Interfaz **responsive**: barra lateral en escritorio, navegación inferior en teléfono.
 
@@ -220,10 +223,11 @@ Context root `/mediconecta`, prefijo `/api`. Todos los endpoints exigen sesión 
 
 | Método | Ruta | Roles | Respuesta |
 |---|---|---|---|
-| GET | `/api/turnos` | RECEPCION, MEDICO, ADMIN | Agenda completa ordenada por fecha |
-| GET | `/api/turnos/{id}` | todos | El turno, o `404` |
-| POST | `/api/turnos` | PACIENTE, RECEPCION, ADMIN | `201` + `Location`, o `400` con la regla incumplida |
-| PUT | `/api/turnos/{id}/cancelar` | RECEPCION, MEDICO, ADMIN | El turno en estado `CANCELADO` |
+| GET | `/api/turnos` | RECEPCION, MEDICO, ADMIN | Agenda operativa (sin archivados) ordenada por fecha |
+| GET | `/api/turnos/{id}` | todos | El turno, o `404` (funciona aunque esté archivado) |
+| POST | `/api/turnos` | PACIENTE, RECEPCION, ADMIN | `201` + `Location`, o `400` con la regla incumplida. Un PACIENTE solo puede reservar para sí mismo |
+| PUT | `/api/turnos/{id}/cancelar` | PACIENTE, RECEPCION, MEDICO, ADMIN | El turno en estado `CANCELADO`. Ownership: un PACIENTE solo cancela los propios, un MEDICO solo los de su agenda; `400` si no corresponde |
+| PUT | `/api/turnos/{id}/archivar` | **RECEPCION, ADMIN** | Saca de la agenda un turno ya `CANCELADO` sin borrarlo: sigue en el historial del paciente. `400` si no está cancelado o si ya estaba archivado |
 
 ### Pacientes
 
@@ -235,6 +239,7 @@ Context root `/mediconecta`, prefijo `/api`. Todos los endpoints exigen sesión 
 | POST | `/api/pacientes` | PACIENTE, RECEPCION, ADMIN | `201`, o `400` si el documento se repite |
 | PUT | `/api/pacientes/{documento}` | RECEPCION, ADMIN | El paciente actualizado |
 | GET | `/api/pacientes/{documento}/turnos` | todos | Historial; un PACIENTE solo puede ver el suyo |
+| GET | `/api/profesionales/mi-perfil` | **MEDICO** | Ficha de profesional asociada al usuario logueado |
 
 ### Profesionales
 
@@ -245,7 +250,7 @@ Context root `/mediconecta`, prefijo `/api`. Todos los endpoints exigen sesión 
 | GET | `/api/profesionales/especialidades` | todos | Especialidades con profesionales activos |
 | GET | `/api/profesionales/{id}` | todos | El profesional, o `404` |
 | POST | `/api/profesionales` | **ADMIN** | `201`, o `403` si el rol no corresponde |
-| PUT | `/api/profesionales/{id}/disponibilidad` | **MEDICO, ADMIN** | Reemplaza la agenda semanal |
+| PUT | `/api/profesionales/{id}/disponibilidad` | **RECEPCION, MEDICO, ADMIN** | Reemplaza la agenda semanal. RECEPCION y ADMIN pueden editar la de cualquiera; un MEDICO solo la propia (`400` si no corresponde) |
 | GET | `/api/profesionales/{id}/horarios-libres?fecha=aaaa-MM-dd` | todos | Horarios disponibles ese día |
 
 ### Reserva guiada (componente `@Stateful`)
