@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MediConecta — Mis turnos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body data-pagina="mis-turnos" data-titulo="Mis turnos" data-subtitulo="Tus turnos, programados y pasados">
+
+<div class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <div class="contenido">
+        <header class="topbar" id="topbar"></header>
+
+        <main class="vista">
+            <section class="card">
+                <div class="card__cabecera">
+                    <div>
+                        <h2>Tus turnos</h2>
+                        <p id="contador">Cargando...</p>
+                    </div>
+                    <a class="boton boton--chico" href="reserva.html">Reservar turno</a>
+                </div>
+
+                <div id="listado"></div>
+            </section>
+        </main>
+    </div>
+</div>
+
+<nav class="nav-inferior" id="nav-inferior"></nav>
+<div id="avisos"></div>
+
+<script type="module" src="../js/mis-turnos.js"></script>
+</body>
+</html>
