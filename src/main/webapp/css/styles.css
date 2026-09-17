@@ -748,6 +748,39 @@ table.tabla tbody tr:last-child td {
     border-left-color: var(--danger);
 }
 
+/* ============================ Confirmación modal ============================ */
+
+.modal-fondo {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(23, 32, 51, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal {
+    background: var(--surface);
+    border-radius: var(--radio-card);
+    padding: 24px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 20px 48px rgba(23, 32, 51, 0.18);
+}
+
+.modal h3 {
+    font-size: 17px;
+    margin-bottom: 10px;
+}
+
+.modal p {
+    color: var(--muted);
+    font-size: 14px;
+    margin: 0 0 22px;
+}
+
 /* ============================ Buscador y filtros ============================ */
 
 .barra-filtros {

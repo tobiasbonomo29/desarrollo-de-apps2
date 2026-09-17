@@ -34,14 +34,16 @@
                     <div class="card__cabecera">
                         <div>
                             <h2>Acciones</h2>
-                            <p>Operaciones disponibles según tu rol.</p>
                         </div>
                     </div>
                     <div id="mensaje" class="aviso aviso--info" hidden></div>
                     <div class="acciones">
-                        <a class="boton boton--secundario" href="turnos.html">Volver a turnos</a>
-                        <button type="button" class="boton boton--peligro" id="boton-cancelar" disabled>
+                        <a class="boton boton--secundario" id="enlace-volver" href="turnos.html">Volver a turnos</a>
+                        <button type="button" class="boton boton--peligro" id="boton-cancelar" hidden>
                             Cancelar turno
+                        </button>
+                        <button type="button" class="boton boton--peligro" id="boton-archivar" hidden>
+                            Eliminar de agenda
                         </button>
                     </div>
                     <p class="campo__ayuda" style="margin-top:12px" id="nota-permisos"></p>

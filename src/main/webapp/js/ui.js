@@ -147,3 +147,61 @@ export function mensajeEnCaja(elemento, texto, tipo) {
     elemento.className = 'aviso aviso--' + (tipo || 'info');
     elemento.textContent = texto;
 }
+
+/* -------------------------- Confirmación modal ---------------------------- */
+
+/**
+ * Pide una confirmación antes de una acción delicada, en lugar de un alert().
+ *
+ * Devuelve una promesa que resuelve en true si la persona confirmó, o false si
+ * canceló (con el botón, con Escape o tocando fuera del cuadro).
+ */
+export function confirmar(titulo, mensaje, textoConfirmar, tipo) {
+    return new Promise((resolve) => {
+        const fondo = document.createElement('div');
+        fondo.className = 'modal-fondo';
+
+        const caja = document.createElement('div');
+        caja.className = 'modal';
+        caja.setAttribute('role', 'alertdialog');
+        caja.setAttribute('aria-modal', 'true');
+        caja.setAttribute('aria-labelledby', 'modal-titulo');
+
+        const botonConfirmarClase = tipo === 'peligro' ? 'boton boton--peligro' : 'boton';
+
+        caja.innerHTML =
+            '<h3 id="modal-titulo">' + esc(titulo) + '</h3>'
+            + '<p>' + esc(mensaje) + '</p>'
+            + '<div class="acciones acciones--derecha">'
+            + '<button type="button" class="boton boton--secundario" data-accion="cancelar">Cancelar</button>'
+            + '<button type="button" class="' + botonConfirmarClase + '" data-accion="confirmar">'
+            + esc(textoConfirmar || 'Confirmar') + '</button>'
+            + '</div>';
+
+        fondo.appendChild(caja);
+        document.body.appendChild(fondo);
+
+        function cerrar(resultado) {
+            document.removeEventListener('keydown', alTeclear);
+            fondo.remove();
+            resolve(resultado);
+        }
+
+        function alTeclear(evento) {
+            if (evento.key === 'Escape') {
+                cerrar(false);
+            }
+        }
+
+        caja.querySelector('[data-accion="cancelar"]').addEventListener('click', () => cerrar(false));
+        caja.querySelector('[data-accion="confirmar"]').addEventListener('click', () => cerrar(true));
+        fondo.addEventListener('click', (evento) => {
+            if (evento.target === fondo) {
+                cerrar(false);
+            }
+        });
+        document.addEventListener('keydown', alTeclear);
+
+        caja.querySelector('[data-accion="confirmar"]').focus();
+    });
+}
