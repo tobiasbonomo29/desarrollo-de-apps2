@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Unidad de persistencia de MediConecta.
+
+    transaction-type="JTA": las transacciones las abre y cierra el contenedor al
+    entrar y salir de cada metodo de los EJB @Stateless. Por eso ningun
+    repositorio llama a begin() ni a commit().
+
+    El datasource NO se define aca: se define en WildFly con el nombre JNDI
+    java:/jdbc/MediConectaDS. Asi el usuario y la contrasena de PostgreSQL viven
+    en la configuracion del servidor y no en el codigo versionado. Los pasos para
+    crearlo estan en el README y automatizados en
+    scripts/wildfly/configurar-wildfly.cli.
+-->
+<persistence xmlns="https://jakarta.ee/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence
+                                 https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd"
+             version="3.0">
+
+    <persistence-unit name="mediconectaPU" transaction-type="JTA">
+
+        <jta-data-source>java:/jdbc/MediConectaDS</jta-data-source>
+
+        <class>com.mediconecta.modelo.Paciente</class>
+        <class>com.mediconecta.modelo.Profesional</class>
+        <class>com.mediconecta.modelo.Disponibilidad</class>
+        <class>com.mediconecta.modelo.Turno</class>
+
+        <exclude-unlisted-classes>true</exclude-unlisted-classes>
+
+        <properties>
+            <!-- Crea o actualiza las tablas al desplegar. Para el TP evita tener
+                 que correr un DDL a mano y no borra los datos entre despliegues.
+                 El esquema equivalente, por si se prefiere crearlo a mano, esta
+                 en scripts/db/esquema.sql -->
+            <property name="hibernate.hbm2ddl.auto" value="update"/>
+
+            <!-- Poner en true para mostrar el SQL en la consola durante la
+                 defensa; se deja en false para no ensuciar el log. -->
+            <property name="hibernate.show_sql" value="false"/>
+            <property name="hibernate.format_sql" value="true"/>
+        </properties>
+    </persistence-unit>
+</persistence>
