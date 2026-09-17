@@ -2,10 +2,10 @@
  * Arma la estructura comun de todas las pantallas: barra lateral, barra
  * superior y navegacion inferior para mobile.
  *
- * El menu se dibuja segun los roles que devuelve /api/sesion. Importante para la
- * defensa: esto es comodidad visual, NO seguridad. Aunque alguien forzara la URL
- * de una pantalla que no le corresponde, el contenedor le negaria igual cada
- * operacion porque la autorizacion real esta en @RolesAllowed, en el servidor.
+ * El menu se dibuja segun los roles que devuelve /api/sesion. Esto es
+ * comodidad visual, no seguridad: aunque alguien forzara la URL de una
+ * pantalla que no le corresponde, el servidor le va a negar igual cada
+ * operacion.
  */
 
 import { api, contexto, irALogin } from './api.js';
@@ -20,16 +20,33 @@ const ICONOS = {
 };
 
 const MENU = [
-    { id: 'inicio', texto: 'Inicio', archivo: 'index.html', roles: null },
-    { id: 'turnos', texto: 'Turnos', archivo: 'turnos.html', roles: ['RECEPCION', 'MEDICO', 'ADMIN'] },
-    { id: 'pacientes', texto: 'Pacientes', archivo: 'pacientes.html', roles: ['RECEPCION', 'MEDICO', 'ADMIN'] },
-    { id: 'profesionales', texto: 'Profesionales', archivo: 'profesionales.html', roles: null },
-    { id: 'reserva', texto: 'Reserva', archivo: 'reserva.html', roles: ['PACIENTE', 'RECEPCION', 'ADMIN'] }
+    { id: 'inicio', texto: 'Inicio', archivo: 'index.html', icono: 'inicio', roles: null },
+    { id: 'turnos', texto: 'Turnos', archivo: 'turnos.html', icono: 'turnos', roles: ['RECEPCION', 'MEDICO', 'ADMIN'] },
+    { id: 'mis-turnos', texto: 'Mis turnos', archivo: 'mis-turnos.html', icono: 'turnos', roles: ['PACIENTE'] },
+    { id: 'pacientes', texto: 'Pacientes', archivo: 'pacientes.html', icono: 'pacientes', roles: ['RECEPCION', 'MEDICO', 'ADMIN'] },
+    { id: 'profesionales', texto: 'Profesionales', archivo: 'profesionales.html', icono: 'profesionales', roles: null },
+    { id: 'reserva', texto: 'Reserva', archivo: 'reserva.html', icono: 'reserva', roles: ['PACIENTE', 'RECEPCION', 'ADMIN'] }
 ];
+
+const NOMBRES_ROL = {
+    PACIENTE: 'Paciente',
+    RECEPCION: 'Recepción',
+    MEDICO: 'Médico',
+    ADMIN: 'Administrador'
+};
+
+function nombreDeRol(rol) {
+    return NOMBRES_ROL[rol] || rol;
+}
 
 /** Devuelve true si la sesion tiene alguno de los roles indicados. */
 export function tieneRol(sesion, ...roles) {
     return roles.some(rol => sesion.roles.includes(rol));
+}
+
+/** Devuelve true si la sesion tiene ese rol y ningun otro. */
+function esSoloRol(sesion, rol) {
+    return sesion.roles.includes(rol) && sesion.roles.length === 1;
 }
 
 function icono(id) {
@@ -57,13 +74,12 @@ function dibujarSidebar(sesion, pagina) {
     const enlaces = visibles(sesion).map(item => {
         const activo = item.id === pagina ? ' sidebar__link--activo' : '';
         return '<a class="sidebar__link' + activo + '" href="' + contexto + '/app/' + item.archivo + '">'
-            + icono(item.id) + '<span>' + esc(item.texto) + '</span></a>';
+            + icono(item.icono) + '<span>' + esc(item.texto) + '</span></a>';
     }).join('');
 
     sidebar.innerHTML =
         '<div class="sidebar__logo">' + logo('#FFFFFF') + '<span>MediConecta</span></div>'
-        + '<nav class="sidebar__nav" aria-label="Secciones">' + enlaces + '</nav>'
-        + '<div class="sidebar__pie">Entrega 1 &middot; Desarrollo de Aplicaciones II</div>';
+        + '<nav class="sidebar__nav" aria-label="Secciones">' + enlaces + '</nav>';
 }
 
 function dibujarNavInferior(sesion, pagina) {
@@ -75,12 +91,48 @@ function dibujarNavInferior(sesion, pagina) {
     nav.innerHTML = visibles(sesion).map(item => {
         const activo = item.id === pagina ? ' class="activo"' : '';
         return '<a' + activo + ' href="' + contexto + '/app/' + item.archivo + '">'
-            + '<span class="nav-inferior__icono">' + icono(item.id) + '</span>'
+            + '<span class="nav-inferior__icono">' + icono(item.icono) + '</span>'
             + esc(item.texto) + '</a>';
     }).join('');
 }
 
-function dibujarTopbar(sesion) {
+/**
+ * Nombre y rol que se muestran en la barra superior.
+ *
+ * Si el usuario tiene una ficha asociada (paciente o medico) se muestra su
+ * nombre real; si no, un nombre acorde a su funcion en la clinica.
+ */
+async function datosDeUsuario(sesion) {
+    if (esSoloRol(sesion, 'PACIENTE')) {
+        try {
+            const ficha = await api.miFicha();
+            return { nombre: ficha.nombre, rol: nombreDeRol('PACIENTE') };
+        } catch (error) {
+            return { nombre: sesion.usuario, rol: nombreDeRol('PACIENTE') };
+        }
+    }
+
+    if (esSoloRol(sesion, 'MEDICO')) {
+        try {
+            const perfil = await api.miPerfilProfesional();
+            return { nombre: perfil.nombre, rol: nombreDeRol('MEDICO') };
+        } catch (error) {
+            return { nombre: sesion.usuario, rol: nombreDeRol('MEDICO') };
+        }
+    }
+
+    if (tieneRol(sesion, 'ADMIN')) {
+        return { nombre: nombreDeRol('ADMIN'), rol: nombreDeRol('ADMIN') };
+    }
+
+    if (tieneRol(sesion, 'RECEPCION')) {
+        return { nombre: nombreDeRol('RECEPCION'), rol: nombreDeRol('RECEPCION') };
+    }
+
+    return { nombre: sesion.usuario, rol: sesion.roles.map(nombreDeRol).join(' · ') };
+}
+
+async function dibujarTopbar(sesion) {
     const topbar = document.getElementById('topbar');
     if (!topbar) {
         return;
@@ -88,6 +140,7 @@ function dibujarTopbar(sesion) {
 
     const titulo = document.body.dataset.titulo || 'MediConecta';
     const subtitulo = document.body.dataset.subtitulo || '';
+    const datos = await datosDeUsuario(sesion);
 
     topbar.innerHTML =
         '<div class="topbar__titulo">'
@@ -96,10 +149,10 @@ function dibujarTopbar(sesion) {
         + '</div>'
         + '<div class="topbar__usuario">'
         + '<div class="usuario__datos">'
-        + '<div class="usuario__nombre">' + esc(sesion.usuario) + '</div>'
-        + '<div class="usuario__rol">' + esc(sesion.roles.join(' / ')) + '</div>'
+        + '<div class="usuario__nombre">' + esc(datos.nombre) + '</div>'
+        + '<div class="usuario__rol">' + esc(datos.rol) + '</div>'
         + '</div>'
-        + '<div class="avatar" aria-hidden="true">' + esc(iniciales(sesion.usuario)) + '</div>'
+        + '<div class="avatar" aria-hidden="true">' + esc(iniciales(datos.nombre)) + '</div>'
         + '<button type="button" class="boton boton--secundario boton--chico" id="boton-salir">Salir</button>'
         + '</div>';
 
@@ -135,7 +188,7 @@ export async function iniciarLayout() {
 
     dibujarSidebar(sesion, pagina);
     dibujarNavInferior(sesion, pagina);
-    dibujarTopbar(sesion);
+    await dibujarTopbar(sesion);
     return sesion;
 }
 

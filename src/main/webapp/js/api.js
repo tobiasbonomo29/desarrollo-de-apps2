@@ -109,6 +109,7 @@ export const api = {
     turno: (id) => pedir('GET', '/turnos/' + encodeURIComponent(id)),
     crearTurno: (pedido) => pedir('POST', '/turnos', pedido),
     cancelarTurno: (id) => pedir('PUT', '/turnos/' + encodeURIComponent(id) + '/cancelar'),
+    archivarTurno: (id) => pedir('PUT', '/turnos/' + encodeURIComponent(id) + '/archivar'),
 
     // Pacientes
     pacientes: (texto) => pedir('GET', '/pacientes' + (texto ? '?q=' + encodeURIComponent(texto) : '')),
@@ -126,6 +127,7 @@ export const api = {
     profesional: (id) => pedir('GET', '/profesionales/' + encodeURIComponent(id)),
     especialidades: () => pedir('GET', '/profesionales/especialidades'),
     registrarProfesional: (profesional) => pedir('POST', '/profesionales', profesional),
+    miPerfilProfesional: () => pedir('GET', '/profesionales/mi-perfil'),
     definirDisponibilidad: (id, franjas) =>
         pedir('PUT', '/profesionales/' + encodeURIComponent(id) + '/disponibilidad', franjas),
     horariosLibres: (id, fecha) =>
