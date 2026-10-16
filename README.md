@@ -120,6 +120,16 @@ El script tiene dos momentos:
    todavía no está arriba, levantarlo (`bin\standalone.bat`) y volver a correr el script
    con `-SoloDatasource`.
 
+> **Mensajería asincrónica (Entrega 2).** A partir de la segunda entrega el WAR declara
+> dos destinos JMS (`DestinosJms`, cola y tópico) que el contenedor crea solo al
+> desplegar, pero **solo si el subsistema de mensajería está activo**. El perfil
+> `standalone.xml` (el que se usó hasta la Entrega 1) **no lo trae**: hay que levantar
+> WildFly con `bin\standalone.bat -c standalone-full.xml` (o
+> `standalone-full-ha.xml`). Si se arranca con el perfil de siempre, el WAR no despliega:
+> el log muestra que no encuentra el subsistema `messaging-activemq`. El detalle de la
+> mensajería y de las integraciones SOAP/REST nuevas está en
+> [`docs/Entrega_Obligatoria_2.md`](docs/Entrega_Obligatoria_2.md).
+
 Si se prefiere hacerlo a mano, los pasos exactos son:
 
 ```powershell

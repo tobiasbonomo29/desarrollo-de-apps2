@@ -1,5 +1,6 @@
 package com.mediconecta.negocio;
 
+import com.mediconecta.mensajeria.NotificadorTurnos;
 import com.mediconecta.modelo.EstadoTurno;
 import com.mediconecta.modelo.Paciente;
 import com.mediconecta.modelo.Profesional;
@@ -7,6 +8,8 @@ import com.mediconecta.modelo.Turno;
 
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.ejb.Stateless;
+import jakarta.ejb.TransactionAttribute;
+import jakarta.ejb.TransactionAttributeType;
 import jakarta.inject.Inject;
 
 import java.time.LocalDate;
@@ -45,6 +48,9 @@ public class FachadaReservas {
 
     @Inject
     private GestionProfesionales gestionProfesionales;
+
+    @Inject
+    private NotificadorTurnos notificadorTurnos;
 
     // ---------- Consultas que alimentan la pantalla de reserva ----------
 
@@ -114,8 +120,20 @@ public class FachadaReservas {
      * <p>Un usuario con rol PACIENTE solo puede reservar para si mismo: la
      * comprobacion la hace {@code GestionPacientes}, que es quien conoce la
      * asociacion entre el usuario autenticado y su ficha.</p>
+     *
+     * <p><b>Transaccion declarativa de varios pasos.</b> Resolver paciente,
+     * resolver profesional, agendar el turno y avisar por JMS son pasos
+     * distintos que tienen que confirmarse o deshacerse juntos: si cualquiera
+     * de ellos lanza una excepcion de sistema (no una {@link ReglaNegocioException}
+     * prevista), el contenedor deshace todo -incluida la creacion del turno en
+     * la base- porque {@code @TransactionAttribute(REQUIRED)} hace explicito
+     * que este metodo corre dentro de una unica transaccion JTA. Se deja
+     * explicito aca porque es el flujo critico que la materia pide demostrar;
+     * en el resto de los metodos de este EJB sigue aplicando el REQUIRED por
+     * omision, sin necesidad de anotarlo.</p>
      */
     @RolesAllowed({Roles.PACIENTE, Roles.RECEPCION, Roles.ADMIN})
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public Turno reservar(SolicitudTurno solicitud) {
         if (solicitud == null) {
             throw new ReglaNegocioException("Debe enviar los datos del turno.");
@@ -125,8 +143,12 @@ public class FachadaReservas {
         gestionPacientes.exigirPropioDocumentoSiEsPaciente(paciente.getDocumento());
         Profesional profesional = resolverProfesional(solicitud);
 
-        return gestionTurnos.agendar(paciente, profesional,
+        Turno turno = gestionTurnos.agendar(paciente, profesional,
                 solicitud.getEspecialidad(), solicitud.getFechaHora(), solicitud.getMotivo());
+
+        notificadorTurnos.turnoConfirmado(turno);
+
+        return turno;
     }
 
     private Paciente resolverPaciente(SolicitudTurno solicitud) {
