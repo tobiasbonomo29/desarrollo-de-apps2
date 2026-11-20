@@ -1,5 +1,6 @@
 package com.mediconecta.modelo;
 
+import jakarta.json.bind.annotation.JsonbTransient;
 import jakarta.json.bind.annotation.JsonbDateFormat;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -12,6 +13,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -39,6 +41,16 @@ public class Turno {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    /**
+     * Version para el control de concurrencia optimista (JPA {@code @Version}):
+     * cada modificacion la incrementa y viaja al cliente en el ETag. No forma
+     * parte del JSON.
+     */
+    @Version
+    @JsonbTransient
+    @Column(nullable = false)
+    private long version;
 
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "paciente_id", nullable = false)
@@ -78,6 +90,10 @@ public class Turno {
     private boolean archivado = false;
 
     public Turno() {
+    }
+
+    public long getVersion() {
+        return version;
     }
 
     public Long getId() {

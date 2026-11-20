@@ -10,7 +10,7 @@
     java:/jdbc/MediConectaDS. Asi el usuario y la contrasena de PostgreSQL viven
     en la configuracion del servidor y no en el codigo versionado. Los pasos para
     crearlo estan en el README y automatizados en
-    scripts/wildfly/configurar-wildfly.cli.
+    scripts/wildfly/configurar-wildfly.ps1 (local) y en el Dockerfile.
 -->
 <persistence xmlns="https://jakarta.ee/xml/ns/persistence"
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -27,17 +27,25 @@
         <class>com.mediconecta.modelo.Disponibilidad</class>
         <class>com.mediconecta.modelo.Turno</class>
         <class>com.mediconecta.modelo.Usuario</class>
-        <class>com.mediconecta.modelo.RegistroIdempotencia</class>
-        <class>com.mediconecta.modelo.MensajeProcesado</class>
+        <class>com.mediconecta.modelo.ClaveIdempotencia</class>
+        <class>com.mediconecta.modelo.Notificacion</class>
+        <class>com.mediconecta.modelo.MensajeFallido</class>
 
         <exclude-unlisted-classes>true</exclude-unlisted-classes>
 
         <properties>
-            <!-- Crea o actualiza las tablas al desplegar. Para el TP evita tener
-                 que correr un DDL a mano y no borra los datos entre despliegues.
-                 El esquema equivalente, por si se prefiere crearlo a mano, esta
-                 en scripts/db/esquema.sql -->
-            <property name="hibernate.hbm2ddl.auto" value="update"/>
+            <!-- Hibernate ya NO crea ni modifica tablas: el esquema lo definen
+                 las migraciones versionadas de db/migraciones (Flyway). Al
+                 desplegar, Hibernate solo VALIDA que las tablas coincidan con
+                 las entidades; si falta una migracion, el despliegue falla con
+                 un mensaje claro en lugar de romper en la primera consulta.
+                 Aplicar las migraciones: mvn flyway:migrate (ver README). -->
+            <property name="hibernate.hbm2ddl.auto" value="validate"/>
+
+            <!-- Ninguna consulta puede tardar mas de 5 segundos: si la base se
+                 traba, el pedido falla en lugar de retener el hilo y la
+                 conexion indefinidamente. -->
+            <property name="jakarta.persistence.query.timeout" value="5000"/>
 
             <!-- Poner en true para mostrar el SQL en la consola durante la
                  defensa; se deja en false para no ensuciar el log. -->

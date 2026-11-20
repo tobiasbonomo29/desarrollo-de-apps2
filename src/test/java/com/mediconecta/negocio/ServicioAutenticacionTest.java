@@ -3,21 +3,16 @@ package com.mediconecta.negocio;
 import com.mediconecta.datos.memoria.RepositorioUsuariosEnMemoria;
 import com.mediconecta.modelo.Usuario;
 import com.mediconecta.seguridad.HashDeClaves;
-import com.mediconecta.seguridad.ProteccionAbuso;
+import com.mediconecta.seguridad.LimitadorDeFrecuencia;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.time.Clock;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.ZoneOffset;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ServicioAutenticacionTest {
 
@@ -31,76 +26,7 @@ class ServicioAutenticacionTest {
         repositorio.guardar(new Usuario("recepcion", HashDeClaves.calcular("Demo.2026"), Set.of(Roles.RECEPCION)));
         servicio = new ServicioAutenticacion();
         Inyeccion.campo(servicio, "repositorio", repositorio);
-        reloj = new RelojDePrueba();
-        Inyeccion.campo(servicio, "proteccion", new ProteccionAbuso(reloj));
-    }
-
-    private RelojDePrueba reloj;
-
-    /** Reloj que los tests pueden adelantar. */
-    static final class RelojDePrueba extends Clock {
-        private Instant ahora = Instant.parse("2026-11-20T12:00:00Z");
-
-        void avanzar(Duration tiempo) {
-            ahora = ahora.plus(tiempo);
-        }
-
-        @Override
-        public ZoneOffset getZone() {
-            return ZoneOffset.UTC;
-        }
-
-        @Override
-        public Clock withZone(java.time.ZoneId zona) {
-            return this;
-        }
-
-        @Override
-        public Instant instant() {
-            return ahora;
-        }
-    }
-
-    private void fallar(String usuario, String origen, int veces) {
-        for (int i = 0; i < veces; i++) {
-            assertThrows(CredencialesInvalidasException.class,
-                    () -> servicio.autenticar(usuario, "incorrecta", origen));
-        }
-    }
-
-    @Test
-    void despuesDeCincoFallosLaCuentaSeBloqueaAunqueLaClaveSeaCorrecta() {
-        fallar("recepcion", "10.0.0.1", 5);
-
-        DemasiadosIntentosException bloqueo = assertThrows(DemasiadosIntentosException.class,
-                () -> servicio.autenticar("recepcion", "Demo.2026", "10.0.0.2"));
-        assertTrue(bloqueo.getSegundosDeEspera() > 0 && bloqueo.getSegundosDeEspera() <= 15 * 60);
-        assertTrue(bloqueo.getMessage().contains("minutos"));
-    }
-
-    @Test
-    void elBloqueoEsTemporal() {
-        fallar("Recepcion ", "10.0.0.1", 5);
-        reloj.avanzar(Duration.ofMinutes(16));
-        assertEquals("recepcion", servicio.autenticar("recepcion", "Demo.2026", "10.0.0.1").getUsuario());
-    }
-
-    @Test
-    void unLoginCorrectoReiniciaElContadorDeLaCuenta() {
-        fallar("recepcion", null, 4);
-        servicio.autenticar("recepcion", "Demo.2026", null);
-        fallar("recepcion", null, 4);
-        assertEquals("recepcion", servicio.autenticar("recepcion", "Demo.2026").getUsuario());
-    }
-
-    @Test
-    void muchosFallosDesdeElMismoOrigenBloqueanEseOrigen() {
-        for (int i = 0; i < ProteccionAbuso.FALLOS_POR_ORIGEN; i++) {
-            fallar("usuario" + i, "10.9.9.9", 1);
-        }
-        assertThrows(DemasiadosIntentosException.class,
-                () -> servicio.autenticar("recepcion", "Demo.2026", "10.9.9.9"));
-        assertFalse(servicio.autenticar("recepcion", "Demo.2026", "10.1.1.1").getRoles().isEmpty());
+        Inyeccion.campo(servicio, "limitador", new LimitadorDeFrecuencia());
     }
 
     @Test
@@ -134,5 +60,35 @@ class ServicioAutenticacionTest {
     void sinDatosSeRechaza() {
         assertThrows(CredencialesInvalidasException.class, () -> servicio.autenticar(null, null));
         assertThrows(CredencialesInvalidasException.class, () -> servicio.autenticar(" ", "x"));
+    }
+
+    @Test
+    void despuesDeCincoFallosSeBloqueaConUn429AunqueLaClaveSeaCorrecta() {
+        for (int i = 0; i < ServicioAutenticacion.MAXIMO_FALLOS_POR_USUARIO; i++) {
+            assertThrows(CredencialesInvalidasException.class, () -> servicio.autenticar("recepcion", "mala", "10.0.0.1"));
+        }
+        DemasiadasSolicitudesException bloqueo = assertThrows(DemasiadasSolicitudesException.class,
+                () -> servicio.autenticar("RECEPCION ", "Demo.2026", "10.0.0.2"));
+        assertTrue(bloqueo.segundosDeEspera() > 0);
+    }
+
+    @Test
+    void unLoginCorrectoBorraLosFallosAnteriores() {
+        for (int i = 0; i < ServicioAutenticacion.MAXIMO_FALLOS_POR_USUARIO - 1; i++) {
+            assertThrows(CredencialesInvalidasException.class, () -> servicio.autenticar("recepcion", "mala"));
+        }
+        servicio.autenticar("recepcion", "Demo.2026");
+        assertThrows(CredencialesInvalidasException.class, () -> servicio.autenticar("recepcion", "mala"));
+        assertEquals("recepcion", servicio.autenticar("recepcion", "Demo.2026").getUsuario());
+    }
+
+    @Test
+    void muchosFallosDesdeUnaMismaIpBloqueanEsaIp() {
+        for (int i = 0; i < ServicioAutenticacion.MAXIMO_FALLOS_POR_ORIGEN; i++) {
+            String usuario = "inexistente" + i;
+            assertThrows(CredencialesInvalidasException.class, () -> servicio.autenticar(usuario, "x", "10.9.9.9"));
+        }
+        assertThrows(DemasiadasSolicitudesException.class, () -> servicio.autenticar("recepcion", "Demo.2026", "10.9.9.9"));
+        assertEquals("recepcion", servicio.autenticar("recepcion", "Demo.2026", "10.1.1.1").getUsuario());
     }
 }

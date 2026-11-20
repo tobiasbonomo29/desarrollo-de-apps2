@@ -43,7 +43,9 @@ import java.util.logging.Logger;
  * <p>La clave solo vive en el servidor: el navegador habla con MediConecta y
  * MediConecta habla con Groq, igual que con los sistemas de obras sociales.</p>
  */
-// NOT_SUPPORTED: la llamada al proveedor no debe retener una transaccion abierta.
+// NOT_SUPPORTED: una llamada remota no tiene que retener una transaccion, y asi
+// una falla del sistema externo no marca para rollback la del llamador (que
+// necesita seguir viva para responder con el fallback).
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class AdaptadorIaGroq implements OrientadorEspecialidad {
@@ -53,22 +55,6 @@ public class AdaptadorIaGroq implements OrientadorEspecialidad {
     static final String URL_POR_DEFECTO = "https://api.groq.com/openai/v1/chat/completions";
 
     static final String MODELO_POR_DEFECTO = "openai/gpt-oss-120b";
-
-    static final String ORIGEN = "IA";
-
-    /** Timeout de conexion y lectura por omision (el mismo corte que aplica {@link ProteccionIntegracion}). */
-    static final int TIMEOUT_POR_DEFECTO = 5;
-
-    /** {@code mediconecta.ia.timeoutSegundos}, entre 1 y 5; fuera de rango o mal escrito se usa 5. */
-    static int timeoutSegundos() {
-        String valor = configuracion("mediconecta.ia.timeoutSegundos", "MEDICONECTA_IA_TIMEOUT_SEGUNDOS", null);
-        try {
-            int segundos = valor == null ? TIMEOUT_POR_DEFECTO : Integer.parseInt(valor);
-            return segundos >= 1 && segundos <= TIMEOUT_POR_DEFECTO ? segundos : TIMEOUT_POR_DEFECTO;
-        } catch (NumberFormatException e) {
-            return TIMEOUT_POR_DEFECTO;
-        }
-    }
 
     @Override
     public SugerenciaEspecialidad orientar(List<MensajeChat> conversacion, List<String> especialidades) {
@@ -83,10 +69,9 @@ public class AdaptadorIaGroq implements OrientadorEspecialidad {
         String url = configuracion("mediconecta.ia.url", "MEDICONECTA_IA_URL", URL_POR_DEFECTO);
         String cuerpo = armarPedido(modelo, conversacion, especialidades).toString();
 
-        int segundos = timeoutSegundos();
         Client cliente = ClientBuilder.newBuilder()
-                .connectTimeout(segundos, TimeUnit.SECONDS)
-                .readTimeout(segundos, TimeUnit.SECONDS)
+                .connectTimeout(2, TimeUnit.SECONDS)
+                .readTimeout(5, TimeUnit.SECONDS)
                 .build();
         try (Response respuesta = cliente.target(url)
                 .request(MediaType.APPLICATION_JSON)
@@ -120,8 +105,13 @@ public class AdaptadorIaGroq implements OrientadorEspecialidad {
                 Reglas:
                 - No diagnostiques, no nombres enfermedades probables y no indiques tratamientos ni medicamentos.
                 - Si con lo que te contaron no alcanza para elegir, hacé una sola pregunta corta y concreta, y dejá "especialidad" en null.
-                - Si ninguna especialidad de la lista encaja, sugerí Clinica Medica si está en la lista; si no está, explicá que no hay una adecuada y dejá "especialidad" en null.
-                - Si aparece algún signo de emergencia (dolor fuerte en el pecho, falta de aire, desmayo, convulsiones, sangrado abundante, signos de ACV como boca torcida o debilidad de un lado del cuerpo, ideas de hacerse daño, o un bebé con fiebre muy alta o muy decaído), poné "urgente" en true y decí que no espere un turno: que llame al 107 (SAME) o al 911, o que vaya a la guardia más cercana.
+                - Si ninguna especialidad de la lista encaja, sugerí Clinica Medica si está en la lista; \
+                si no está, explicá que no hay una adecuada y dejá "especialidad" en null.
+                - Si aparece algún signo de emergencia (dolor fuerte en el pecho, falta de aire, desmayo, \
+                convulsiones, sangrado abundante, signos de ACV como boca torcida o debilidad de un lado del \
+                cuerpo, ideas de hacerse daño, o un bebé con fiebre muy alta o muy decaído), poné "urgente" \
+                en true y decí que no espere un turno: que llame al 107 (SAME) o al 911, o que vaya a la \
+                guardia más cercana.
                 - Si te piden algo que no tiene que ver con elegir una especialidad, explicá con amabilidad que solo podés ayudar con eso.
                 - Hablá en español rioplatense, con calidez, en no más de tres oraciones.
 
@@ -185,7 +175,6 @@ public class AdaptadorIaGroq implements OrientadorEspecialidad {
         if (sugerencia.getMensaje().isEmpty()) {
             throw new IntegracionExternaException("El asistente de IA devolvio una respuesta vacia.");
         }
-        sugerencia.setOrigen(ORIGEN);
         return sugerencia;
     }
 
@@ -197,7 +186,7 @@ public class AdaptadorIaGroq implements OrientadorEspecialidad {
         return texto.isEmpty() || texto.equalsIgnoreCase("null") ? null : texto;
     }
 
-    static String configuracion(String propiedad, String variableDeEntorno, String porDefecto) {
+    private static String configuracion(String propiedad, String variableDeEntorno, String porDefecto) {
         String valor = System.getProperty(propiedad);
         if (valor == null || valor.isBlank()) {
             valor = System.getenv(variableDeEntorno);

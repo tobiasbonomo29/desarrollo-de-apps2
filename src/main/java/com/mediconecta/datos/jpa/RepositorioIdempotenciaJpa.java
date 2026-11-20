@@ -1,7 +1,7 @@
 package com.mediconecta.datos.jpa;
 
 import com.mediconecta.datos.RepositorioIdempotencia;
-import com.mediconecta.modelo.RegistroIdempotencia;
+import com.mediconecta.modelo.ClaveIdempotencia;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
@@ -11,7 +11,7 @@ import jakarta.persistence.PersistenceException;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-/** Implementacion de {@link RepositorioIdempotencia} sobre JPA + PostgreSQL. */
+/** {@link RepositorioIdempotencia} sobre JPA + PostgreSQL. */
 @ApplicationScoped
 public class RepositorioIdempotenciaJpa implements RepositorioIdempotencia {
 
@@ -19,9 +19,9 @@ public class RepositorioIdempotenciaJpa implements RepositorioIdempotencia {
     private EntityManager em;
 
     @Override
-    public Optional<RegistroIdempotencia> buscar(String usuario, String clave) {
-        return em.createQuery("select r from RegistroIdempotencia r"
-                        + " where r.usuario = :usuario and r.clave = :clave", RegistroIdempotencia.class)
+    public Optional<ClaveIdempotencia> buscar(String usuario, String clave) {
+        return em.createQuery("select c from ClaveIdempotencia c where c.usuario = :usuario and c.clave = :clave",
+                        ClaveIdempotencia.class)
                 .setParameter("usuario", usuario)
                 .setParameter("clave", clave)
                 .getResultStream()
@@ -29,16 +29,15 @@ public class RepositorioIdempotenciaJpa implements RepositorioIdempotencia {
     }
 
     /**
-     * El {@code flush} inmediato es a proposito: si otro pedido con la misma
-     * clave esta en curso, el INSERT espera a que ese termine y despues choca
-     * con la restriccion unica. Asi el conflicto aparece aca, antes de crear el
-     * turno, y no recien en el commit. La transaccion queda marcada para
-     * rollback y el negocio responde con un conflicto.
+     * El {@code flush} fuerza el INSERT en este momento: si otra transaccion ya
+     * registro la misma clave, PostgreSQL espera a que termine y, si confirmo,
+     * rechaza este INSERT por la restriccion unica. Esa violacion es la senal de
+     * "pedido repetido en curso"; la transaccion queda marcada para deshacerse.
      */
     @Override
-    public boolean registrar(RegistroIdempotencia registro) {
+    public boolean registrar(ClaveIdempotencia clave) {
         try {
-            em.persist(registro);
+            em.persist(clave);
             em.flush();
             return true;
         } catch (PersistenceException duplicada) {
@@ -47,13 +46,17 @@ public class RepositorioIdempotenciaJpa implements RepositorioIdempotencia {
     }
 
     @Override
-    public RegistroIdempotencia actualizar(RegistroIdempotencia registro) {
-        return em.merge(registro);
+    public void eliminar(ClaveIdempotencia clave) {
+        ClaveIdempotencia administrada = em.contains(clave) ? clave : em.find(ClaveIdempotencia.class, clave.getId());
+        if (administrada != null) {
+            em.remove(administrada);
+            em.flush();
+        }
     }
 
     @Override
-    public int borrarAnterioresA(LocalDateTime limite) {
-        return em.createQuery("delete from RegistroIdempotencia r where r.creadaEn < :limite")
+    public int eliminarAnterioresA(LocalDateTime limite) {
+        return em.createQuery("delete from ClaveIdempotencia c where c.creadaEn < :limite")
                 .setParameter("limite", limite)
                 .executeUpdate();
     }

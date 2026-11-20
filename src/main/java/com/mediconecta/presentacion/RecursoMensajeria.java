@@ -1,7 +1,7 @@
 package com.mediconecta.presentacion;
 
-import com.mediconecta.mensajeria.DiagnosticoMensajeria;
-import com.mediconecta.mensajeria.EstadoMensajeria;
+import com.mediconecta.modelo.MensajeFallido;
+import com.mediconecta.negocio.GestionNotificaciones;
 
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
@@ -12,15 +12,20 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import java.util.List;
 import java.util.Map;
 
 /**
- * Diagnostico de la mensajeria (rol ADMIN, lo exige {@link DiagnosticoMensajeria}).
+ * Operacion de la mensajeria JMS (solo ADMIN; el control esta en
+ * {@link GestionNotificaciones}).
  *
- * <pre>
- * GET  /api/mensajeria/estado      -&gt; procesados por consumidor y ultimos mensajes en la DLQ
- * POST /api/mensajeria/prueba-dlq  -&gt; 202 {"clave":"prueba-dlq-..."}: manda un mensaje veneno
- * </pre>
+ * <ul>
+ *   <li>{@code GET /api/mensajeria/mensajes-fallidos}: lo que termino en la
+ *       DLQ despues de agotar los reintentos.</li>
+ *   <li>{@code POST /api/mensajeria/mensaje-defectuoso}: manda un mensaje que
+ *       ningun consumidor entiende, para ver en vivo los reintentos y la DLQ.
+ *       Responde {@code 202 Accepted}: el resultado es asincronico.</li>
+ * </ul>
  */
 @Path("/mensajeria")
 @Produces(MediaType.APPLICATION_JSON)
@@ -28,17 +33,18 @@ import java.util.Map;
 public class RecursoMensajeria {
 
     @Inject
-    private DiagnosticoMensajeria diagnostico;
+    private GestionNotificaciones gestionNotificaciones;
 
     @GET
-    @Path("/estado")
-    public EstadoMensajeria estado() {
-        return diagnostico.estado();
+    @Path("/mensajes-fallidos")
+    public List<MensajeFallido> mensajesFallidos() {
+        return gestionNotificaciones.mensajesFallidos();
     }
 
     @POST
-    @Path("/prueba-dlq")
-    public Response pruebaDlq() {
-        return Response.accepted(Map.of("clave", diagnostico.enviarMensajeVeneno())).build();
+    @Path("/mensaje-defectuoso")
+    public Response enviarMensajeDefectuoso() {
+        String eventoId = gestionNotificaciones.enviarMensajeDefectuoso();
+        return Response.accepted(Map.of("eventoId", eventoId)).build();
     }
 }

@@ -9,10 +9,12 @@
 #  Requiere que antes se haya instalado el modulo del driver (lo hace
 #  configurar-wildfly.ps1, o a mano con "module add").
 #
-#  El usuario y la contrasena se pasan como propiedades del sistema para no
-#  dejarlos escritos en un archivo versionado:
+#  La URL, el usuario y la contrasena se pasan como propiedades del sistema
+#  para no dejarlos escritos en un archivo versionado (no hay valores por
+#  defecto: si falta alguno, el CLI falla):
 #
 #      jboss-cli.bat --connect --resolve-parameter-values ^
+#          -Dmediconecta.db.url=jdbc:postgresql://127.0.0.1:5432/mediconecta ^
 #          -Dmediconecta.db.usuario=mediconecta ^
 #          -Dmediconecta.db.clave=mediconecta ^
 #          --file=configurar-datasource.cli
@@ -43,16 +45,17 @@ end-if
 /subsystem=datasources/data-source=MediConectaDS:add( \
     jndi-name="java:/jdbc/MediConectaDS", \
     driver-name=postgresql, \
-    connection-url="${mediconecta.db.url:jdbc:postgresql://localhost:5432/mediconecta}", \
-    user-name="${mediconecta.db.usuario:mediconecta}", \
-    password="${mediconecta.db.clave:mediconecta}", \
+    connection-url="${mediconecta.db.url}", \
+    user-name="${mediconecta.db.usuario}", \
+    password="${mediconecta.db.clave}", \
     min-pool-size=5, \
     max-pool-size=20, \
     enabled=true, \
     use-java-context=true, \
     background-validation=true, \
     background-validation-millis=60000, \
-    check-valid-connection-sql="SELECT 1")
+    check-valid-connection-sql="SELECT 1", \
+    blocking-timeout-wait-millis=5000)
 
 /subsystem=datasources/data-source=MediConectaDS:test-connection-in-pool
 

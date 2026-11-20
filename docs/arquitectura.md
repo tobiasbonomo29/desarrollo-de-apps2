@@ -469,9 +469,10 @@ un servicio SOAP.
 
 | Operación | PACIENTE | RECEPCION | MEDICO | ADMIN |
 |---|:--:|:--:|:--:|:--:|
-| Prueba de vida (`/api/salud`) | público | público | público | público |
+| Health checks (`/api/salud`, `/api/salud/vivo`) | público | público | público | público |
 | Ver la agenda completa | — | ✔ | ✔ | ✔ |
-| Ver un turno puntual | ✔ | ✔ | ✔ | ✔ |
+| Ver un turno puntual | solo los propios | ✔ | ✔ | ✔ |
+| Ver los avisos JMS de un turno | solo de los propios | ✔ | ✔ | ✔ |
 | Agendar un turno directo | solo para sí mismo | ✔ | — | ✔ |
 | Cancelar un turno | solo el propio | ✔ | solo de su agenda | ✔ |
 | Marcar un turno atendido | — | — | solo de su agenda | ✔ |
@@ -486,6 +487,7 @@ un servicio SOAP.
 | Ver la propia ficha de profesional (`mi-perfil`) | — | — | ✔ | — |
 | Tablero de la clínica | — | ✔ | ✔ | ✔ |
 | Reserva guiada | ✔ (para sí mismo) | ✔ | — | ✔ |
+| Mensajes fallidos (DLQ) y mensaje de prueba | — | — | — | ✔ |
 
 ### 5.4 Un caso donde lo declarativo no alcanza
 
@@ -517,6 +519,17 @@ Se redirige y no se hace *forward* porque con un forward la barra del navegador 
 mostrando la URL protegida y las rutas relativas de `login.html` (`css/`, `js/`) se
 resolverían mal.
 
+### 5.6 Endurecimiento posterior a la corrección de la 2.ª entrega
+
+| Tema | Qué se hizo | Dónde |
+|---|---|---|
+| **Sin secretos por defecto** | El secreto JWT ya no tiene un valor fijo en el código: si no se configura, se genera uno aleatorio al arrancar (`SecureRandom`). Los usuarios demo solo se crean si se configuró su contraseña (`MEDICONECTA_DEMO_CLAVE`). El datasource no tiene usuario ni contraseña por omisión. | `ServicioJwt`, `CargaDeDatosDemo`, `configurar-datasource.cli`, `.env.example` |
+| **Cabeceras de seguridad** | Un filtro agrega a toda respuesta `Content-Security-Policy` (estricta: sin scripts ni estilos en línea; en la API `default-src 'none'`), `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-*`, HSTS si llega por HTTPS y `Cache-Control: no-store` en la API. Para que la CSP pudiera ser estricta se quitaron todos los `style="..."` del HTML y del JS. | `seguridad.CabecerasSeguridad`, `css/styles.css` (utilidades `u-*`) |
+| **401 coherente** | El 401 del mecanismo JWT sale en Problem Details y con las mismas cabeceras (se escribe antes de los filtros). | `MecanismoAutenticacionJwt` |
+| **IDOR** | `GET /api/turnos/{id}` dejaba que un PACIENTE leyera turnos ajenos recorriendo ids. Ahora `GestionTurnos.obtenerTurno` exige que sea suyo (mismo control programático que §5.4). | `GestionTurnos` |
+| **Cookie de sesión** | `HttpOnly` y `SameSite=Strict` (defensa CSRF para el asistente `@Stateful`). | `web.xml`, `WEB-INF/undertow-handlers.conf` |
+| **Datos personales en JMS** | El evento viaja con ids, no con nombre ni documento del paciente. | `mensajeria.EventoTurno` |
+
 ---
 
 ## 6. Persistencia
@@ -525,8 +538,17 @@ resolverían mal.
   `src/main/resources/META-INF/persistence.xml`, con `transaction-type="JTA"`.
 - **Datasource:** `java:/jdbc/MediConectaDS`, definido **en WildFly**, no en el WAR. Por eso
   el usuario y la contraseña de PostgreSQL no están en el código versionado.
-- **Esquema:** lo genera Hibernate (`hibernate.hbm2ddl.auto=update`). El DDL equivalente
-  está documentado en `scripts/db/esquema.sql`.
+- **Esquema:** lo definen las **migraciones versionadas** de `db/migraciones` (Flyway):
+  `V1__esquema_inicial.sql` reproduce exactamente lo que generaba Hibernate hasta la
+  Entrega 2 y `V2__...` agrega índices y las tablas `notificaciones`, `mensajes_fallidos` y
+  `claves_idempotencia`. Hibernate ya no modifica nada: `hbm2ddl.auto=validate` comprueba al
+  desplegar que las tablas coincidan con las entidades. Las migraciones corren fuera del WAR
+  (plugin de Maven en local, servicio `migraciones` en Docker, job propio en CI), así el WAR
+  sigue sin librerías de implementación y el esquema existe antes de que Hibernate lo valide.
+  Una base creada por Hibernate se toma como versión 1 (`baselineOnMigrate`).
+- **Timeouts:** ninguna consulta puede tardar más de 5 s
+  (`jakarta.persistence.query.timeout`); un pedido espera como máximo 5 s una conexión libre
+  del pool (`configurar-limites.cli`).
 
 ### 6.1 Modelo relacional
 
@@ -666,7 +688,28 @@ despliega con otro nombre.
 **Decisión:** sólo `jakarta.platform:jakarta.jakartaee-api:10.0.0`, en scope `provided`.
 **Por qué:** las implementaciones (RESTEasy, Weld, Hibernate, el contenedor de EJB) las
 aporta WildFly. Empaquetarlas dentro del WAR generaría clases duplicadas en el classpath y
-el despliegue fallaría. El WAR pesa unos 120 kB, casi todo frontend.
+el despliegue fallaría. El WAR pesa unos 260 kB, casi todo frontend.
+
+Las herramientas que se sumaron después de la corrección (Checkstyle, JaCoCo, Flyway) son
+**plugins de Maven**: corren en el build o en el pipeline y no entran al WAR.
+
+### 7.9 Migraciones fuera del WAR
+
+**Decisión:** Flyway corre como paso propio (plugin de Maven, imagen `flyway/flyway` en
+compose, job de CI) y no embebido en la aplicación.
+**Por qué:** la unidad de persistencia de WildFly arranca antes que cualquier `@Startup`, así
+que una migración embebida llegaría tarde para `hbm2ddl.auto=validate`. Además Flyway 10+
+arrastra Jackson, que chocaría con la regla de no empaquetar implementaciones. Como paso
+separado, el esquema queda listo antes del despliegue y Hibernate lo puede validar.
+
+### 7.10 Contrato OpenAPI escrito a mano y verificado por test
+
+**Decisión:** `openapi.json` (OpenAPI 3.1) escrito a mano, servido como archivo estático y
+navegable con Swagger UI; un test (`ContratoOpenApiTest`) lo compara con los recursos.
+**Alternativa descartada:** generarlo con MicroProfile OpenAPI. `standalone-full.xml` (el
+perfil que exige JMS) no trae ese subsistema y habría que agregarlo a mano en cada
+instalación. A mano se documentan en castellano los roles (`x-roles`), los tipos de Problem
+Details y la semántica de `Idempotency-Key`; el test evita que se desactualice.
 
 ---
 
@@ -688,24 +731,40 @@ el despliegue fallaría. El WAR pesa unos 120 kB, casi todo frontend.
 
 ---
 
-## 9. Checkpoint 3: resiliencia, mensajería confiable y contrato REST
+## 9. Operación: mensajería confiable, API y despliegue
 
-Agregados de la tercera entrega. El detalle de las pruebas está en
-[`plan-de-pruebas.md`](plan-de-pruebas.md) y la relación requisito → código → prueba en
-[`matriz-trazabilidad.md`](matriz-trazabilidad.md).
+El detalle punto por punto (con evidencia y cómo probar cada cosa) está en
+[`Mejoras_Correccion_Entrega_2.md`](Mejoras_Correccion_Entrega_2.md). Resumen:
 
-| Tema | Decisión | Dónde |
-|---|---|---|
-| Timeout | 5 s duros por llamada externa, con el `ManagedExecutorService` del contenedor; además 5 s en cada cliente (JAX-RS, JAX-WS) para liberar el hilo | `integraciones.ProteccionIntegracion`, adapters |
-| Circuit breaker | 3 fallas seguidas abren el circuito 30 s; luego una llamada de prueba (semiabierto) | `ProteccionIntegracion` |
-| Fallback | Cobertura: último dato bueno (≤ 24 h) o "sin verificar", nunca un 502. IA: orientador por palabras clave (segundo Adapter de `OrientadorEspecialidad`) | `GestorCobertura`, `MemoriaCobertura`, `OrientadorPorPalabrasClave` |
-| Transacciones y llamadas remotas | Adapters `NOT_SUPPORTED`: no se retiene una transacción de base durante una llamada externa y su falla no marca para rollback la del llamador | adapters |
-| Idempotency-Key | Registro por usuario + clave en la **misma transacción JTA** que la reserva; restricción única para reintentos simultáneos (409); otra huella → 422 | `FachadaReservas#reservarIdempotente`, `RegistroIdempotencia` |
-| ETag | Hash de los campos visibles, calculado en presentación (no hizo falta columna `@Version`); `If-Match` opcional para no romper clientes | `presentacion.Etiquetas` |
-| Errores | Problem Details (RFC 9457) con extensiones `error`/`codigo` por compatibilidad | `presentacion.Problemas`, `Manejador*` |
-| Mensajería | Mensajes `PERSISTENT` con clave de negocio, consumidores idempotentes, DLQ propia con 3 reintentos, suscripciones durables al tópico | `mensajeria.*`, `configurar-mensajeria.cli` |
-| Seguridad | BOLA cerrado en `obtenerTurno` y `buscarPorDocumento` (403 con `AccesoDenegadoException`); fuerza bruta → 429; cabeceras CSP; sin secreto JWT fijo | `negocio`, `seguridad.ProteccionAbuso`, `FiltroCabecerasSeguridad` |
-| Calidad | Maven Wrapper, JaCoCo (80/70), PIT (60), CI con gitleaks y Sonar opcional | `pom.xml`, `.github/workflows/ci.yml` |
+```mermaid
+sequenceDiagram
+    participant F as FachadaReservas
+    participant B as Broker JMS (Artemis)
+    participant C as ReceptorConfirmacion (MDB)
+    participant N as GestionNotificaciones
+    participant D as MonitorMensajesFallidos (DLQ)
 
-Patrones nuevos o reforzados: **Adapter** (ahora con dos implementaciones de
-`OrientadorEspecialidad`), **Circuit Breaker** e **Idempotent Receiver** (mensajería).
+    F->>B: EventoTurno JSON v1 (eventoId) · misma transaccion XA que el turno
+    B->>C: entrega 1
+    C->>N: registrarConfirmacion(eventoId, turnoId)
+    alt ya existe (eventoId, CONFIRMACION)
+        N-->>C: false: duplicado, no se repite el aviso
+    else falla (base caida, mensaje invalido)
+        C->>C: setRollbackOnly()
+        B->>C: reintentos a 1 s, 2 s y 4 s
+        B->>D: tras la 4.a entrega: MensajesFallidos
+        D->>N: registrarMensajeFallido
+    end
+```
+
+- **Mensajería:** contrato JSON versionado (`EventoTurno`), mensajes persistentes,
+  consumidores idempotentes por `(eventoId, tipo)`, que hacen trabajo real (registran
+  confirmación, recordatorio a 24 h y aviso al profesional) y no se tragan los errores;
+  reintentos con backoff exponencial y DLQ configurados en el broker
+  (`configurar-mensajeria.cli`); suscripciones durables al tópico.
+- **API:** Problem Details (RFC 9457) para todo error; `Idempotency-Key` en el alta de
+  turnos; timeouts de conexión y de respuesta en los adaptadores SOAP y REST (`504` si se
+  agotan) y en el servidor (JTA, HTTP, pool); contrato OpenAPI 3.1.
+- **Despliegue:** `Dockerfile` multi-etapa con `HEALTHCHECK`, `compose.yaml` (base +
+  migraciones + app), health checks de readiness y liveness, CI en GitHub Actions con
+  linter, tests, cobertura mínima, migraciones y prueba de punta a punta.

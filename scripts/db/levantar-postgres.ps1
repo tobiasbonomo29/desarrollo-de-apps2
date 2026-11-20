@@ -60,5 +60,5 @@ Write-Host "  Base      : $Base"
 Write-Host "  Usuario   : $Usuario"
 Write-Host "  URL JDBC  : jdbc:postgresql://localhost:$Puerto/$Base"
 Write-Host ""
-Write-Host "Las tablas las crea Hibernate al desplegar el WAR." -ForegroundColor DarkGray
+Write-Host "Las tablas las crean las migraciones:  mvn flyway:migrate -Dflyway.url=jdbc:postgresql://127.0.0.1:$Puerto/$Base -Dflyway.password=..." -ForegroundColor DarkGray
 Write-Host "Para entrar por consola:  docker exec -it $Nombre psql -U $Usuario -d $Base" -ForegroundColor DarkGray

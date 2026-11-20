@@ -1,0 +1,21 @@
+[
+ {"archivo":"grafico-metricas.html","titulo":"Cobertura y mutation testing — versión integrada","subtitulo":"./mvnw verify y PIT, 19-20/11/2026, commit de integración. Mismo resultado en el CI de GitHub Actions.","filas":[
+  {"nombre":"Líneas · capa de negocio","valor":95.0,"umbral":80,"nota":"720 / 758 · paquete negocio"},
+  {"nombre":"Ramas · capa de negocio","valor":82.6,"umbral":70,"nota":"276 / 334"},
+  {"nombre":"Mutation score (PIT)","valor":85.4,"umbral":60,"nota":"338 / 396 · negocio + modelo.estado"},
+  {"nombre":"Líneas · alcance del umbral global","valor":86.7,"umbral":null,"nota":"1684 / 1942 · regla BUNDLE del pom"},
+  {"nombre":"Ramas · alcance del umbral global","valor":79.0,"umbral":null,"nota":"529 / 670"},
+  {"nombre":"Líneas · proyecto completo","valor":72.5,"umbral":null,"nota":"1766 / 2436 · 128 clases"},
+  {"nombre":"Ramas · proyecto completo","valor":69.2,"umbral":null,"nota":"556 / 804"}]},
+ {"archivo":"grafico-paquetes.html","titulo":"Cobertura de líneas por paquete (JaCoCo)","subtitulo":"Proyecto completo, sin exclusiones. datos.jpa y los simuladores se ejercitan en el humo de CI, no en JUnit.","filas":[
+  {"nombre":"modelo.estado","valor":95.3,"umbral":null,"nota":"41 / 43"},
+  {"nombre":"negocio","valor":95.0,"umbral":80,"nota":"720 / 758"},
+  {"nombre":"datos.memoria","valor":90.9,"umbral":null,"nota":"120 / 132"},
+  {"nombre":"modelo","valor":82.6,"umbral":null,"nota":"185 / 224"},
+  {"nombre":"seguridad","valor":79.1,"umbral":null,"nota":"174 / 220"},
+  {"nombre":"mensajeria","valor":78.9,"umbral":null,"nota":"120 / 152"},
+  {"nombre":"integraciones","valor":72.8,"umbral":null,"nota":"238 / 327"},
+  {"nombre":"presentacion","valor":42.1,"umbral":null,"nota":"168 / 399"},
+  {"nombre":"datos.jpa","valor":0.0,"umbral":null,"nota":"0 / 139"},
+  {"nombre":"integraciones.simulacion","valor":0.0,"umbral":null,"nota":"0 / 42"}]}
+]

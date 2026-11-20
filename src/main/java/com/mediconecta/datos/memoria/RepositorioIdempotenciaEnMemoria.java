@@ -1,7 +1,7 @@
 package com.mediconecta.datos.memoria;
 
 import com.mediconecta.datos.RepositorioIdempotencia;
-import com.mediconecta.modelo.RegistroIdempotencia;
+import com.mediconecta.modelo.ClaveIdempotencia;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Alternative;
@@ -13,46 +13,45 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Implementacion en memoria de {@link RepositorioIdempotencia} (plan B sin base
- * de datos y tests unitarios). {@code putIfAbsent} cumple el mismo papel que la
- * restriccion unica de la tabla.
+ * {@link RepositorioIdempotencia} en memoria (plan B sin base y tests). Como
+ * las demas de este paquete, esta desactivada con {@code @Alternative}.
  */
 @Alternative
 @ApplicationScoped
 public class RepositorioIdempotenciaEnMemoria implements RepositorioIdempotencia {
 
-    private final Map<String, RegistroIdempotencia> registros = new ConcurrentHashMap<>();
+    private final Map<String, ClaveIdempotencia> claves = new ConcurrentHashMap<>();
 
     private final AtomicLong generadorDeId = new AtomicLong(0);
 
     private static String llave(String usuario, String clave) {
-        return usuario + "|" + clave.length() + "|" + clave;
+        return usuario + "\u0000" + clave;
     }
 
     @Override
-    public Optional<RegistroIdempotencia> buscar(String usuario, String clave) {
-        return Optional.ofNullable(registros.get(llave(usuario, clave)));
+    public Optional<ClaveIdempotencia> buscar(String usuario, String clave) {
+        return Optional.ofNullable(claves.get(llave(usuario, clave)));
     }
 
     @Override
-    public boolean registrar(RegistroIdempotencia registro) {
-        if (registros.putIfAbsent(llave(registro.getUsuario(), registro.getClave()), registro) != null) {
+    public boolean registrar(ClaveIdempotencia clave) {
+        ClaveIdempotencia previa = claves.putIfAbsent(llave(clave.getUsuario(), clave.getClave()), clave);
+        if (previa != null) {
             return false;
         }
-        registro.setId(generadorDeId.incrementAndGet());
+        clave.setId(generadorDeId.incrementAndGet());
         return true;
     }
 
     @Override
-    public RegistroIdempotencia actualizar(RegistroIdempotencia registro) {
-        registros.put(llave(registro.getUsuario(), registro.getClave()), registro);
-        return registro;
+    public void eliminar(ClaveIdempotencia clave) {
+        claves.remove(llave(clave.getUsuario(), clave.getClave()));
     }
 
     @Override
-    public int borrarAnterioresA(LocalDateTime limite) {
-        int antes = registros.size();
-        registros.values().removeIf(r -> r.getCreadaEn().isBefore(limite));
-        return antes - registros.size();
+    public int eliminarAnterioresA(LocalDateTime limite) {
+        int antes = claves.size();
+        claves.values().removeIf(c -> c.getCreadaEn().isBefore(limite));
+        return antes - claves.size();
     }
 }

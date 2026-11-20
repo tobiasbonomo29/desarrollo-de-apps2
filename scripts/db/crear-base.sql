@@ -21,6 +21,5 @@ CREATE DATABASE mediconecta WITH OWNER = mediconecta ENCODING = 'UTF8';
 
 GRANT ALL PRIVILEGES ON DATABASE mediconecta TO mediconecta;
 
--- Las tablas las crea Hibernate al desplegar el WAR
--- (hibernate.hbm2ddl.auto=update en persistence.xml).
--- El esquema equivalente, por si se prefiere crearlo a mano, esta en esquema.sql
+-- Las tablas NO se crean aca: las crean las migraciones versionadas de
+-- db/migraciones (Flyway), con "mvn flyway:migrate" (ver README).

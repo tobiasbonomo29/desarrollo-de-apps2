@@ -1,0 +1,2703 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "API de MediConecta",
+    "version": "3.1.0",
+    "description": "Gestion de turnos medicos (TP integrador, Desarrollo de Aplicaciones II - UADE).\n\n* **Autenticacion:** `POST /auth/login` devuelve un JWT; el resto de las operaciones lo esperan en `Authorization: Bearer <token>`.\n* **Autorizacion:** por rol, en la capa de negocio (`@RolesAllowed`). Cada operacion indica sus roles (tambien en `x-roles`).\n* **Errores:** siempre `application/problem+json` (RFC 9457).\n* **Idempotencia:** `POST /turnos` acepta `Idempotency-Key`.\n* **Concurrencia optimista:** turnos y pacientes devuelven `ETag`; `If-None-Match` da `304` y `If-Match` con una version vieja da `412`.\n* **Limites:** `429` con `Retry-After` ante fuerza bruta en el login y en el gateway de IA.\n\nEste documento lo valida un test unitario (ContratoOpenApiTest): si se agrega un endpoint sin documentarlo, el build falla."
+  },
+  "servers": [
+    {
+      "url": "/mediconecta/api",
+      "description": "Este servidor"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Salud"
+    },
+    {
+      "name": "Sesion"
+    },
+    {
+      "name": "Turnos"
+    },
+    {
+      "name": "Pacientes"
+    },
+    {
+      "name": "Profesionales"
+    },
+    {
+      "name": "Reserva guiada (@Stateful)"
+    },
+    {
+      "name": "Mensajeria JMS"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "tags": [
+          "Sesion"
+        ],
+        "summary": "Iniciar sesion (emite un JWT)",
+        "operationId": "login",
+        "security": [],
+        "description": "Valida usuario y contrasena contra la tabla usuarios (hash PBKDF2) y devuelve un JWT HS256. **Fuerza bruta:** tras 5 intentos fallidos para un usuario (o 30 desde una IP) en 5 minutos responde `429` con `Retry-After`.\n\n**Publico**: no requiere token.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PedidoLogin"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaLogin"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problema400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problema401"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problema429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema500"
+          }
+        }
+      }
+    },
+    "/mensajeria/mensaje-defectuoso": {
+      "post": {
+        "tags": [
+          "Mensajeria JMS"
+        ],
+        "summary": "Enviar un mensaje que ningun consumidor entiende",
+        "operationId": "enviarMensajeDefectuoso",
+        "x-roles": [
+          "ADMIN"
+        ],
+        "description": "Demostracion en vivo de reintentos con backoff y DLQ.\n\n**Roles:** ADMIN.",
+        "responses": {
+          "202": {
+            "description": "Aceptado: los reintentos y el pase a la DLQ ocurren de forma asincronica",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "eventoId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problema401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema403"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema500"
+          }
+        }
+      }
+    },
+    "/mensajeria/mensajes-fallidos": {
+      "get": {
+        "tags": [
+          "Mensajeria JMS"
+        ],
+        "summary": "Mensajes en la DLQ",
+        "operationId": "mensajesFallidos",
+        "x-roles": [
+          "ADMIN"
+        ],
+        "description": "Mensajes que agotaron los reintentos y llegaron a la cola MensajesFallidos.\n\n**Roles:** ADMIN.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MensajeFallido"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problema401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema403"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema500"
+          }
+        }
+      }
+    },
+    "/pacientes": {
+      "get": {
+        "tags": [
+          "Pacientes"
+        ],
+        "summary": "Padron de pacientes",
+        "operationId": "listarPacientes",
+        "x-roles": [
+          "RECEPCION",
+          "MEDICO",
+          "ADMIN"
+        ],
+        "description": "**Roles:** RECEPCION, MEDICO, ADMIN.",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "description": "Filtra por nombre o documento",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Paciente"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problema401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema403"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema500"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Pacientes"
+        ],
+        "summary": "Registrar un paciente",
+        "operationId": "registrarPaciente",
+        "x-roles": [
+          "PACIENTE",
+          "RECEPCION",
+          "ADMIN"
+        ],
+        "description": "**Roles:** PACIENTE, RECEPCION, ADMIN.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Paciente"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Paciente creado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Paciente"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problema400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problema401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema403"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema500"
+          }
+        }
+      }
+    },
+    "/pacientes/mi-ficha": {
+      "get": {
+        "tags": [
+          "Pacientes"
+        ],
+        "summary": "Ficha del paciente logueado",
+        "operationId": "miFicha",
+        "x-roles": [
+          "PACIENTE",
+          "RECEPCION",
+          "MEDICO",
+          "ADMIN"
+        ],
+        "description": "**Roles:** PACIENTE, RECEPCION, MEDICO, ADMIN.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Paciente"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problema401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problema404"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema500"
+          }
+        }
+      }
+    },
+    "/pacientes/{documento}": {
+      "get": {
+        "tags": [
+          "Pacientes"
+        ],
+        "summary": "Un paciente",
+        "operationId": "obtenerPaciente",
+        "x-roles": [
+          "PACIENTE",
+          "RECEPCION",
+          "MEDICO",
+          "ADMIN"
+        ],
+        "description": "Un PACIENTE solo puede ver su propia ficha (`400`, BOLA). Devuelve `ETag`; con `If-None-Match` igual responde `304`.\n\n**Roles:** PACIENTE, RECEPCION, MEDICO, ADMIN.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Documento"
+          },
+          {
+            "$ref": "#/components/parameters/IfNoneMatch"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "La ficha, con su ETag",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Paciente"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              }
+            }
+          },
+          "304": {
+            "description": "No cambio desde el ETag de If-None-Match (sin cuerpo)",
+            "headers": {
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problema400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problema401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problema404"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema500"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Pacientes"
+        ],
+        "summary": "Actualizar un paciente",
+        "operationId": "actualizarPaciente",
+        "x-roles": [
+          "RECEPCION",
+          "ADMIN"
+        ],
+        "description": "Con `If-Match` (opcional) solo se aplica si la ficha sigue en esa version; si no, `412`.\n\n**Roles:** RECEPCION, ADMIN.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Documento"
+          },
+          {
+            "$ref": "#/components/parameters/IfMatch"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Paciente"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "La ficha con su ETag nuevo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Paciente"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problema400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problema401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problema404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problema409"
+          },
+          "412": {
+            "$ref": "#/components/responses/Problema412"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema500"
+          }
+        }
+      }
+    },
+    "/pacientes/{documento}/cobertura": {
+      "get": {
+        "tags": [
+          "Pacientes"
+        ],
+        "summary": "Validar la cobertura (SOAP o REST)",
+        "operationId": "validarCobertura",
+        "x-roles": [
+          "PACIENTE",
+          "RECEPCION",
+          "MEDICO",
+          "ADMIN"
+        ],
+        "description": "PAMI, OSDE e IOMA se validan contra el sistema legado por SOAP; el resto contra el partner por REST (patron Adapter). **Timeout de 5 s con fallback:** si el sistema externo falla o no responde a tiempo se responde igual `200` con `contingencia: true`: el ultimo resultado verificado de las ultimas 24 h (`origen: CACHE`) o uno a verificar en la atencion (`origen: CONTINGENCIA`).\n\n**Roles:** PACIENTE, RECEPCION, MEDICO, ADMIN.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Documento"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoCobertura"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problema400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problema401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problema404"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema500"
+          }
+        }
+      }
+    },
+    "/pacientes/{documento}/turnos": {
+      "get": {
+        "tags": [
+          "Pacientes"
+        ],
+        "summary": "Historial de turnos del paciente",
+        "operationId": "historial",
+        "x-roles": [
+          "PACIENTE",
+          "RECEPCION",
+          "MEDICO",
+          "ADMIN"
+        ],
+        "description": "Un PACIENTE solo puede ver el suyo.\n\n**Roles:** PACIENTE, RECEPCION, MEDICO, ADMIN.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Documento"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Turno"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problema400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problema401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problema404"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema500"
+          }
+        }
+      }
+    },
+    "/profesionales": {
+      "get": {
+        "tags": [
+          "Profesionales"
+        ],
+        "summary": "Profesionales",
+        "operationId": "listarProfesionales",
+        "x-roles": [
+          "PACIENTE",
+          "RECEPCION",
+          "MEDICO",
+          "ADMIN"
+        ],
+        "description": "**Roles:** PACIENTE, RECEPCION, MEDICO, ADMIN.",
+        "parameters": [
+          {
+            "name": "especialidad",
+            "in": "query",
+            "required": false,
+            "description": "Solo los de esa especialidad",
+            "schema": {
+              "type": "string"
+            },
+            "example": "Cardiologia"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Profesional"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problema401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema403"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema500"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Profesionales"
+        ],
+        "summary": "Dar de alta un profesional",
+        "operationId": "registrarProfesional",
+        "x-roles": [
+          "ADMIN"
+        ],
+        "description": "**Roles:** ADMIN.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Profesional"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Profesional creado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profesional"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problema400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problema401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema403"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema500"
+          }
+        }
+      }
+    },
+    "/profesionales/especialidades": {
+      "get": {
+        "tags": [
+          "Profesionales"
+        ],
+        "summary": "Especialidades con profesionales activos",
+        "operationId": "especialidades",
+        "x-roles": [
+          "PACIENTE",
+          "RECEPCION",
+          "MEDICO",
+          "ADMIN"
+        ],
+        "description": "**Roles:** PACIENTE, RECEPCION, MEDICO, ADMIN.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problema401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema403"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema500"
+          }
+        }
+      }
+    },
+    "/profesionales/mi-perfil": {
+      "get": {
+        "tags": [
+          "Profesionales"
+        ],
+        "summary": "Ficha del medico logueado",
+        "operationId": "miPerfil",
+        "x-roles": [
+          "MEDICO"
+        ],
+        "description": "**Roles:** MEDICO.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profesional"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problema401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problema404"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema500"
+          }
+        }
+      }
+    },
+    "/profesionales/{id}": {
+      "get": {
+        "tags": [
+          "Profesionales"
+        ],
+        "summary": "Un profesional",
+        "operationId": "obtenerProfesional",
+        "x-roles": [
+          "PACIENTE",
+          "RECEPCION",
+          "MEDICO",
+          "ADMIN"
+        ],
+        "description": "**Roles:** PACIENTE, RECEPCION, MEDICO, ADMIN.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdProfesional"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profesional"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problema401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problema404"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema500"
+          }
+        }
+      }
+    },
+    "/profesionales/{id}/disponibilidad": {
+      "put": {
+        "tags": [
+          "Profesionales"
+        ],
+        "summary": "Reemplazar la agenda semanal",
+        "operationId": "definirDisponibilidad",
+        "x-roles": [
+          "RECEPCION",
+          "MEDICO",
+          "ADMIN"
+        ],
+        "description": "Un MEDICO solo puede editar la propia.\n\n**Roles:** RECEPCION, MEDICO, ADMIN.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdProfesional"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Disponibilidad"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profesional"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problema400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problema401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problema404"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema500"
+          }
+        }
+      }
+    },
+    "/profesionales/{id}/horarios-libres": {
+      "get": {
+        "tags": [
+          "Profesionales"
+        ],
+        "summary": "Horarios libres de un dia",
+        "operationId": "horariosLibres",
+        "x-roles": [
+          "PACIENTE",
+          "RECEPCION",
+          "MEDICO",
+          "ADMIN"
+        ],
+        "description": "**Roles:** PACIENTE, RECEPCION, MEDICO, ADMIN.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdProfesional"
+          },
+          {
+            "name": "fecha",
+            "in": "query",
+            "required": true,
+            "description": "Dia (aaaa-MM-dd)",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "example": "2026-11-24"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "example": "2026-11-24T09:30"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problema400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problema401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problema404"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema500"
+          }
+        }
+      }
+    },
+    "/reserva": {
+      "get": {
+        "tags": [
+          "Reserva guiada (@Stateful)"
+        ],
+        "summary": "Estado de la reserva en curso",
+        "operationId": "estadoReserva",
+        "x-roles": [
+          "PACIENTE",
+          "RECEPCION",
+          "ADMIN"
+        ],
+        "description": "Lo que recuerda el EJB @Stateful asociado a la sesion HTTP.\n\n**Roles:** PACIENTE, RECEPCION, ADMIN.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstadoReserva"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problema401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema403"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema500"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Reserva guiada (@Stateful)"
+        ],
+        "summary": "Abandonar la reserva",
+        "operationId": "cancelarReserva",
+        "x-roles": [
+          "PACIENTE",
+          "RECEPCION",
+          "ADMIN"
+        ],
+        "description": "**Roles:** PACIENTE, RECEPCION, ADMIN.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstadoReserva"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problema401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema403"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema500"
+          }
+        }
+      }
+    },
+    "/reserva/confirmar": {
+      "post": {
+        "tags": [
+          "Reserva guiada (@Stateful)"
+        ],
+        "summary": "Paso 4: confirmar y crear el turno",
+        "operationId": "confirmarReserva",
+        "x-roles": [
+          "PACIENTE",
+          "RECEPCION",
+          "ADMIN"
+        ],
+        "description": "Crea el turno por la misma fachada que POST /turnos y descarta el EJB @Stateful. Un segundo confirmar no duplica: la conversacion ya termino.\n\n**Roles:** PACIENTE, RECEPCION, ADMIN.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstadoReserva"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problema400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problema401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema403"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema500"
+          }
+        }
+      }
+    },
+    "/reserva/especialidad": {
+      "put": {
+        "tags": [
+          "Reserva guiada (@Stateful)"
+        ],
+        "summary": "Paso 1: elegir especialidad",
+        "operationId": "elegirEspecialidad",
+        "x-roles": [
+          "PACIENTE",
+          "RECEPCION",
+          "ADMIN"
+        ],
+        "description": "**Roles:** PACIENTE, RECEPCION, ADMIN.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasoReserva"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstadoReserva"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problema400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problema401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema403"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema500"
+          }
+        }
+      }
+    },
+    "/reserva/horario": {
+      "put": {
+        "tags": [
+          "Reserva guiada (@Stateful)"
+        ],
+        "summary": "Paso 3: elegir horario",
+        "operationId": "elegirHorario",
+        "x-roles": [
+          "PACIENTE",
+          "RECEPCION",
+          "ADMIN"
+        ],
+        "description": "**Roles:** PACIENTE, RECEPCION, ADMIN.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasoReserva"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstadoReserva"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problema400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problema401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema403"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema500"
+          }
+        }
+      }
+    },
+    "/reserva/horarios": {
+      "get": {
+        "tags": [
+          "Reserva guiada (@Stateful)"
+        ],
+        "summary": "Horarios libres del profesional elegido",
+        "operationId": "horariosReserva",
+        "x-roles": [
+          "PACIENTE",
+          "RECEPCION",
+          "ADMIN"
+        ],
+        "description": "**Roles:** PACIENTE, RECEPCION, ADMIN.",
+        "parameters": [
+          {
+            "name": "fecha",
+            "in": "query",
+            "required": true,
+            "description": "Dia (aaaa-MM-dd)",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "example": "2026-11-24"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "example": "2026-11-24T09:30"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problema400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problema401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema403"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema500"
+          }
+        }
+      }
+    },
+    "/reserva/iniciar": {
+      "post": {
+        "tags": [
+          "Reserva guiada (@Stateful)"
+        ],
+        "summary": "Paso 0: identificar al paciente",
+        "operationId": "iniciarReserva",
+        "x-roles": [
+          "PACIENTE",
+          "RECEPCION",
+          "ADMIN"
+        ],
+        "description": "**Roles:** PACIENTE, RECEPCION, ADMIN.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasoReserva"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstadoReserva"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problema400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problema401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problema404"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema500"
+          }
+        }
+      }
+    },
+    "/reserva/orientacion": {
+      "post": {
+        "tags": [
+          "Reserva guiada (@Stateful)"
+        ],
+        "summary": "Paso 1 con IA: sugerir especialidad (gateway de IA)",
+        "operationId": "orientarEspecialidad",
+        "x-roles": [
+          "PACIENTE",
+          "RECEPCION",
+          "ADMIN"
+        ],
+        "description": "La conversacion la manda el cliente (el servidor no la guarda). Solo se sugieren especialidades con profesionales activos. **Gateway:** maximo 10 consultas por minuto por usuario (`429` con `Retry-After`); si el modelo falla o no responde en 5 s se usa la orientacion de respaldo por palabras clave (`contingencia: true`), que tambien detecta emergencias.\n\n**Roles:** PACIENTE, RECEPCION, ADMIN.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PedidoOrientacion"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SugerenciaEspecialidad"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problema400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problema401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema403"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problema429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema500"
+          }
+        }
+      }
+    },
+    "/reserva/profesional": {
+      "put": {
+        "tags": [
+          "Reserva guiada (@Stateful)"
+        ],
+        "summary": "Paso 2: elegir profesional",
+        "operationId": "elegirProfesional",
+        "x-roles": [
+          "PACIENTE",
+          "RECEPCION",
+          "ADMIN"
+        ],
+        "description": "**Roles:** PACIENTE, RECEPCION, ADMIN.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasoReserva"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstadoReserva"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problema400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problema401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problema404"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema500"
+          }
+        }
+      }
+    },
+    "/reserva/volver": {
+      "put": {
+        "tags": [
+          "Reserva guiada (@Stateful)"
+        ],
+        "summary": "Volver un paso atras",
+        "operationId": "volverPaso",
+        "x-roles": [
+          "PACIENTE",
+          "RECEPCION",
+          "ADMIN"
+        ],
+        "description": "**Roles:** PACIENTE, RECEPCION, ADMIN.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstadoReserva"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problema400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problema401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema403"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema500"
+          }
+        }
+      }
+    },
+    "/salud": {
+      "get": {
+        "tags": [
+          "Salud"
+        ],
+        "summary": "Health check (readiness)",
+        "operationId": "salud",
+        "security": [],
+        "description": "Verifica PostgreSQL y el broker JMS. Lo usan el HEALTHCHECK de Docker y el pipeline de CI.\n\n**Publico**: no requiere token.",
+        "responses": {
+          "200": {
+            "description": "Base de datos y broker JMS responden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstadoSalud"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema500"
+          },
+          "503": {
+            "description": "Alguna dependencia no responde",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstadoSalud"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/salud/vivo": {
+      "get": {
+        "tags": [
+          "Salud"
+        ],
+        "summary": "Health check (liveness)",
+        "operationId": "saludVivo",
+        "security": [],
+        "description": "No toca dependencias: solo confirma que la aplicacion atiende.\n\n**Publico**: no requiere token.",
+        "responses": {
+          "200": {
+            "description": "El WAR esta desplegado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "estado": {
+                      "type": "string",
+                      "example": "UP"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema500"
+          }
+        }
+      }
+    },
+    "/sesion": {
+      "get": {
+        "tags": [
+          "Sesion"
+        ],
+        "summary": "Usuario de la sesion",
+        "operationId": "sesion",
+        "x-roles": [
+          "PACIENTE",
+          "RECEPCION",
+          "MEDICO",
+          "ADMIN"
+        ],
+        "description": "**Roles:** PACIENTE, RECEPCION, MEDICO, ADMIN.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sesion"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problema401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema403"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema500"
+          }
+        }
+      }
+    },
+    "/sesion/logout": {
+      "post": {
+        "tags": [
+          "Sesion"
+        ],
+        "summary": "Cerrar sesion",
+        "operationId": "logout",
+        "x-roles": [
+          "PACIENTE",
+          "RECEPCION",
+          "MEDICO",
+          "ADMIN"
+        ],
+        "description": "**Roles:** PACIENTE, RECEPCION, MEDICO, ADMIN.",
+        "responses": {
+          "204": {
+            "description": "Sesion HTTP del asistente liberada; el token lo descarta el cliente"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problema401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema403"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema500"
+          }
+        }
+      }
+    },
+    "/tablero": {
+      "get": {
+        "tags": [
+          "Turnos"
+        ],
+        "summary": "Resumen del dia",
+        "operationId": "tablero",
+        "x-roles": [
+          "RECEPCION",
+          "MEDICO",
+          "ADMIN"
+        ],
+        "description": "**Roles:** RECEPCION, MEDICO, ADMIN.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResumenAgenda"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problema401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema403"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema500"
+          }
+        }
+      }
+    },
+    "/turnos": {
+      "get": {
+        "tags": [
+          "Turnos"
+        ],
+        "summary": "Agenda operativa",
+        "operationId": "listarTurnos",
+        "x-roles": [
+          "RECEPCION",
+          "MEDICO",
+          "ADMIN"
+        ],
+        "description": "Turnos no archivados, ordenados por fecha.\n\n**Roles:** RECEPCION, MEDICO, ADMIN.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Turno"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problema401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema403"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema500"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Turnos"
+        ],
+        "summary": "Reservar un turno",
+        "operationId": "crearTurno",
+        "x-roles": [
+          "PACIENTE",
+          "RECEPCION",
+          "ADMIN"
+        ],
+        "description": "Acepta el cuerpo corto (`documentoPaciente`, `profesionalId`, `fechaHora`) y el de la Entrega 1 (paciente embebido y nombre del profesional). Un PACIENTE solo puede reservar para si mismo.\n\n**Idempotencia:** con la cabecera `Idempotency-Key`, repetir el mismo pedido devuelve el mismo turno en lugar de crear otro (vigencia 24 h). Misma clave con otro cuerpo: `422`. Dos pedidos simultaneos con la misma clave: el segundo recibe `409`.\n\n**Roles:** PACIENTE, RECEPCION, ADMIN.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PedidoTurno"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Turno creado (o el ya creado con la misma Idempotency-Key)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Turno"
+                }
+              }
+            },
+            "headers": {
+              "Location": {
+                "description": "URL del turno",
+                "schema": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              },
+              "Idempotent-Replayed": {
+                "description": "`true` si no se creo nada: es el turno de un pedido anterior con la misma clave",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problema400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problema401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problema404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problema409"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problema422"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema500"
+          }
+        }
+      }
+    },
+    "/turnos/{id}": {
+      "get": {
+        "tags": [
+          "Turnos"
+        ],
+        "summary": "Un turno",
+        "operationId": "obtenerTurno",
+        "x-roles": [
+          "PACIENTE",
+          "RECEPCION",
+          "MEDICO",
+          "ADMIN"
+        ],
+        "description": "Un PACIENTE solo puede consultar los suyos (`400`, BOLA). Devuelve `ETag`; con `If-None-Match` igual responde `304`.\n\n**Roles:** PACIENTE, RECEPCION, MEDICO, ADMIN.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdTurno"
+          },
+          {
+            "$ref": "#/components/parameters/IfNoneMatch"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "El turno, con su ETag",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Turno"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              }
+            }
+          },
+          "304": {
+            "description": "No cambio desde el ETag de If-None-Match (sin cuerpo)",
+            "headers": {
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problema400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problema401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problema404"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema500"
+          }
+        }
+      }
+    },
+    "/turnos/{id}/archivar": {
+      "put": {
+        "tags": [
+          "Turnos"
+        ],
+        "summary": "Archivar un turno",
+        "operationId": "archivarTurno",
+        "x-roles": [
+          "RECEPCION",
+          "ADMIN"
+        ],
+        "description": "Saca de la agenda un turno CANCELADO sin borrarlo. `409` si la transicion no es valida (patron State). Con `If-Match` (opcional) solo se aplica si el turno sigue en esa version; si no, `412`.\n\n**Roles:** RECEPCION, ADMIN.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdTurno"
+          },
+          {
+            "$ref": "#/components/parameters/IfMatch"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "El turno con su ETag nuevo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Turno"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problema400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problema401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problema404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problema409"
+          },
+          "412": {
+            "$ref": "#/components/responses/Problema412"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema500"
+          }
+        }
+      }
+    },
+    "/turnos/{id}/atender": {
+      "put": {
+        "tags": [
+          "Turnos"
+        ],
+        "summary": "Atender un turno",
+        "operationId": "atenderTurno",
+        "x-roles": [
+          "MEDICO",
+          "ADMIN"
+        ],
+        "description": "PROGRAMADO -> ATENDIDO. Un MEDICO solo sobre su agenda. `409` si la transicion no es valida (patron State). Con `If-Match` (opcional) solo se aplica si el turno sigue en esa version; si no, `412`.\n\n**Roles:** MEDICO, ADMIN.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdTurno"
+          },
+          {
+            "$ref": "#/components/parameters/IfMatch"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "El turno con su ETag nuevo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Turno"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problema400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problema401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problema404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problema409"
+          },
+          "412": {
+            "$ref": "#/components/responses/Problema412"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema500"
+          }
+        }
+      }
+    },
+    "/turnos/{id}/cancelar": {
+      "put": {
+        "tags": [
+          "Turnos"
+        ],
+        "summary": "Cancelar un turno",
+        "operationId": "cancelarTurno",
+        "x-roles": [
+          "PACIENTE",
+          "RECEPCION",
+          "MEDICO",
+          "ADMIN"
+        ],
+        "description": "PROGRAMADO -> CANCELADO. Un PACIENTE solo cancela los propios; un MEDICO solo los de su agenda. `409` si la transicion no es valida (patron State). Con `If-Match` (opcional) solo se aplica si el turno sigue en esa version; si no, `412`.\n\n**Roles:** PACIENTE, RECEPCION, MEDICO, ADMIN.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdTurno"
+          },
+          {
+            "$ref": "#/components/parameters/IfMatch"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "El turno con su ETag nuevo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Turno"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problema400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problema401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problema404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problema409"
+          },
+          "412": {
+            "$ref": "#/components/responses/Problema412"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema500"
+          }
+        }
+      }
+    },
+    "/turnos/{id}/notificaciones": {
+      "get": {
+        "tags": [
+          "Turnos"
+        ],
+        "summary": "Avisos generados por JMS para el turno",
+        "operationId": "notificacionesDeTurno",
+        "x-roles": [
+          "PACIENTE",
+          "RECEPCION",
+          "MEDICO",
+          "ADMIN"
+        ],
+        "description": "Confirmacion (cola), recordatorio y aviso al profesional (topico). Los generan los consumidores JMS de forma asincronica: pueden tardar unos segundos en aparecer.\n\n**Roles:** PACIENTE, RECEPCION, MEDICO, ADMIN.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdTurno"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Notificacion"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problema400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problema401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problema404"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema500"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "parameters": {
+      "IdTurno": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "IdProfesional": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "Documento": {
+        "name": "documento",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "example": "30111222"
+        }
+      },
+      "IfMatch": {
+        "name": "If-Match",
+        "in": "header",
+        "required": false,
+        "description": "ETag de la version que el cliente conoce; si cambio, 412",
+        "schema": {
+          "type": "string",
+          "example": "\"turno-42-v3\""
+        }
+      },
+      "IfNoneMatch": {
+        "name": "If-None-Match",
+        "in": "header",
+        "required": false,
+        "description": "ETag de la version en cache; si no cambio, 304",
+        "schema": {
+          "type": "string",
+          "example": "\"turno-42-v3\""
+        }
+      },
+      "IdempotencyKey": {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "required": false,
+        "description": "Clave unica por intento de reserva (se recomienda un UUID). Repetir el pedido con la misma clave no crea otro turno.",
+        "schema": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 100,
+          "pattern": "^[A-Za-z0-9._:-]{8,100}$",
+          "example": "5f0c7d2e-8b1a-4f3e-9c4d-2a6b7e8f9a01"
+        }
+      }
+    },
+    "headers": {
+      "ETag": {
+        "description": "Version del recurso (\"<recurso>-<id>-v<version>\")",
+        "schema": {
+          "type": "string"
+        }
+      }
+    },
+    "responses": {
+      "Problema400": {
+        "description": "Pedido invalido o regla de negocio incumplida",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problema"
+            }
+          }
+        }
+      },
+      "Problema401": {
+        "description": "Falta el token o es invalido",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problema"
+            }
+          }
+        }
+      },
+      "Problema403": {
+        "description": "El rol no tiene permiso",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problema"
+            }
+          }
+        }
+      },
+      "Problema404": {
+        "description": "No existe el recurso",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problema"
+            }
+          }
+        }
+      },
+      "Problema409": {
+        "description": "Conflicto con el estado actual (transicion invalida, pedido repetido en curso o modificacion concurrente)",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problema"
+            }
+          }
+        }
+      },
+      "Problema412": {
+        "description": "If-Match no coincide con la version actual del recurso",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problema"
+            }
+          }
+        }
+      },
+      "Problema422": {
+        "description": "Idempotency-Key reutilizada con otro pedido",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problema"
+            }
+          }
+        }
+      },
+      "Problema429": {
+        "description": "Demasiadas solicitudes (fuerza bruta en el login o limite del gateway de IA)",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problema"
+            }
+          }
+        },
+        "headers": {
+          "Retry-After": {
+            "description": "Segundos a esperar",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "Problema500": {
+        "description": "Error inesperado (sin detalles internos; ver idError)",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problema"
+            }
+          }
+        }
+      },
+      "Problema502": {
+        "description": "Fallo un sistema externo",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problema"
+            }
+          }
+        }
+      },
+      "Problema504": {
+        "description": "Un sistema externo no respondio a tiempo",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problema"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Problema": {
+        "type": "object",
+        "description": "Problem Details (RFC 9457). `type` identifica el error; `detail` es para personas.",
+        "required": [
+          "type",
+          "title",
+          "status"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "format": "uri",
+            "example": "urn:mediconecta:problema:regla-negocio",
+            "description": "urn:mediconecta:problema:{regla-negocio|pedido-invalido|no-autenticado|credenciales-invalidas|acceso-denegado|no-encontrado|transicion-invalida|idempotencia-en-curso|idempotencia-reutilizada|modificacion-concurrente|precondicion-fallida|demasiadas-solicitudes|integracion-externa|tiempo-agotado|error-interno}, o about:blank para errores HTTP genericos"
+          },
+          "title": {
+            "type": "string",
+            "example": "Regla de negocio incumplida"
+          },
+          "status": {
+            "type": "integer",
+            "example": 400
+          },
+          "detail": {
+            "type": "string",
+            "example": "El profesional ya tiene un turno en ese horario."
+          },
+          "instance": {
+            "type": "string",
+            "example": "/mediconecta/api/turnos"
+          },
+          "idError": {
+            "type": "string",
+            "description": "Solo en los 500: el mismo identificador queda en el log del servidor"
+          }
+        }
+      },
+      "Paciente": {
+        "type": "object",
+        "required": [
+          "documento",
+          "nombre"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "documento": {
+            "type": "string",
+            "example": "30111222"
+          },
+          "nombre": {
+            "type": "string",
+            "example": "Ana Gomez"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "telefono": {
+            "type": "string"
+          },
+          "cobertura": {
+            "type": "string",
+            "example": "OSDE 210"
+          },
+          "usuario": {
+            "type": "string",
+            "nullable": true
+          },
+          "activo": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Disponibilidad": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "diaSemana": {
+            "type": "string",
+            "enum": [
+              "MONDAY",
+              "TUESDAY",
+              "WEDNESDAY",
+              "THURSDAY",
+              "FRIDAY",
+              "SATURDAY",
+              "SUNDAY"
+            ]
+          },
+          "horaDesde": {
+            "type": "string",
+            "example": "09:00:00"
+          },
+          "horaHasta": {
+            "type": "string",
+            "example": "13:00:00"
+          },
+          "duracionMinutos": {
+            "type": "integer",
+            "example": 30
+          }
+        }
+      },
+      "Profesional": {
+        "type": "object",
+        "required": [
+          "nombre",
+          "especialidad",
+          "matricula"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "nombre": {
+            "type": "string",
+            "example": "Dra. Laura Fernandez"
+          },
+          "especialidad": {
+            "type": "string",
+            "example": "Cardiologia"
+          },
+          "matricula": {
+            "type": "string",
+            "example": "MP-10234"
+          },
+          "email": {
+            "type": "string"
+          },
+          "activo": {
+            "type": "boolean"
+          },
+          "usuario": {
+            "type": "string",
+            "nullable": true
+          },
+          "disponibilidades": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Disponibilidad"
+            }
+          }
+        }
+      },
+      "Turno": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "paciente": {
+            "$ref": "#/components/schemas/Paciente"
+          },
+          "profesional": {
+            "$ref": "#/components/schemas/Profesional"
+          },
+          "especialidad": {
+            "type": "string"
+          },
+          "fechaHora": {
+            "type": "string",
+            "example": "2026-11-24T09:30",
+            "description": "aaaa-MM-ddTHH:mm"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "PROGRAMADO",
+              "ATENDIDO",
+              "CANCELADO"
+            ]
+          },
+          "motivo": {
+            "type": "string"
+          },
+          "archivado": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PedidoTurno": {
+        "type": "object",
+        "description": "Forma corta (la de la interfaz) o la de la Entrega 1 (paciente embebido y profesional por nombre).",
+        "properties": {
+          "documentoPaciente": {
+            "type": "string",
+            "example": "30111222"
+          },
+          "nombrePaciente": {
+            "type": "string",
+            "description": "Solo para dar de alta al paciente si no existe"
+          },
+          "profesionalId": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "profesional": {
+            "type": "string",
+            "description": "Nombre del profesional (forma de la Entrega 1)"
+          },
+          "paciente": {
+            "type": "object",
+            "properties": {
+              "nombre": {
+                "type": "string"
+              },
+              "documento": {
+                "type": "string"
+              }
+            }
+          },
+          "especialidad": {
+            "type": "string",
+            "example": "Cardiologia"
+          },
+          "fechaHora": {
+            "type": "string",
+            "example": "2026-11-24T09:30",
+            "description": "aaaa-MM-ddTHH:mm"
+          },
+          "motivo": {
+            "type": "string",
+            "example": "Control anual"
+          }
+        }
+      },
+      "PedidoLogin": {
+        "type": "object",
+        "required": [
+          "usuario",
+          "clave"
+        ],
+        "properties": {
+          "usuario": {
+            "type": "string",
+            "example": "recepcion"
+          },
+          "clave": {
+            "type": "string",
+            "format": "password"
+          }
+        }
+      },
+      "RespuestaLogin": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "tipo": {
+            "type": "string",
+            "example": "Bearer"
+          },
+          "expiraEnSegundos": {
+            "type": "integer",
+            "example": 7200
+          },
+          "usuario": {
+            "type": "string"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "Sesion": {
+        "type": "object",
+        "properties": {
+          "autenticado": {
+            "type": "boolean"
+          },
+          "usuario": {
+            "type": "string"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ResumenAgenda": {
+        "type": "object",
+        "properties": {
+          "turnosDeHoy": {
+            "type": "integer"
+          },
+          "pacientesActivos": {
+            "type": "integer"
+          },
+          "profesionalesActivos": {
+            "type": "integer"
+          },
+          "pendientes": {
+            "type": "integer"
+          },
+          "proximosTurnos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Turno"
+            }
+          }
+        }
+      },
+      "ResultadoCobertura": {
+        "type": "object",
+        "properties": {
+          "vigente": {
+            "type": "boolean"
+          },
+          "plan": {
+            "type": "string"
+          },
+          "copago": {
+            "type": "number"
+          },
+          "origen": {
+            "type": "string",
+            "enum": [
+              "LEGADO",
+              "PARTNER",
+              "NINGUNA",
+              "CACHE",
+              "CONTINGENCIA"
+            ]
+          },
+          "contingencia": {
+            "type": "boolean",
+            "description": "true si el sistema externo no respondio y el resultado es de respaldo"
+          },
+          "mensaje": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "PasoReserva": {
+        "type": "object",
+        "description": "Cada paso usa solo su campo.",
+        "properties": {
+          "documentoPaciente": {
+            "type": "string"
+          },
+          "especialidad": {
+            "type": "string"
+          },
+          "profesionalId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "fechaHora": {
+            "type": "string",
+            "example": "2026-11-24T09:30",
+            "description": "aaaa-MM-ddTHH:mm"
+          }
+        }
+      },
+      "EstadoReserva": {
+        "type": "object",
+        "properties": {
+          "idConversacion": {
+            "type": "string"
+          },
+          "instancia": {
+            "type": "string"
+          },
+          "paso": {
+            "type": "integer"
+          },
+          "pasoActual": {
+            "type": "string",
+            "enum": [
+              "SIN_INICIAR",
+              "ELEGIR_ESPECIALIDAD",
+              "ELEGIR_PROFESIONAL",
+              "ELEGIR_HORARIO",
+              "CONFIRMAR",
+              "FINALIZADA"
+            ]
+          },
+          "iniciadaEn": {
+            "type": "string"
+          },
+          "documentoPaciente": {
+            "type": "string"
+          },
+          "nombrePaciente": {
+            "type": "string"
+          },
+          "especialidad": {
+            "type": "string"
+          },
+          "profesionalId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "nombreProfesional": {
+            "type": "string"
+          },
+          "fechaHora": {
+            "type": "string",
+            "example": "2026-11-24T09:30",
+            "description": "aaaa-MM-ddTHH:mm"
+          },
+          "finalizada": {
+            "type": "boolean"
+          },
+          "turnoId": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "MensajeChat": {
+        "type": "object",
+        "required": [
+          "rol",
+          "texto"
+        ],
+        "properties": {
+          "rol": {
+            "type": "string",
+            "enum": [
+              "usuario",
+              "asistente"
+            ]
+          },
+          "texto": {
+            "type": "string"
+          }
+        }
+      },
+      "PedidoOrientacion": {
+        "type": "object",
+        "required": [
+          "mensajes"
+        ],
+        "properties": {
+          "mensajes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MensajeChat"
+            }
+          }
+        }
+      },
+      "SugerenciaEspecialidad": {
+        "type": "object",
+        "properties": {
+          "mensaje": {
+            "type": "string"
+          },
+          "especialidad": {
+            "type": "string",
+            "nullable": true
+          },
+          "urgente": {
+            "type": "boolean"
+          },
+          "contingencia": {
+            "type": "boolean",
+            "description": "true si respondio la orientacion de respaldo y no el modelo de IA"
+          }
+        }
+      },
+      "Notificacion": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "eventoId": {
+            "type": "string"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "CONFIRMACION",
+              "RECORDATORIO",
+              "AVISO_PROFESIONAL"
+            ]
+          },
+          "canal": {
+            "type": "string",
+            "enum": [
+              "EMAIL",
+              "SMS",
+              "AGENDA"
+            ]
+          },
+          "turnoId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "destinatario": {
+            "type": "string"
+          },
+          "mensaje": {
+            "type": "string"
+          },
+          "creadaEn": {
+            "type": "string",
+            "example": "2026-11-24T09:30",
+            "description": "aaaa-MM-ddTHH:mm"
+          },
+          "programadaPara": {
+            "type": "string",
+            "example": "2026-11-24T09:30",
+            "description": "aaaa-MM-ddTHH:mm",
+            "nullable": true
+          }
+        }
+      },
+      "MensajeFallido": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "mensajeId": {
+            "type": "string"
+          },
+          "eventoId": {
+            "type": "string",
+            "nullable": true
+          },
+          "destinoOriginal": {
+            "type": "string"
+          },
+          "cuerpo": {
+            "type": "string"
+          },
+          "recibidoEn": {
+            "type": "string",
+            "example": "2026-11-19T13:05:12"
+          }
+        }
+      },
+      "EstadoSalud": {
+        "type": "object",
+        "properties": {
+          "estado": {
+            "type": "string",
+            "enum": [
+              "UP",
+              "DOWN"
+            ]
+          },
+          "componentes": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "enum": [
+                "UP",
+                "DOWN"
+              ]
+            },
+            "example": {
+              "baseDeDatos": "UP",
+              "mensajeria": "UP"
+            }
+          },
+          "verificadoEn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  }
+}

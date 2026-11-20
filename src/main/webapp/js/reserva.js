@@ -381,11 +381,11 @@ async function pasoHorario() {
 
     contenedor.innerHTML = '<h2>Elegí un horario disponible</h2>'
         + (atiende
-            ? '<p class="campo__ayuda u-m-6-0-14">' + esc(estado.nombreProfesional)
+            ? '<p class="campo__ayuda u-my-ayuda">' + esc(estado.nombreProfesional)
                 + ' atiende ' + esc(atiende) + '.</p>'
                 + '<div class="campo"><label>Próximos días de atención</label>'
                 + htmlDiasDeAtencion(lugares, fechaElegida) + '</div>'
-            : '<p class="campo__ayuda u-m-6-0-14">' + esc(estado.nombreProfesional)
+            : '<p class="campo__ayuda u-my-ayuda">' + esc(estado.nombreProfesional)
                 + ' todavía no tiene días de atención cargados.</p>')
         + '<div class="campo u-ancho-240"><label for="fecha">'
         + (atiende ? 'Otra fecha' : 'Fecha') + '</label>'

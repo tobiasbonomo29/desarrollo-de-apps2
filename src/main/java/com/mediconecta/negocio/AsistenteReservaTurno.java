@@ -117,13 +117,12 @@ public class AsistenteReservaTurno implements Serializable {
     /**
      * Cierra la conversacion y le avisa al contenedor que puede descartar la
      * instancia. Despues de este metodo el bean deja de existir.
-     *
-     * <p>{@code @PermitAll}: tambien lo invoca el contenedor cuando expira o se
-     * invalida la sesion HTTP (via {@code ConversacionDeReserva}), y en ese momento
-     * no hay un usuario autenticado. Con el {@code @RolesAllowed} de la clase la
-     * llamada era rechazada ({@code EJBAccessException}) y la conversacion no se
-     * cerraba por {@code @Remove}. No expone datos: solo termina la conversacion
-     * de quien ya la tenia.</p>
+     */
+    /**
+     * {@code @PermitAll}: cuando vence la sesion HTTP, quien llama a este metodo
+     * es el contenedor (ConversacionDeReserva al destruirse), sin un usuario
+     * autenticado. Con el {@code @RolesAllowed} de la clase la llamada se
+     * rechazaba y el EJB quedaba vivo hasta su {@code @StatefulTimeout}.
      */
     @Remove
     @PermitAll

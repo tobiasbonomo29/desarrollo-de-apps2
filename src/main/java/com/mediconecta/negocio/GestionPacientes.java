@@ -28,6 +28,7 @@ public class GestionPacientes {
      * ({@code /api/pacientes/{documento}}): antes se aceptaba cualquier texto y el
      * escaneo de OWASP ZAP dejo en el padron documentos con {@code <script>} y
      * {@code {}} que ademas provocaban un 500 al armar el {@code Location}.
+     * (Correccion incorporada desde el commit 947ba9d en la integracion final.)
      */
     static final Pattern FORMATO_DOCUMENTO = Pattern.compile("[0-9]{6,10}");
 
@@ -53,21 +54,11 @@ public class GestionPacientes {
         return repositorio.buscar(texto.trim());
     }
 
-    /**
-     * Ficha de un paciente por documento.
-     *
-     * <p>Control de BOLA/IDOR: un usuario que es <b>solo</b> PACIENTE solo puede
-     * pedir su propio documento; cualquier otro recibe 403 sin revelar si ese
-     * documento existe. Esto tambien cierra un hueco de la reserva: antes un
-     * PACIENTE que reservaba con un documento ajeno inexistente provocaba el alta
-     * de ese paciente antes de que se rechazara la reserva.</p>
-     */
     @RolesAllowed({Roles.PACIENTE, Roles.RECEPCION, Roles.MEDICO, Roles.ADMIN})
     public Paciente buscarPorDocumento(String documento) {
         if (documento == null || documento.isBlank()) {
             throw new ReglaNegocioException("Debe indicar el documento del paciente.");
         }
-        exigirPropioDocumentoSiEsPaciente(documento.trim());
         return repositorio.buscarPorDocumento(documento.trim())
                 .orElseThrow(() -> NoEncontradoException.paciente(documento));
     }
@@ -79,6 +70,19 @@ public class GestionPacientes {
      * flujo de reserva: si alguien pide un turno con un documento que todavia no
      * esta en el padron, {@link FachadaReservas} lo da de alta en el momento.</p>
      */
+    /**
+     * La ficha de un paciente para mostrarla. A diferencia de
+     * {@link #buscarPorDocumento} (que usan los otros componentes), un PACIENTE
+     * solo puede consultar la propia: sin este control podria leer la ficha de
+     * cualquiera cambiando el documento de la URL (BOLA / IDOR).
+     */
+    @RolesAllowed({Roles.PACIENTE, Roles.RECEPCION, Roles.MEDICO, Roles.ADMIN})
+    public Paciente consultarFicha(String documento) {
+        Paciente paciente = buscarPorDocumento(documento);
+        exigirPropioDocumentoSiEsPaciente(paciente.getDocumento());
+        return paciente;
+    }
+
     @RolesAllowed({Roles.PACIENTE, Roles.RECEPCION, Roles.ADMIN})
     public Paciente registrarPaciente(Paciente paciente) {
         if (paciente == null) {
@@ -114,7 +118,14 @@ public class GestionPacientes {
      */
     @RolesAllowed({Roles.RECEPCION, Roles.ADMIN})
     public Paciente actualizarDatos(String documento, Paciente datos) {
+        return actualizarDatos(documento, datos, null);
+    }
+
+    /** {@link #actualizarDatos(String, Paciente)} con control de concurrencia optimista (If-Match). */
+    @RolesAllowed({Roles.RECEPCION, Roles.ADMIN})
+    public Paciente actualizarDatos(String documento, Paciente datos, Long versionEsperada) {
         Paciente existente = buscarPorDocumento(documento);
+        VersionDesactualizadaException.exigir(existente.getVersion(), versionEsperada, "paciente");
 
         if (datos == null) {
             throw new ReglaNegocioException("Debe enviar los datos del paciente.");

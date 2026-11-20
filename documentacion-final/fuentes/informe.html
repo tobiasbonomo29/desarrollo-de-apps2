@@ -1,0 +1,679 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word">
+<head>
+<meta charset="utf-8">
+<title>MediConecta — Informe Final del TPO</title>
+<style>
+@page WordSection1 { size: 595.3pt 841.9pt; margin: 62pt 56pt 62pt 56pt; }
+div.WordSection1 { page: WordSection1; }
+body { font-family: Calibri, Arial, sans-serif; font-size: 10.5pt; color: #1E2B38; line-height: 1.32; }
+h1 { font-family: Calibri, Arial, sans-serif; font-size: 19pt; color: #0F2A44; margin: 0 0 8pt 0; page-break-before: always; border-bottom: 1.5pt solid #2563EB; padding-bottom: 3pt; }
+h2 { font-size: 13pt; color: #2563EB; margin: 13pt 0 5pt 0; }
+h3 { font-size: 11pt; color: #0F2A44; margin: 10pt 0 3pt 0; }
+p { margin: 0 0 6pt 0; text-align: justify; }
+ul, ol { margin-top: 0; margin-bottom: 6pt; }
+li { margin-bottom: 2pt; }
+table.t { border-collapse: collapse; width: 100%; margin: 4pt 0 9pt 0; font-size: 9pt; }
+table.t th { background: #0F2A44; color: #FFFFFF; text-align: left; padding: 3pt 5pt; border: 0.75pt solid #0F2A44; font-weight: bold; }
+table.t td { padding: 3pt 5pt; border: 0.75pt solid #C9D6E3; vertical-align: top; }
+table.t tr.alt td { background: #F3F7FC; }
+code, .c { font-family: Consolas, "Courier New", monospace; font-size: 8.8pt; color: #0B3B8C; }
+.fig { text-align: center; margin: 6pt 0 2pt 0; }
+.cap { font-size: 8.8pt; color: #4A6178; text-align: center; margin: 0 0 10pt 0; font-style: italic; }
+.ok { color: #0B7A55; font-weight: bold; }
+.par { color: #B26A00; font-weight: bold; }
+.no { color: #B42318; font-weight: bold; }
+.nv { color: #5B4BB7; font-weight: bold; }
+.nota { background: #FFF5E6; border: 0.75pt solid #F5C27A; padding: 5pt 8pt; margin: 6pt 0 9pt 0; font-size: 9.5pt; }
+.info { background: #EAF1FE; border: 0.75pt solid #BBD0F7; padding: 5pt 8pt; margin: 6pt 0 9pt 0; font-size: 9.5pt; }
+.kpi td { text-align: center; padding: 7pt 4pt; border: 0.75pt solid #C9D6E3; }
+.kpi .v { font-size: 17pt; font-weight: bold; color: #2563EB; }
+.kpi .l { font-size: 8.5pt; color: #4A6178; }
+</style>
+</head>
+<body>
+<div class="WordSection1">
+
+<!-- ====================== PORTADA ====================== -->
+<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
+<tr><td style="background:#0F2A44; padding:26pt 26pt 22pt 26pt">
+<p style="color:#9FC0F5; font-size:10.5pt; letter-spacing:1pt; margin:0">UNIVERSIDAD ARGENTINA DE LA EMPRESA — UADE</p>
+<p style="color:#C9D6E3; font-size:10.5pt; margin:2pt 0 30pt 0">Facultad de Ingeniería y Ciencias Exactas · Departamento de Tecnología Informática</p>
+<p style="color:#FFFFFF; font-size:36pt; font-weight:bold; margin:0; text-align:left">MediConecta</p>
+<p style="color:#FFFFFF; font-size:15pt; margin:4pt 0 0 0; text-align:left">Sistema de gestión de turnos médicos sobre Jakarta EE 10 y WildFly</p>
+<p style="color:#9FC0F5; font-size:12pt; margin:26pt 0 0 0; text-align:left">Informe técnico final · Trabajo Práctico Obligatorio Final</p>
+</td></tr>
+<tr><td style="background:#2563EB; height:6pt; font-size:2pt">&nbsp;</td></tr>
+</table>
+<p>&nbsp;</p>
+<table class="t" style="font-size:10.5pt">
+<tr><td style="width:34%; background:#F3F7FC"><b>Materia</b></td><td>Desarrollo de Aplicaciones II (3.4.218)</td></tr>
+<tr><td style="background:#F3F7FC"><b>Proyecto</b></td><td>MediConecta</td></tr>
+<tr><td style="background:#F3F7FC"><b>Entrega</b></td><td>Trabajo Práctico Obligatorio Final</td></tr>
+<tr><td style="background:#F3F7FC"><b>Período</b></td><td>2.º cuatrimestre 2026</td></tr>
+<tr><td style="background:#F3F7FC"><b>Integrantes</b></td><td>Facundo Sánchez<br>Mateo Bellinzona<br>Facundo Morán<br>Tobías Bonomo<br>Laureano Gómez Moreno</td></tr>
+<tr><td style="background:#F3F7FC"><b>Repositorio</b></td><td>github.com/tobiasbonomo29/desarrollo-de-apps2 · rama <span class="c">integracion-final</span></td></tr>
+<tr><td style="background:#F3F7FC"><b>Commit de referencia del código</b></td><td><span class="c">eda4b02</span> (código verificado; la documentación se agrega en el commit siguiente)</td></tr>
+<tr><td style="background:#F3F7FC"><b>Fecha</b></td><td>20 de noviembre de 2026</td></tr>
+</table>
+<div class="nota"><b>Alcance de este informe.</b> Todo lo que se afirma corresponde al código de la rama
+<span class="c">integracion-final</span> y a ejecuciones realizadas sobre ese código (build local y GitHub Actions).
+Cuando un dato proviene de una medición anterior o de otra máquina, se indica su origen. Los requisitos que no
+pudieron comprobarse figuran como <span class="nv">NO VERIFICABLE</span> o <span class="par">PENDIENTE</span>.</div>
+
+<!-- ====================== ÍNDICE ====================== -->
+<h1 style="border:none">Índice</h1>
+<p>[[INDICE]]</p>
+
+<!-- ====================== 1 ====================== -->
+<h1>1. Resumen ejecutivo</h1>
+<p>MediConecta es una aplicación web para administrar los turnos de una clínica. Reúne en una sola agenda la reserva,
+la cancelación y la atención de turnos, el padrón de pacientes y la disponibilidad de los profesionales, con cuatro
+roles (paciente, recepción, médico y administración). Está construida sobre Jakarta EE 10 y se despliega como un WAR
+en WildFly con PostgreSQL 16, mensajería JMS (ActiveMQ Artemis), integraciones SOAP y REST con sistemas de obras
+sociales y un asistente de IA que orienta al paciente sobre la especialidad que necesita.</p>
+<p>La versión final integra el trabajo de las dos ramas paralelas del tercer checkpoint: se adoptó como base el código
+de Mateo Bellinzona (<span class="c">052aa90</span>) y se incorporaron dos correcciones del commit
+<span class="c">947ba9d</span> de Facundo Morán (acceso a recursos ajenos con 403 y validación del documento). El
+historial de ambas ramas se conserva.</p>
+<table class="kpi" width="100%" style="border-collapse:collapse; margin:6pt 0 8pt 0">
+<tr><td><span class="v">195 / 195</span><br><span class="l">tests JUnit en verde</span></td>
+<td><span class="v">95,0 %</span><br><span class="l">líneas · capa de negocio<br>(82,6 % ramas)</span></td>
+<td><span class="v">85 %</span><br><span class="l">mutation score PIT<br>(338 / 396)</span></td>
+<td><span class="v">148 / 148</span><br><span class="l">verificaciones de humo<br>en Docker Compose (CI)</span></td>
+<td><span class="v">22,2 ms</span><br><span class="l">p95 bajo carga k6 (CI)</span></td></tr>
+</table>
+<p><b>Resultado.</b> El código integrado compila, pasa Checkstyle, los 195 tests, los umbrales de cobertura y de
+mutación, la verificación de migraciones y el escaneo de secretos, tanto localmente como en GitHub Actions. La prueba de sistema en GitHub Actions levantó la aplicación completa con Docker Compose (PostgreSQL, migraciones Flyway y WildFly) y pasó las 148 verificaciones de humo, la carga k6 (p95 22,2 ms, 0 % de errores con 20 usuarios) y el escaneo OWASP ZAP baseline (0 alertas que fallen; 3 advertencias informativas).</p>
+<p><b>Pendientes que impiden declarar la entrega lista</b> (detalle en §16): el Quality Gate de SonarCloud no se
+ejecutó (falta configurar el token); no hay pruebas E2E de interfaz automatizadas ni pruebas de integración con
+Testcontainers/Arquillian; faltan los criterios Gherkin de las historias de usuario originales, el estado de Jira, la
+firma de la declaración de IA, el merge a <span class="c">main</span> y el tag de entrega; y el sistema no
+implementa reintento acotado ni circuit breaker frente a sistemas externos (sí timeout y fallback).</p>
+
+<!-- ====================== 2 ====================== -->
+<h1>2. Introducción y problema</h1>
+<p>En muchas clínicas pequeñas y medianas los turnos se siguen gestionando por teléfono o con agendas en planillas
+separadas por profesional. El relevamiento del equipo identificó cuatro problemas concretos:</p>
+<table class="t">
+<tr><th style="width:26%">Problema</th><th>Consecuencia</th><th style="width:33%">Respuesta de MediConecta</th></tr>
+<tr><td>Turnos por teléfono</td><td>Líneas ocupadas; los horarios libres solo los conoce la recepción.</td><td>Reserva web guiada en 4 pasos, con los horarios reales de cada profesional.</td></tr>
+<tr class="alt"><td>Agendas en planillas</td><td>Superposiciones, turnos duplicados, falta de comunicación entre paciente y médico.</td><td>Una agenda única; el sistema rechaza superposiciones y fechas pasadas.</td></tr>
+<tr><td>Sin confirmación</td><td>El paciente no recibe aviso y el médico no sabe quién viene.</td><td>Avisos asincrónicos por JMS al confirmar (paciente, recordatorio y agenda del médico).</td></tr>
+<tr class="alt"><td>¿A qué médico voy?</td><td>Pacientes que no saben qué especialidad necesitan.</td><td>Asistente de IA que sugiere una especialidad sin diagnosticar.</td></tr>
+</table>
+<p>El objetivo académico del trabajo es aplicar sobre ese dominio los contenidos de la materia: componentes EJB con y
+sin estado, transacciones y seguridad declarativas, persistencia JPA, integración por SOAP, REST y mensajería,
+resiliencia, pruebas automatizadas y uso responsable de IA.</p>
+
+<!-- ====================== 3 ====================== -->
+<h1>3. Objetivos y alcance</h1>
+<h2>3.1 Objetivo general</h2>
+<p>Construir un sistema de turnos médicos multiusuario, seguro y resiliente sobre la plataforma Jakarta EE, con
+evidencia ejecutable de su calidad.</p>
+<h2>3.2 Objetivos específicos</h2>
+<ul>
+<li>Modelar la reserva como una conversación con estado (EJB <span class="c">@Stateful</span>) y las reglas de negocio como componentes sin estado.</li>
+<li>Garantizar la atomicidad de la reserva (turno + avisos) con una transacción JTA declarativa.</li>
+<li>Integrar sistemas externos de obras sociales (SOAP legado y REST moderno) detrás de una misma interfaz.</li>
+<li>Publicar una API REST con Problem Details (RFC 9457), <span class="c">Idempotency-Key</span> y <span class="c">ETag</span>.</li>
+<li>Proteger la API con JWT y roles, controlando la propiedad de cada recurso (BOLA/IDOR) y la fuerza bruta.</li>
+<li>Incorporar un asistente de IA a través de un gateway con límites, timeout y fallback.</li>
+<li>Automatizar build, pruebas, cobertura, mutación, escaneo de secretos y pruebas de sistema en CI.</li>
+</ul>
+<h2>3.3 Funcionalidades comprometidas e implementadas</h2>
+<table class="t">
+<tr><th>Funcionalidad</th><th style="width:14%">Estado</th><th>Dónde</th></tr>
+<tr><td>Inicio de sesión con JWT y cuatro roles</td><td class="ok">Implementada</td><td><span class="c">RecursoAutenticacion</span>, <span class="c">ServicioAutenticacion</span>, <span class="c">ServicioJwt</span></td></tr>
+<tr class="alt"><td>Reserva directa y reserva guiada en 4 pasos</td><td class="ok">Implementada</td><td><span class="c">FachadaReservas</span>, <span class="c">AsistenteReservaTurno</span></td></tr>
+<tr><td>Cancelar, atender y archivar turnos (patrón State)</td><td class="ok">Implementada</td><td><span class="c">GestionTurnos</span>, <span class="c">modelo.estado</span></td></tr>
+<tr class="alt"><td>Padrón de pacientes, ficha e historial</td><td class="ok">Implementada</td><td><span class="c">GestionPacientes</span></td></tr>
+<tr><td>Profesionales y disponibilidad semanal</td><td class="ok">Implementada</td><td><span class="c">GestionProfesionales</span></td></tr>
+<tr class="alt"><td>Validación de cobertura (SOAP / REST)</td><td class="ok">Implementada</td><td><span class="c">GestorCobertura</span> y adaptadores</td></tr>
+<tr><td>Avisos asincrónicos por JMS con DLQ</td><td class="ok">Implementada</td><td><span class="c">NotificadorTurnos</span>, MDB, <span class="c">GestionNotificaciones</span></td></tr>
+<tr class="alt"><td>Asistente de IA para elegir especialidad</td><td class="ok">Implementada</td><td><span class="c">GestorOrientacion</span>, <span class="c">AdaptadorIaGroq</span></td></tr>
+<tr><td>Tablero del día</td><td class="ok">Implementada</td><td><span class="c">RecursoTablero</span>, <span class="c">FachadaReservas.resumenDelDia</span></td></tr>
+<tr class="alt"><td>Envío real de mails/SMS</td><td class="par">Fuera de alcance</td><td>Los avisos se registran en <span class="c">notificaciones</span>; no hay proveedor real.</td></tr>
+</table>
+<h2>3.4 Limitaciones conocidas</h2>
+<ul>
+<li>El broker JMS está embebido en WildFly: “apagar el broker” equivale a detener el servidor.</li>
+<li>El limitador de intentos y la caché de cobertura viven en memoria de una instancia; con varias instancias habría que llevarlos a un almacén compartido.</li>
+<li>No hay reintento acotado ni circuit breaker ante sistemas externos (ver §10.4).</li>
+<li>No hay pruebas automatizadas de interfaz (Selenium/Playwright) ni de integración con contenedores desde JUnit (Testcontainers/Arquillian).</li>
+</ul>
+
+<!-- ====================== 4 ====================== -->
+<h1>4. Requerimientos e historias de usuario</h1>
+<div class="nota"><b>Historias de usuario originales.</b> El repositorio no contiene la “Entrega del diseño” del 03/11 ni
+un export de Jira con las historias de usuario y sus criterios en formato Dado/Cuando/Entonces. Los Criterios de Testing
+(eje A) exigen al menos tres criterios Gherkin por HU y prioridad MoSCoW. Ese material debe cotejarse con el documento
+entregado y con Jira; mientras tanto, este informe traza los <b>casos de uso</b> (<span class="c">docs/casos-de-uso.md</span>)
+y los <b>requisitos funcionales</b> (<span class="c">docs/Matriz_de_Trazabilidad.md</span>), que sí están versionados.</div>
+<h2>4.1 Casos de uso</h2>
+<table class="t">
+<tr><th style="width:9%">Id</th><th>Caso de uso</th><th style="width:22%">Actor</th><th style="width:34%">Flujos alternativos y de error verificados</th></tr>
+<tr><td>CU-01</td><td>Reservar un turno (alta directa)</td><td>Paciente, Recepción, Admin</td><td>Horario ocupado (400), fecha pasada (400), documento ajeno (403), clave repetida</td></tr>
+<tr class="alt"><td>CU-02</td><td>Reservar con el asistente guiado</td><td>Paciente, Recepción, Admin</td><td>Volver un paso, abandonar, expiración a los 30 min</td></tr>
+<tr><td>CU-03</td><td>Cancelar un turno</td><td>Todos (con propiedad)</td><td>Turno ajeno (403), ya cancelado (409), ETag viejo (412)</td></tr>
+<tr class="alt"><td>CU-04</td><td>Archivar un turno cancelado</td><td>Recepción, Admin</td><td>Turno no cancelado (409), rol no habilitado (403)</td></tr>
+<tr><td>CU-05</td><td>Consultar historial de un paciente</td><td>Todos (con propiedad)</td><td>Historial ajeno (403), paciente inexistente (404)</td></tr>
+<tr class="alt"><td>CU-06</td><td>Gestionar profesionales y disponibilidad</td><td>Admin, Recepción, Médico</td><td>Médico sobre agenda ajena (403), rol sin permiso (403)</td></tr>
+<tr><td>CU-07</td><td>Validar la cobertura (obra social)</td><td>Todos (con propiedad)</td><td>Sistema externo lento o caído → fallback con aviso</td></tr>
+<tr class="alt"><td>CU-08</td><td>Ver el tablero de la clínica</td><td>Recepción, Médico, Admin</td><td>Paciente (403)</td></tr>
+<tr><td>CU-09</td><td>Recibir avisos de confirmación y recordatorio</td><td>Sistema (asincrónico)</td><td>Mensaje repetido (un solo aviso), mensaje inválido (DLQ)</td></tr>
+</table>
+<h2>4.2 Requisitos funcionales y su verificación</h2>
+<p>La relación completa requisito → componente → test está en la matriz de trazabilidad (§15). Todos los requisitos
+funcionales RF-01 a RF-13 tienen al menos un test unitario y una verificación de humo; RF-14 (interfaz por rol) solo
+tiene verificación manual.</p>
+
+<!-- ====================== 5 ====================== -->
+<h1>5. Arquitectura del sistema</h1>
+<p>MediConecta es un único WAR (<span class="c">mediconecta.war</span>) desplegado en WildFly con el perfil
+<span class="c">standalone-full</span>, necesario para JMS. La aplicación se organiza en tres capas —presentación,
+negocio y datos— más servicios transversales de seguridad, mensajería, integraciones e IA. Cada capa depende solo de la
+inferior: los recursos JAX-RS no acceden a JPA y los EJB de negocio dependen de interfaces de repositorio, no de
+<span class="c">EntityManager</span>.</p>
+<div class="fig"><img src="img/arquitectura.png" width="600"></div>
+<p class="cap">Figura 1. Arquitectura en capas, construida a partir de los paquetes del código integrado.</p>
+<h2>5.1 Tecnologías</h2>
+<table class="t">
+<tr><th style="width:30%">Tecnología</th><th>Uso en el proyecto</th></tr>
+<tr><td>Jakarta EE 10 (EJB, CDI, JPA, JAX-RS, JAX-WS, JMS, Security)</td><td>Única dependencia de compilación del WAR: <span class="c">jakarta.jakartaee-api</span> con alcance <span class="c">provided</span>.</td></tr>
+<tr class="alt"><td>WildFly (standalone-full)</td><td>Servidor de aplicaciones; datasource, mensajería, seguridad y propiedades se configuran con scripts CLI (<span class="c">scripts/wildfly/</span>, <span class="c">docker/</span>).</td></tr>
+<tr><td>PostgreSQL 16 + Flyway</td><td>Persistencia; el esquema lo definen las migraciones V1–V3 y Hibernate solo lo valida.</td></tr>
+<tr class="alt"><td>ActiveMQ Artemis (embebido)</td><td>Cola de confirmaciones, tópico de recordatorios y DLQ <span class="c">MensajesFallidos</span>.</td></tr>
+<tr><td>JWT HS256 + PBKDF2-HMAC-SHA256</td><td>Autenticación sin estado y hash de contraseñas (120 000 iteraciones, sal por usuario).</td></tr>
+<tr class="alt"><td>HTML, CSS y JavaScript (ES modules)</td><td>Interfaz sin framework; tipografía Inter servida desde el propio sitio.</td></tr>
+<tr><td>Groq (API compatible con OpenAI)</td><td>Proveedor del modelo de lenguaje del asistente.</td></tr>
+<tr class="alt"><td>Maven Wrapper 3.9.9, JUnit 5, JaCoCo, PIT, Checkstyle</td><td>Build reproducible y control de calidad.</td></tr>
+<tr><td>Docker / Docker Compose, GitHub Actions, gitleaks, k6, OWASP ZAP</td><td>Despliegue reproducible y pipeline de CI.</td></tr>
+</table>
+<h2>5.2 Componentes de negocio</h2>
+<table class="t">
+<tr><th style="width:28%">Componente</th><th style="width:22%">Tipo</th><th>Responsabilidad</th></tr>
+<tr><td>C1 <span class="c">GestionTurnos</span></td><td>EJB <span class="c">@Stateless</span></td><td>Agenda, superposición, transiciones del turno y propiedad.</td></tr>
+<tr class="alt"><td>C2 <span class="c">GestionPacientes</span></td><td>EJB <span class="c">@Stateless</span></td><td>Padrón, ficha, historial, validación de documento.</td></tr>
+<tr><td>C3 <span class="c">GestionProfesionales</span></td><td>EJB <span class="c">@Stateless</span></td><td>Profesionales, disponibilidad y horarios libres.</td></tr>
+<tr class="alt"><td>C4 <span class="c">AsistenteReservaTurno</span></td><td>EJB <span class="c">@Stateful</span> (timeout 30 min)</td><td>Conversación de reserva en 4 pasos; recuerda lo elegido entre pedidos.</td></tr>
+<tr><td>C5 Notificaciones</td><td><span class="c">NotificadorTurnos</span> <span class="c">@Stateless</span> + 4 MDB <span class="c">@MessageDriven</span></td><td>Publica eventos del turno y los consume de forma idempotente.</td></tr>
+<tr class="alt"><td>C6 Obras sociales</td><td><span class="c">GestorCobertura</span> y adaptadores <span class="c">@Stateless</span>; <span class="c">CacheCobertura</span> CDI <span class="c">@ApplicationScoped</span></td><td>Valida la cobertura por SOAP o REST con timeout y fallback.</td></tr>
+<tr><td>C7 Orientación con IA</td><td><span class="c">GestorOrientacion</span> y <span class="c">AdaptadorIaGroq</span> <span class="c">@Stateless</span></td><td>Gateway hacia el modelo de lenguaje, con límites y fallback.</td></tr>
+<tr class="alt"><td><span class="c">FachadaReservas</span></td><td>EJB <span class="c">@Stateless</span></td><td>Punto único de reserva (REST y asistente); transacción <span class="c">REQUIRED</span>.</td></tr>
+</table>
+<p>No todos los componentes de integración son sesión sin estado: los consumidores de mensajes son
+<span class="c">@MessageDriven</span>, la caché de cobertura y el limitador de frecuencia son beans CDI de alcance de
+aplicación, y la carga de datos de demostración es un <span class="c">@Singleton @Startup</span>.</p>
+
+<!-- ====================== 6 ====================== -->
+<h1>6. Patrones de diseño</h1>
+<table class="t">
+<tr><th style="width:15%">Patrón</th><th style="width:32%">Clases reales</th><th>Problema que resuelve</th></tr>
+<tr><td><b>State</b></td><td><span class="c">modelo.estado.EstadoDelTurno</span>, <span class="c">TurnoProgramado</span>, <span class="c">TurnoAtendido</span>, <span class="c">TurnoCancelado</span>, <span class="c">TransicionInvalidaException</span></td><td>Cada estado decide qué transiciones admite. Atender un turno cancelado o cancelar dos veces lanza <span class="c">TransicionInvalidaException</span>, que la API traduce a 409. Evita condicionales dispersos sobre el campo <span class="c">estado</span>.</td></tr>
+<tr class="alt"><td><b>Facade</b></td><td><span class="c">negocio.FachadaReservas</span></td><td>Una sola puerta para reservar, usada por <span class="c">RecursoTurnos</span> y por el asistente; coordina pacientes, turnos, idempotencia y avisos dentro de una transacción.</td></tr>
+<tr><td><b>Factory</b></td><td><span class="c">negocio.FabricaTurnos</span></td><td>Todo turno nace <span class="c">PROGRAMADO</span>, con la fecha redondeada al minuto y una especialidad coherente con el profesional.</td></tr>
+<tr class="alt"><td><b>Adapter</b></td><td><span class="c">integraciones.ValidadorCobertura</span>, <span class="c">AdaptadorObraSocialLegado</span> (SOAP), <span class="c">AdaptadorObraSocialPartner</span> (REST), <span class="c">AdaptadorIaGroq</span></td><td>Sistemas externos con contratos distintos quedan detrás de una interfaz propia; el negocio no conoce WSDL, JSON del partner ni el formato del proveedor de IA.</td></tr>
+<tr><td><b>Repository / DAO</b></td><td><span class="c">datos.Repositorio*</span>, <span class="c">datos.jpa.*</span>, <span class="c">datos.memoria.*</span></td><td>El negocio depende de interfaces; la implementación JPA es la activa y la de memoria es una <span class="c">@Alternative</span> que permite los tests sin base y el “plan B”.</td></tr>
+<tr class="alt"><td><b>Gateway</b></td><td><span class="c">integraciones.GestorOrientacion</span></td><td>Centraliza el acceso al servicio de IA: validación, límite de uso, filtro de especialidades y fallback.</td></tr>
+</table>
+
+<!-- ====================== 7 ====================== -->
+<h1>7. Funcionalidades y roles</h1>
+<h2>7.1 Matriz de permisos</h2>
+<table class="t">
+<tr><th>Operación</th><th>Paciente</th><th>Recepción</th><th>Médico</th><th>Admin</th></tr>
+<tr><td>Reservar turno</td><td>solo propio</td><td>sí</td><td>no</td><td>sí</td></tr>
+<tr class="alt"><td>Ver agenda completa y tablero</td><td>no (403)</td><td>sí</td><td>sí</td><td>sí</td></tr>
+<tr><td>Ver / cancelar turno</td><td>solo propios</td><td>sí</td><td>su agenda</td><td>sí</td></tr>
+<tr class="alt"><td>Atender turno</td><td>no</td><td>no</td><td>su agenda</td><td>sí</td></tr>
+<tr><td>Archivar turno cancelado</td><td>no</td><td>sí</td><td>no</td><td>sí</td></tr>
+<tr class="alt"><td>Padrón de pacientes</td><td>solo su ficha</td><td>sí</td><td>consulta</td><td>sí</td></tr>
+<tr><td>Alta de profesionales</td><td>no</td><td>no</td><td>no</td><td>sí</td></tr>
+<tr class="alt"><td>Definir disponibilidad</td><td>no</td><td>cualquiera</td><td>solo la propia</td><td>cualquiera</td></tr>
+<tr><td>Mensajes fallidos (DLQ)</td><td>no</td><td>no</td><td>no</td><td>sí</td></tr>
+</table>
+<p>La autorización está en los EJB (<span class="c">@RolesAllowed</span>) y no solo en la interfaz; la propiedad del
+recurso se comprueba en el negocio (§11.2).</p>
+<h2>7.2 Flujos principales</h2>
+<p><b>Reserva guiada.</b> El paciente elige la especialidad (o la describe al asistente de IA), luego el profesional, un
+horario libre según la disponibilidad real y confirma. El servidor recuerda cada paso en el EJB
+<span class="c">@Stateful</span>; al confirmar delega en <span class="c">FachadaReservas</span>, que valida, crea el
+turno y publica los avisos.</p>
+<p><b>Gestión en recepción.</b> La recepción consulta la agenda con buscador y filtros, abre el detalle de un turno y
+lo cancela o archiva; el médico registra la atención sobre su propia agenda.</p>
+<div class="info"><b>Sobre las capturas.</b> Las capturas siguientes son reales, tomadas del sistema en ejecución el
+17/09/2026 (<span class="c">docs/presentacion/capturas/</span>). La versión integrada mantiene las mismas pantallas y
+flujos, pero cambió estilos (tipografía local, barra de navegación común en <span class="c">js/layout.js</span>). No se
+pudieron tomar capturas nuevas de la versión integrada porque en la máquina de verificación no se pudo levantar Docker
+ni PostgreSQL (§13.8). Reemplazarlas es una tarea pendiente.</div>
+<table width="100%" style="border-collapse:collapse">
+<tr><td style="width:50%; padding:3pt; text-align:center"><img src="img/02-dashboard-recepcion.png" width="285"><br><span class="cap">Figura 2. Tablero de recepción.</span></td>
+<td style="width:50%; padding:3pt; text-align:center"><img src="img/03-turnos-listado.png" width="285"><br><span class="cap">Figura 3. Agenda con buscador y filtros.</span></td></tr>
+<tr><td style="padding:3pt; text-align:center"><img src="img/08-reserva-especialidad.png" width="285"><br><span class="cap">Figura 4. Reserva guiada: elección de especialidad.</span></td>
+<td style="padding:3pt; text-align:center"><img src="img/04-turno-detalle.png" width="285"><br><span class="cap">Figura 5. Detalle del turno con acciones por rol.</span></td></tr>
+<tr><td style="padding:3pt; text-align:center"><img src="img/05-profesionales.png" width="285"><br><span class="cap">Figura 6. Profesionales y disponibilidad.</span></td>
+<td style="padding:3pt; text-align:center"><img src="img/09-dashboard-paciente.png" width="285"><br><span class="cap">Figura 7. Inicio del rol paciente.</span></td></tr>
+</table>
+
+<!-- ====================== 8 ====================== -->
+<h1>8. Modelo de datos</h1>
+<p>El esquema se versiona con Flyway en <span class="c">db/migraciones</span> (V1 esquema inicial, V2 índices,
+notificaciones, mensajes fallidos y claves de idempotencia, V3 columna <span class="c">version</span> para ETag).
+Hibernate arranca con <span class="c">hbm2ddl.auto=validate</span>: si falta una migración, el despliegue falla en
+lugar de alterar tablas.</p>
+<div class="fig"><img src="img/modelo-datos.png" width="600"></div>
+<p class="cap">Figura 8. Entidades, relaciones y restricciones según las migraciones V1–V3.</p>
+<table class="t">
+<tr><th style="width:30%">Restricción</th><th>Para qué sirve</th></tr>
+<tr><td><span class="c">uk_pacientes_documento</span></td><td>El documento es la clave de negocio que aparece en las URLs de la API.</td></tr>
+<tr class="alt"><td><span class="c">turnos_estado_check</span></td><td>Solo los tres estados del patrón State.</td></tr>
+<tr><td><span class="c">uk_notificaciones_evento_tipo</span></td><td>Un mismo evento genera un solo aviso de cada tipo: base del consumidor idempotente.</td></tr>
+<tr class="alt"><td><span class="c">uk_claves_idempotencia_usuario_clave</span></td><td>Una <span class="c">Idempotency-Key</span> por usuario crea un único turno.</td></tr>
+<tr><td><span class="c">uk_mensajes_fallidos_mensaje</span></td><td>Un mensaje de la DLQ se registra una sola vez.</td></tr>
+<tr class="alt"><td>Columna <span class="c">version</span> (turnos, pacientes)</td><td>Bloqueo optimista JPA y valor del <span class="c">ETag</span>.</td></tr>
+</table>
+
+<!-- ====================== 9 ====================== -->
+<h1>9. API REST y SOAP</h1>
+<p>La API se publica bajo <span class="c">/mediconecta/api</span> y está documentada en
+<span class="c">openapi.json</span> (34 rutas), visible en <span class="c">api-docs.html</span>. El test
+<span class="c">ContratoOpenApiTest</span> rompe el build si un endpoint real no está documentado o viceversa.</p>
+<table class="t">
+<tr><th style="width:9%">Método</th><th style="width:33%">Ruta</th><th style="width:20%">Roles</th><th>Respuesta y errores</th></tr>
+<tr><td>POST</td><td><span class="c">/api/auth/login</span></td><td>público</td><td>Token JWT; 401 credenciales inválidas; 429 tras 5 fallos</td></tr>
+<tr class="alt"><td>GET</td><td><span class="c">/api/salud</span>, <span class="c">/api/salud/vivo</span></td><td>público</td><td>Readiness (base y broker; 503 si caen) y liveness</td></tr>
+<tr><td>GET</td><td><span class="c">/api/turnos</span></td><td>Recepción, Médico, Admin</td><td>Agenda; 403 para Paciente</td></tr>
+<tr class="alt"><td>POST</td><td><span class="c">/api/turnos</span></td><td>Paciente, Recepción, Admin</td><td>201 + Location; 400 regla; 403 ajeno; <span class="c">Idempotency-Key</span></td></tr>
+<tr><td>GET</td><td><span class="c">/api/turnos/{id}</span></td><td>todos (propiedad)</td><td>ETag; 304 con <span class="c">If-None-Match</span>; 403 ajeno; 404</td></tr>
+<tr class="alt"><td>PUT</td><td><span class="c">/api/turnos/{id}/cancelar|atender|archivar</span></td><td>según rol</td><td>409 transición inválida; 412 <span class="c">If-Match</span> viejo; 403</td></tr>
+<tr><td>GET/POST/PUT</td><td><span class="c">/api/pacientes…</span></td><td>según rol</td><td>Padrón, ficha, historial y cobertura; 403 ajeno; 404</td></tr>
+<tr class="alt"><td>GET/POST/PUT</td><td><span class="c">/api/profesionales…</span></td><td>según rol</td><td>Alta (Admin), disponibilidad, horarios libres</td></tr>
+<tr><td>varios</td><td><span class="c">/api/reserva/*</span></td><td>Paciente, Recepción, Admin</td><td>Pasos del asistente <span class="c">@Stateful</span> y orientación con IA</td></tr>
+<tr class="alt"><td>GET/POST</td><td><span class="c">/api/mensajeria/*</span></td><td>Admin</td><td>Mensajes fallidos y mensaje defectuoso de demostración (202)</td></tr>
+</table>
+<h2>9.1 Idempotency-Key</h2>
+<p><span class="c">POST /api/turnos</span> acepta la cabecera <span class="c">Idempotency-Key</span> (8 a 100
+caracteres). <span class="c">FachadaReservas.reservarConClave</span> guarda la clave por usuario junto con la huella
+SHA-256 del pedido: si se repite con el mismo cuerpo devuelve el mismo turno con
+<span class="c">Idempotent-Replayed: true</span>; con otro cuerpo responde 422; si el primer pedido sigue en curso,
+409. Las claves vencidas las borra <span class="c">LimpiezaIdempotencia</span>.</p>
+<h2>9.2 ETag y concurrencia</h2>
+<p>Turnos y pacientes devuelven un <span class="c">ETag</span> derivado de la columna <span class="c">version</span>.
+<span class="c">If-None-Match</span> igual produce 304; una modificación con <span class="c">If-Match</span>
+desactualizado produce 412 y no cambia el recurso. Si dos transacciones chocan sin cabecera, el bloqueo optimista de JPA
+responde 409 <span class="c">modificacion-concurrente</span>.</p>
+<h2>9.3 Problem Details (RFC 9457)</h2>
+<p>Todo error se responde como <span class="c">application/problem+json</span> con <span class="c">type</span>,
+<span class="c">title</span>, <span class="c">status</span>, <span class="c">detail</span> e
+<span class="c">instance</span>. <span class="c">Problemas</span> traduce cada excepción a un
+<span class="c">TipoProblema</span>; los errores inesperados no exponen trazas al cliente.</p>
+<table class="t">
+<tr><th>Código</th><th>Tipo (<span class="c">urn:mediconecta:problema:…</span>)</th><th>Cuándo</th></tr>
+<tr><td>400</td><td>regla-negocio, pedido-invalido</td><td>Regla incumplida, JSON mal formado</td></tr>
+<tr class="alt"><td>401</td><td>no-autenticado, credenciales-invalidas</td><td>Token ausente o inválido; login fallido</td></tr>
+<tr><td>403</td><td>acceso-denegado</td><td>Rol sin permiso (BFLA) o recurso ajeno (BOLA)</td></tr>
+<tr class="alt"><td>404</td><td>no-encontrado</td><td>Recurso inexistente</td></tr>
+<tr><td>409</td><td>transicion-invalida, idempotencia-en-curso, modificacion-concurrente</td><td>Patrón State, clave en curso, conflicto JPA</td></tr>
+<tr class="alt"><td>412</td><td>precondicion-fallida</td><td><span class="c">If-Match</span> desactualizado</td></tr>
+<tr><td>422</td><td>idempotencia-reutilizada</td><td>Misma clave con otro pedido</td></tr>
+<tr class="alt"><td>429</td><td>demasiadas-solicitudes</td><td>Fuerza bruta en login o abuso del asistente de IA</td></tr>
+<tr><td>502 / 504</td><td>integracion-externa, tiempo-agotado</td><td>Falla o timeout de un sistema externo sin fallback</td></tr>
+</table>
+<h2>9.4 Integración SOAP</h2>
+<p>El sistema legado de obras sociales se publica en la propia aplicación como servicio JAX-WS de simulación
+(<span class="c">ServicioObraSocialLegadoImpl</span>, contrato en <span class="c">wsdl/ServicioObraSocialLegado.wsdl</span>).
+<span class="c">AdaptadorObraSocialLegado</span> lo consume para PAMI, OSDE e IOMA, con timeouts de conexión (2 s) y
+respuesta (5 s) cargados en el contexto del cliente JAX-WS. Las demás obras sociales se consultan por REST al partner
+simulado (<span class="c">RecursoPartnerCobertura</span>). Un fault o timeout no llega crudo al usuario: se aplica el
+fallback de §10.3.</p>
+
+<!-- ====================== 10 ====================== -->
+<h1>10. Mensajería y resiliencia</h1>
+<div class="fig"><img src="img/mensajeria.png" width="600"></div>
+<p class="cap">Figura 9. Flujo de mensajería: publicación transaccional, consumidores idempotentes, reintentos y DLQ.</p>
+<h2>10.1 Colas, tópicos y persistencia</h2>
+<p>Al confirmar un turno, <span class="c">NotificadorTurnos</span> envía un mensaje persistente a la cola de
+confirmaciones y otro al tópico de recordatorios, dentro de la misma transacción XA que guarda el turno: si algo falla,
+el contenedor deshace ambos. El tópico tiene dos suscripciones durables (paciente y profesional), de modo que un
+consumidor detenido recibe los mensajes al volver.</p>
+<h2>10.2 Consumidores idempotentes, reintentos y DLQ</h2>
+<p>Los tres consumidores delegan en <span class="c">ConsumoDeEventos</span>/<span class="c">GestionNotificaciones</span>,
+que registra cada aviso con la restricción única <span class="c">(evento_id, tipo)</span>: una entrega repetida no
+genera un segundo aviso. Ante una falla el MDB marca <span class="c">setRollbackOnly</span> y Artemis reintenta.
+<b>La versión final hace 4 intentos</b> (la entrega original y 3 reintentos, con esperas de 1, 2 y 4 s; antes, en
+<span class="c">947ba9d</span>, eran 3); luego el mensaje pasa a la DLQ <span class="c">MensajesFallidos</span>, donde
+<span class="c">MonitorMensajesFallidos</span> lo registra y el administrador lo consulta por la API.</p>
+<h2>10.3 Timeouts y fallback</h2>
+<table class="t">
+<tr><th style="width:22%">Dependencia</th><th style="width:22%">Timeout</th><th>Fallback si falla o tarda</th></tr>
+<tr><td>SOAP legado / REST partner</td><td>conexión 2 s · respuesta 5 s (<span class="c">TiemposDeEspera</span>, configurables)</td><td>Último resultado bueno de <span class="c">CacheCobertura</span>; si no hay, cobertura “a verificar” con <span class="c">contingencia: true</span>.</td></tr>
+<tr class="alt"><td>Proveedor de IA</td><td>conexión 2 s · lectura 5 s</td><td><span class="c">OrientacionDeRespaldo</span> por palabras clave (también detecta urgencias).</td></tr>
+<tr><td>Base de datos</td><td>consultas ≤ 5 s (<span class="c">persistence.xml</span>)</td><td>Error 5xx en Problem Details; <span class="c">/api/salud</span> informa DOWN.</td></tr>
+</table>
+<h2>10.4 Cumplimiento del eje C</h2>
+<table class="t">
+<tr><th style="width:30%">Escenario (Criterios de Testing)</th><th style="width:15%">Estado</th><th>Evidencia</th></tr>
+<tr><td>SOAP: respuesta válida, fault de negocio y técnico</td><td class="par">PARCIAL</td><td>Respuesta válida y caída/timeout cubiertos (<span class="c">FallbacksTest</span>, humo COBERTURA). No hay un test específico de fault de negocio SOAP.</td></tr>
+<tr class="alt"><td>Externo no responde en 5 s</td><td class="par">PARCIAL</td><td>Timeout efectivo y fallback comunicado (<span class="c">contingencia</span>) verificados en tests. <b>No hay reintento acotado ni circuit breaker</b>: existían en <span class="c">947ba9d</span> (<span class="c">ProteccionIntegracion</span>) pero no en la base adoptada.</td></tr>
+<tr><td>Broker apagado y vuelto a levantar</td><td class="par">MANUAL</td><td>Procedimiento documentado y ejecutado por M. Bellinzona el 19/11 (turno 61 confirmado 15 s después del reinicio). No reejecutado sobre la versión integrada.</td></tr>
+<tr class="alt"><td>Mensaje duplicado</td><td class="ok">CUMPLE</td><td><span class="c">GestionNotificacionesTest.elMismoEventoDosVecesGeneraUnSoloAviso</span></td></tr>
+<tr><td>Mensaje inválido → DLQ</td><td class="ok">CUMPLE</td><td><span class="c">ConsumoDeEventosTest</span>; humo MENSAJERIA en CI.</td></tr>
+<tr class="alt"><td>Falla a mitad de la transacción</td><td class="ok">CUMPLE</td><td>Transacción JTA <span class="c">REQUIRED</span> + envío XA; tests de <span class="c">FachadaReservasTest</span>.</td></tr>
+<tr><td>POST repetido con Idempotency-Key</td><td class="ok">CUMPLE</td><td><span class="c">FachadaReservasTest</span>; humo IDEMPOTENCY-KEY.</td></tr>
+<tr class="alt"><td>ETag desactualizado → 412</td><td class="ok">CUMPLE</td><td><span class="c">EtiquetasTest</span>, <span class="c">GestionTurnosTest</span>; humo ETAG.</td></tr>
+<tr><td>Errores en Problem Details</td><td class="ok">CUMPLE</td><td><span class="c">ProblemasTest</span>; humo PROBLEM DETAILS.</td></tr>
+<tr class="alt"><td>Carga: 50 usuarios, 5 min, p95 &lt; 500 ms</td><td class="par">PARCIAL</td><td>k6 en CI: 20 usuarios virtuales durante 45 s sobre 7 endpoints (salud, agenda, padrón, tablero, profesionales, horarios, ficha): 9467 pedidos, p95 22,18 ms, 0 % de errores. El escenario exigido (50 usuarios, 5 min) no se ejecutó.</td></tr>
+</table>
+
+<!-- ====================== 11 ====================== -->
+<h1>11. Seguridad</h1>
+<h2>11.1 Autenticación</h2>
+<p><span class="c">MecanismoAutenticacionJwt</span> (Jakarta Security) valida en cada pedido un JWT HS256 firmado con un
+secreto de al menos 32 bytes que se configura por entorno (<span class="c">MEDICONECTA_JWT_SECRETO</span>); el código no
+tiene secreto por defecto. Se rechazan firma alterada, <span class="c">alg:none</span>, emisor ajeno, token mal formado y
+vencido (401). Las contraseñas se guardan con PBKDF2-HMAC-SHA256, 120 000 iteraciones y sal por usuario.</p>
+<h2>11.2 Autorización: BFLA y BOLA/IDOR</h2>
+<p><b>BFLA.</b> Cada método público de los EJB declara <span class="c">@RolesAllowed</span>; un rol sin permiso recibe
+403 (<span class="c">EJBAccessException</span> → <span class="c">acceso-denegado</span>).</p>
+<p><b>BOLA/IDOR.</b> La propiedad se controla en el negocio: un paciente solo accede a su ficha, sus turnos, su
+historial y su cobertura; un médico solo atiende, cancela o cambia la disponibilidad de su propia agenda. <b>Cambio de la
+integración:</b> la base de Bellinzona respondía 400 en estos casos; los Criterios de Testing exigen 403 o 404. Se
+incorporó de <span class="c">947ba9d</span> la excepción <span class="c">AccesoDenegadoException</span>, ahora mapeada a
+403 en <span class="c">Problemas</span>, con tests nuevos en <span class="c">ProblemasTest</span> y
+<span class="c">GestionPacientesTest</span> y el humo actualizado.</p>
+<h2>11.3 Fuerza bruta y abuso</h2>
+<p><span class="c">ServicioAutenticacion</span> con <span class="c">LimitadorDeFrecuencia</span>: tras 5 fallos para un
+mismo usuario o 30 desde un mismo origen en 5 minutos responde 429 con <span class="c">Retry-After</span>. El asistente
+de IA admite 10 consultas por minuto por usuario.</p>
+<h2>11.4 Validación de entrada y datos</h2>
+<ul>
+<li>Documento del paciente: 6 a 10 dígitos (corrección incorporada de <span class="c">947ba9d</span>; antes un documento como <span class="c">{x}</span> provocaba un 500 al armar el <span class="c">Location</span>).</li>
+<li>Mass assignment: los recursos usan DTO de entrada (<span class="c">PedidoTurno</span>) y el negocio fija estado, id y archivado.</li>
+<li>Inyección SQL: solo consultas JPQL parametrizadas; XSS: la API devuelve JSON y la interfaz escapa con <span class="c">esc()</span>; CSP sin <span class="c">unsafe-inline</span> en las pantallas.</li>
+</ul>
+<h2>11.5 Cabeceras HTTP</h2>
+<p><span class="c">CabecerasSeguridad</span> agrega Content-Security-Policy (estricta en pantallas y
+<span class="c">default-src 'none'</span> en la API), <span class="c">X-Content-Type-Options: nosniff</span>,
+<span class="c">X-Frame-Options: DENY</span>, <span class="c">Strict-Transport-Security</span> cuando el pedido llega
+por HTTPS y <span class="c">Cache-Control: no-store</span> en la API. La cookie de sesión es
+<span class="c">HttpOnly</span> y <span class="c">SameSite=Strict</span>. La página de documentación de la API
+(Swagger UI desde jsDelivr) usa una CSP propia más permisiva.</p>
+<h2>11.6 Gestión de secretos</h2>
+<ul>
+<li>Base de datos, JWT, contraseña de demostración y clave de IA se leen del entorno (<span class="c">.env</span>, no versionado; plantilla en <span class="c">.env.example</span>) o de propiedades de WildFly.</li>
+<li>gitleaks sobre todo el historial en CI: <b>0 hallazgos</b> (36 commits escaneados, run #4).</li>
+<li><b>Riesgo residual:</b> el historial conserva, en commits anteriores a la integración (desde <span class="c">c285ce8</span>), un secreto JWT de desarrollo escrito en <span class="c">ServicioJwt.java</span>. gitleaks no lo marca, pero otra herramienta (p. ej. trufflehog, mencionada en G6) podría hacerlo. Ya no se usa: el código actual exige el secreto por entorno. Procedimiento recomendado: no reescribir el historial; documentar el hallazgo y asegurar que ningún despliegue use ese valor. Si el equipo decidiera limpiar el historial, es una operación destructiva sobre ramas compartidas que requiere acuerdo de todos.</li>
+<li>Los scripts de prueba usan la contraseña de demostración <span class="c">Demo.2026</span> como valor por omisión: es un dato ficticio de la demo, no una credencial real.</li>
+</ul>
+<h2>11.7 Resultados de seguridad</h2>
+<table class="t">
+<tr><th style="width:34%">Prueba (eje D)</th><th style="width:14%">Estado</th><th>Evidencia</th></tr>
+<tr><td>BOLA/IDOR (403/404)</td><td class="ok">CUMPLE</td><td>Humo “seguridad en vivo” (403) en CI; <span class="c">GestionTurnosTest</span>, <span class="c">GestionPacientesTest</span></td></tr>
+<tr class="alt"><td>BFLA (403)</td><td class="ok">CUMPLE</td><td>Humo SEGURIDAD en CI</td></tr>
+<tr><td>JWT vencido, alterado, alg=none, otro emisor (401)</td><td class="ok">CUMPLE</td><td><span class="c">ServicioJwtTest</span>, <span class="c">MecanismoAutenticacionJwtTest</span>, humo</td></tr>
+<tr class="alt"><td>Mass assignment</td><td class="par">PARCIAL</td><td>DTO de entrada; sin test dedicado</td></tr>
+<tr><td>Inyección SQL / XSS</td><td class="ok">CUMPLE</td><td>Humo: SQL en búsqueda, ruta y login; XSS almacenado devuelto como JSON</td></tr>
+<tr class="alt"><td>XXE en el canal SOAP</td><td class="nv">NO VERIFICABLE</td><td>No hay prueba que envíe una entidad externa al servicio SOAP</td></tr>
+<tr><td>Fuerza bruta → 429</td><td class="ok">CUMPLE</td><td><span class="c">ServicioAutenticacionTest</span>, <span class="c">LimitadorDeFrecuenciaTest</span>, humo</td></tr>
+<tr class="alt"><td>OWASP ZAP (baseline + activo autenticado)</td><td class="par">PARCIAL</td><td>Baseline pasivo en CI: 65 reglas PASS, 0 FAIL, 3 WARN informativas (comentarios sospechosos, contenido no almacenable, aplicación web moderna). No se ejecutó el escaneo activo autenticado.</td></tr>
+<tr><td>Dependencias (Dependency-Check / Trivy / Snyk)</td><td class="no">NO EJECUTADO</td><td>No hay escaneo SCA en el pipeline</td></tr>
+<tr class="alt"><td>Cabeceras, CORS y cookies</td><td class="ok">CUMPLE</td><td><span class="c">CabecerasSeguridadTest</span>; sin CORS habilitado</td></tr>
+<tr><td>Logs y mensajes de error</td><td class="ok">CUMPLE</td><td>Sin trazas al cliente (<span class="c">ProblemasTest</span>)</td></tr>
+<tr class="alt"><td>TLS y hash adaptativo</td><td class="par">PARCIAL</td><td>PBKDF2 verificado (<span class="c">HashDeClavesTest</span>); TLS depende del despliegue (HSTS solo bajo HTTPS)</td></tr>
+</table>
+
+<!-- ====================== 12 ====================== -->
+<h1>12. Inteligencia artificial</h1>
+<h2>12.1 Funcionamiento</h2>
+<p>En el primer paso de la reserva, la opción “Prefiero escribirlo” abre un chat. El paciente cuenta qué le pasa y el
+asistente sugiere una especialidad entre las que tienen médicos activos, con un botón para elegirla; la persona decide.
+Si detecta una urgencia, indica llamar al 107 (SAME) o al 911 en lugar de pedir un turno.</p>
+<div class="fig"><img src="img/ia-gateway.png" width="600"></div>
+<p class="cap">Figura 10. Gateway de IA: validación, límites, adaptador del proveedor y fallback.</p>
+<h2>12.2 Proveedor, gateway y fallback</h2>
+<ul>
+<li><b>Proveedor:</b> Groq, API compatible con <i>chat completions</i>; modelo por omisión <span class="c">openai/gpt-oss-120b</span> (configurable). La clave vive solo en el servidor.</li>
+<li><b>Gateway</b> (<span class="c">GestorOrientacion</span>): conversaciones de hasta 20 mensajes y 1000 caracteres por mensaje; 10 consultas por minuto por usuario; descarta una especialidad sugerida que no exista.</li>
+<li><b>Timeout:</b> conexión 2 s y lectura 5 s en <span class="c">AdaptadorIaGroq</span>.</li>
+<li><b>Fallback:</b> <span class="c">OrientacionDeRespaldo</span> por palabras clave cuando el proveedor falla, tarda o no hay clave; la respuesta lleva <span class="c">contingencia: true</span> y el flujo de reserva no se interrumpe.</li>
+<li><b>Datos:</b> solo se envía el texto que escribe la persona y la lista de especialidades; no se envían nombre, documento ni historia clínica.</li>
+</ul>
+<h2>12.3 Pruebas: simuladas y reales</h2>
+<table class="t">
+<tr><th style="width:30%">Prueba</th><th style="width:18%">Tipo</th><th>Resultado verificable</th></tr>
+<tr><td><span class="c">AdaptadorIaGroqTest</span> (7), <span class="c">GestorOrientacionTest</span> (5), <span class="c">FallbacksTest</span> (8)</td><td>Unitarias, proveedor <b>simulado</b></td><td>Pasan en local y en CI: formato del pedido, respuestas inválidas, límites, fallback.</td></tr>
+<tr class="alt"><td>Humo “ASISTENTE DE IA” en CI</td><td>Sistema, <b>sin clave</b></td><td>Verifica que sin proveedor responda el respaldo sin romper el flujo.</td></tr>
+<tr><td><span class="c">pruebas/ia/evaluar-ia.sh</span> con <span class="c">casos.json</span> (12 casos: orientación, urgencias, <i>prompt injection</i> directa e indirecta, fuera de dominio, especialidades inexistentes; umbral 80 %)</td><td><b>Proveedor real</b></td><td>Según la documentación de M. Bellinzona (19/11): 11/12 en la primera corrida (un caso mal planteado) y 12/12 tras corregir el caso. <span class="nv">La salida de esa corrida no está versionada y no se reejecutó sobre la versión integrada</span> (requiere la clave del proveedor).</td></tr>
+</table>
+<h2>12.4 Limitaciones</h2>
+<ul>
+<li>Las respuestas del modelo pueden variar entre corridas; la evaluación debe repetirse antes de la defensa y guardar su salida como evidencia.</li>
+<li>La versión anterior de la presentación mostraba mediciones del gateway de <span class="c">947ba9d</span> (circuit breaker, proveedor simulado): no corresponden al código final.</li>
+</ul>
+
+<!-- ====================== 13 ====================== -->
+<h1>13. Plan y resultados de testing</h1>
+<h2>13.1 Niveles, técnicas y herramientas</h2>
+<table class="t">
+<tr><th style="width:22%">Nivel</th><th style="width:28%">Herramienta</th><th>Qué cubre</th></tr>
+<tr><td>Unitario</td><td>JUnit 5; EJB como objetos con repositorios en memoria</td><td>Reglas de negocio, State (parametrizado), Facade, asistente, idempotencia, consumidores JMS, Problem Details, JWT, limitador, fallbacks</td></tr>
+<tr class="alt"><td>Contrato</td><td><span class="c">ContratoOpenApiTest</span></td><td>OpenAPI publicado vs. endpoints reales</td></tr>
+<tr><td>Cobertura y mutación</td><td>JaCoCo, PIT</td><td>Umbrales que cortan el build</td></tr>
+<tr class="alt"><td>Migraciones</td><td>Flyway sobre PostgreSQL en CI</td><td>Esquema desde cero e idempotente</td></tr>
+<tr><td>Sistema / E2E de API</td><td><span class="c">scripts/smoke-test.sh</span> (bash + curl + jq) contra Docker Compose</td><td>Flujos de todos los recursos, seguridad en vivo, resiliencia</td></tr>
+<tr class="alt"><td>Carga</td><td>k6 (<span class="c">pruebas/carga/carga.js</span>)</td><td>p95 y tasa de error en endpoints críticos</td></tr>
+<tr><td>Seguridad</td><td>Humo + OWASP ZAP baseline + gitleaks</td><td>Eje D</td></tr>
+<tr class="alt"><td>IA</td><td>Unitarias + <span class="c">evaluar-ia.sh</span></td><td>Eje E</td></tr>
+<tr><td>Aceptación / exploratoria</td><td>Manual de usuario</td><td>Recorrido por rol (manual)</td></tr>
+</table>
+<h2>13.2 Cantidad de tests</h2>
+<table class="t">
+<tr><th>Paquete</th><th>Tests</th><th>Clases de test destacadas</th></tr>
+<tr><td>negocio</td><td>88</td><td>FachadaReservasTest (15), GestionTurnosTest (14), GestionNotificacionesTest (12), AsistenteReservaTurnoTest (11)</td></tr>
+<tr class="alt"><td>integraciones</td><td>29</td><td>FallbacksTest (8), AdaptadorIaGroqTest (7), TiemposDeEsperaTest (6)</td></tr>
+<tr><td>seguridad</td><td>27</td><td>ServicioJwtTest (10), CabecerasSeguridadTest (6), HashDeClavesTest (5)</td></tr>
+<tr class="alt"><td>presentacion</td><td>24</td><td>ProblemasTest (12), ContratoOpenApiTest (5)</td></tr>
+<tr><td>mensajeria</td><td>16</td><td>ConsumoDeEventosTest (8), EventoTurnoTest (8)</td></tr>
+<tr class="alt"><td>modelo.estado</td><td>11</td><td>EstadoDelTurnoTest (transiciones válidas e inválidas)</td></tr>
+<tr><td><b>Total</b></td><td><b>195</b></td><td>0 fallas, 0 errores, 0 omitidos (local y CI)</td></tr>
+</table>
+<h2>13.3 Cobertura y mutación</h2>
+<div class="fig"><img src="img/grafico-metricas.png" width="600"></div>
+<p class="cap">Figura 11. Cobertura y mutation score frente a los umbrales de los Criterios de Testing.</p>
+<p>Las cifras miden alcances distintos y no deben mezclarse: los Criterios de Testing fijan el umbral sobre la
+<b>capa de negocio</b> (paquete <span class="c">negocio</span>: 95,0 % de líneas y 82,6 % de ramas) y el mutation score
+sobre el <b>dominio</b> (PIT sobre <span class="c">negocio</span> y <span class="c">modelo.estado</span>: 85 %). El pom
+agrega una regla propia de 80 % de líneas sobre un alcance que excluye recursos REST, JPA, simuladores y adaptadores SOAP
+(86,7 %). Sobre el proyecto completo la cobertura es 72,5 % de líneas y 69,2 % de ramas.</p>
+<div class="fig"><img src="img/grafico-paquetes.png" width="560"></div>
+<p class="cap">Figura 12. Cobertura de líneas por paquete (sin exclusiones).</p>
+<div class="info"><b>Comparación con la presentación anterior.</b> Las cifras previas (203 tests, 84,3 % / 83,1 % totales,
+77 % de mutación sobre 994 mutantes) se midieron sobre <span class="c">947ba9d</span>, con otra suite y otro alcance de
+PIT (todo <span class="c">com.mediconecta</span>). No son comparables con las de la versión integrada.</div>
+<h2>13.4 Pruebas de sistema, seguridad y carga</h2>
+<table class="t">
+<tr><th style="width:28%">Prueba</th><th>Resultado sobre la versión integrada</th></tr>
+<tr><td>Humo en Docker Compose (CI)</td><td>148 verificaciones OK, 0 fallidas (salud, cabeceras, contrato, seguridad, Problem Details, profesionales, pacientes, turnos, Idempotency-Key, ownership, State, cobertura, asistente, mensajería/DLQ, seguridad en vivo, ETag, asistente de IA).</td></tr>
+<tr class="alt"><td>Carga k6 (CI)</td><td>20 VUs, rampa 10 s + 30 s + 5 s; 9467 pedidos (209 req/s); p95 22,18 ms (umbral 500 ms); 0 % de errores; 100 % de checks. No alcanza el escenario de 50 usuarios × 5 min de la cátedra.</td></tr>
+<tr><td>OWASP ZAP baseline (CI)</td><td>Baseline pasivo: 0 FAIL, 3 WARN informativas, 65 PASS. Sin escaneo activo autenticado.</td></tr>
+<tr class="alt"><td>gitleaks (CI)</td><td>0 hallazgos en 36 commits.</td></tr>
+<tr><td>Migraciones (CI)</td><td>3 migraciones aplicadas sobre base vacía; segunda corrida sin cambios.</td></tr>
+</table>
+<h2>13.5 Defectos encontrados y corregidos</h2>
+<table class="t">
+<tr><th style="width:7%">Id</th><th style="width:11%">Severidad</th><th>Defecto</th><th style="width:30%">Corrección y prueba</th></tr>
+<tr><td>D-01</td><td>Crítico</td><td>IDOR: un paciente podía leer turnos ajenos</td><td><span class="c">GestionTurnos</span>; <span class="c">GestionTurnosTest</span>, humo</td></tr>
+<tr class="alt"><td>D-02</td><td>Crítico</td><td>BOLA: un paciente podía leer fichas ajenas</td><td><span class="c">consultarFicha</span>; <span class="c">GestionPacientesTest</span>, humo</td></tr>
+<tr><td>D-03</td><td>Crítico</td><td>Secreto JWT y contraseña demo en el código</td><td>Configuración por entorno; <span class="c">ServicioJwtTest</span></td></tr>
+<tr class="alt"><td>D-04</td><td>Mayor</td><td>Los MDB se tragaban errores y perdían mensajes</td><td>Rollback + reintentos + DLQ; <span class="c">ConsumoDeEventosTest</span></td></tr>
+<tr><td>D-05</td><td>Mayor</td><td><span class="c">@Remove</span> del asistente fallaba al vencer la sesión</td><td><span class="c">@PermitAll</span> en <span class="c">finalizar()</span>; revisión de log</td></tr>
+<tr class="alt"><td>D-06</td><td>Menor</td><td>Sin timeouts, un externo colgado retenía hilos</td><td>Timeouts + fallback; <span class="c">FallbacksTest</span></td></tr>
+<tr><td>D-07</td><td>Mayor</td><td>Acceso a recurso ajeno devolvía 400 en vez de 403/404 (incumplía eje D)</td><td>Integración: <span class="c">AccesoDenegadoException</span>; <span class="c">ProblemasTest</span>, humo</td></tr>
+<tr class="alt"><td>D-08</td><td>Mayor</td><td>Documento con <span class="c">{x}</span> provocaba 500; el padrón aceptaba <span class="c">&lt;script&gt;</span></td><td>Integración: formato 6–10 dígitos; <span class="c">GestionPacientesTest</span></td></tr>
+<tr><td>D-09</td><td>Bloqueante (CI)</td><td>La integración dejó <span class="c">mvnw</span> sin permiso de ejecución: el CI fallaba</td><td>Permiso restaurado (<span class="c">9c4a39e</span>); CI en verde</td></tr>
+<tr class="alt"><td>D-10</td><td>Menor</td><td>Una verificación del humo seguía esperando 400</td><td>Expectativa corregida (<span class="c">eda4b02</span>)</td></tr>
+</table>
+<p>Defectos abiertos conocidos: ninguno bloqueante ni crítico. Quedan como brechas de cumplimiento (no como defectos
+del código) las listadas en §16. El registro completo está en <span class="c">documentacion-final/Registro_de_Defectos.md</span>;
+debe reflejarse en Jira.</p>
+<h2>13.6 Lecciones aprendidas</h2>
+<ul>
+<li><b>D-07</b> llegó tarde porque los tests verificaban que se lanzara “una regla de negocio” y no el código HTTP esperado por la cátedra. Lo habría atrapado un test de contrato del código de estado por escenario de seguridad.</li>
+<li><b>D-08</b> lo encontró el escaneo de ZAP en la rama de Morán, no un test unitario. Lo habría atrapado una prueba de datos de borde sobre el documento (tipo negativo/borde).</li>
+<li><b>D-09</b> solo se manifestaba en Linux: lo atrapó el CI, no el build local en Windows. Lo evita revisar los modos de archivo (<span class="c">git ls-files -s</span>) al resolver conflictos.</li>
+</ul>
+<h2>13.7 Evidencias</h2>
+<p>Run de GitHub Actions: https://github.com/tobiasbonomo29/desarrollo-de-apps2/actions/runs/44658335940. Resúmenes y datos crudos en <span class="c">documentacion-final/evidencias/</span>
+(reportes de surefire, <span class="c">jacoco.csv</span>, resumen de PIT, logs de CI).</p>
+<h2>13.8 Limitaciones de la verificación</h2>
+<ul>
+<li>En la máquina de verificación Docker Desktop no arrancó y no había PostgreSQL local: el despliegue completo, el humo, la carga y ZAP se verificaron <b>solo en GitHub Actions</b>.</li>
+<li><span class="c">smoke-test.ps1</span> no se ejecutó (se actualizó su expectativa 400 → 403).</li>
+<li>La evaluación de IA con proveedor real y la prueba de reinicio del broker no se reejecutaron.</li>
+<li>Codex CLI no pudo usarse como revisor independiente (el modelo configurado no está disponible para la cuenta).</li>
+</ul>
+
+<!-- ====================== 14 ====================== -->
+<h1>14. Integración continua y despliegue</h1>
+<div class="fig"><img src="img/pipeline.png" width="600"></div>
+<p class="cap">Figura 13. Jobs del pipeline <span class="c">.github/workflows/ci.yml</span> (en cada push y pull request).</p>
+<table class="t">
+<tr><th style="width:26%">Job</th><th style="width:16%">Estado</th><th>Detalle (run #4)</th></tr>
+<tr><td>calidad</td><td class="ok">Ejecutado ✔</td><td>enforcer, Checkstyle, 195 tests, JaCoCo con umbrales, WAR</td></tr>
+<tr class="alt"><td>mutacion</td><td class="ok">Ejecutado ✔</td><td>PIT 85 % (338/396), mínimo 60 %</td></tr>
+<tr><td>secretos</td><td class="ok">Ejecutado ✔</td><td>gitleaks 8.21.2, 0 hallazgos</td></tr>
+<tr class="alt"><td>migraciones</td><td class="ok">Ejecutado ✔</td><td>Flyway V1–V3 sobre PostgreSQL vacío, dos veces</td></tr>
+<tr><td>punta-a-punta</td><td><span class="ok">Ejecutado ✔</span></td><td>Docker Compose; humo 148/148; k6 p95 22,18 ms; ZAP baseline 0 FAIL</td></tr>
+<tr class="alt"><td>sonar</td><td class="no">No ejecutado</td><td>El job termina “success” pero <b>omite el análisis</b>: falta el secreto <span class="c">SONAR_TOKEN</span> y las variables de organización y proyecto. No hay Quality Gate aprobado.</td></tr>
+</table>
+<h2>14.1 Despliegue</h2>
+<ul>
+<li><b>Docker Compose</b> (<span class="c">compose.yaml</span>): PostgreSQL 16, migraciones Flyway y WildFly con la aplicación; un único comando: <span class="c">cp .env.example .env</span> (completar) y <span class="c">docker compose up -d --build</span>.</li>
+<li><b>Local</b>: WildFly con <span class="c">-c standalone-full.xml</span> configurado con <span class="c">scripts/wildfly/configurar-wildfly.ps1</span> (driver, datasource, migraciones, mensajería, límites, endurecimiento, propiedades y seguridad).</li>
+<li><b>Build reproducible</b>: <span class="c">./mvnw</span> fija Maven 3.9.9 y el enforcer exige JDK ≥ 17 y versiones fijas de plugins. Verificado con JDK 21 (local) y JDK 17 (CI).</li>
+</ul>
+
+<!-- ====================== 15 ====================== -->
+<h1>15. Matriz de trazabilidad</h1>
+<table class="t">
+<tr><th style="width:7%">Id</th><th style="width:24%">Requisito</th><th style="width:7%">CU</th><th style="width:24%">Componente</th><th>Tests</th><th style="width:9%">Estado</th></tr>
+<tr><td>RF-01</td><td>Iniciar sesión y obtener JWT</td><td>—</td><td>RecursoAutenticacion, ServicioAutenticacion, ServicioJwt</td><td>ServicioAutenticacionTest, ServicioJwtTest, humo</td><td class="ok">✔</td></tr>
+<tr class="alt"><td>RF-02</td><td>Ver la agenda</td><td>CU-08</td><td>GestionTurnos</td><td>GestionTurnosTest, humo</td><td class="ok">✔</td></tr>
+<tr><td>RF-03</td><td>Reservar turno directo</td><td>CU-01</td><td>FachadaReservas, FabricaTurnos</td><td>FachadaReservasTest, FabricaTurnosTest, humo</td><td class="ok">✔</td></tr>
+<tr class="alt"><td>RF-04</td><td>Sin superposición ni fechas pasadas</td><td>CU-01</td><td>GestionTurnos</td><td>GestionTurnosTest, humo</td><td class="ok">✔</td></tr>
+<tr><td>RF-05</td><td>Cancelar, atender y archivar (State)</td><td>CU-03, CU-04</td><td>modelo.estado, GestionTurnos</td><td>EstadoDelTurnoTest, GestionTurnosTest, PIT, humo</td><td class="ok">✔</td></tr>
+<tr class="alt"><td>RF-06</td><td>Reserva guiada @Stateful</td><td>CU-02</td><td>AsistenteReservaTurno</td><td>AsistenteReservaTurnoTest, humo</td><td class="ok">✔</td></tr>
+<tr><td>RF-07</td><td>Padrón, ficha e historial</td><td>CU-05</td><td>GestionPacientes</td><td>GestionPacientesTest, humo</td><td class="ok">✔</td></tr>
+<tr class="alt"><td>RF-08</td><td>Profesionales y disponibilidad</td><td>CU-06</td><td>GestionProfesionales</td><td>GestionProfesionalesTest, humo</td><td class="ok">✔</td></tr>
+<tr><td>RF-09</td><td>Validar cobertura SOAP/REST</td><td>CU-07</td><td>GestorCobertura, adaptadores</td><td>GestorCoberturaTest, FallbacksTest, TiemposDeEsperaTest, humo</td><td class="ok">✔</td></tr>
+<tr class="alt"><td>RF-10</td><td>Orientación con IA</td><td>CU-02</td><td>GestorOrientacion, AdaptadorIaGroq</td><td>GestorOrientacionTest, AdaptadorIaGroqTest, FallbacksTest, evaluar-ia.sh</td><td class="par">◐</td></tr>
+<tr><td>RF-11</td><td>Avisos al confirmar</td><td>CU-09</td><td>NotificadorTurnos, MDB, GestionNotificaciones</td><td>ConsumoDeEventosTest, GestionNotificacionesTest, EventoTurnoTest, humo</td><td class="ok">✔</td></tr>
+<tr class="alt"><td>RF-12</td><td>Tablero del día</td><td>CU-08</td><td>FachadaReservas</td><td>FachadaReservasTest, k6</td><td class="ok">✔</td></tr>
+<tr><td>RF-13</td><td>Mensajes fallidos (Admin)</td><td>CU-09</td><td>RecursoMensajeria, MonitorMensajesFallidos</td><td>ConsumoDeEventosTest, humo</td><td class="ok">✔</td></tr>
+<tr class="alt"><td>RF-14</td><td>Interfaz web por rol</td><td>todos</td><td>src/main/webapp</td><td>Recorrido manual; ZAP</td><td class="par">◐</td></tr>
+</table>
+<p>◐ RF-10: la evaluación con proveedor real no tiene salida versionada. ◐ RF-14: sin pruebas automatizadas de interfaz.
+La matriz extendida, con requisitos no funcionales, está en <span class="c">documentacion-final/Matriz_de_Trazabilidad_Final.md</span>.
+La trazabilidad hacia las HU originales y sus criterios Gherkin queda pendiente (§4).</p>
+
+<!-- ====================== 16 ====================== -->
+<h1>16. Cumplimiento de los requisitos finales</h1>
+<p>Condiciones de admisibilidad (G1–G9) y ejes (A–E) según el documento oficial “Criterios de Testing y Aseguramiento de
+Calidad” (Clase 15). Se declara CUMPLE solo cuando hay evidencia ejecutada sobre la versión integrada.</p>
+<h2>16.1 Condiciones G1–G9 [eliminatorias]</h2>
+<table class="t">
+<tr><th style="width:24%">Condición</th><th style="width:12%">Estado</th><th>Evidencia y ubicación</th><th style="width:25%">Limitación / pendiente</th></tr>
+<tr><td>G1 Build reproducible con un comando</td><td><span class="par">CUMPLE en CI</span></td><td>En GitHub Actions, <span class="c">docker compose up -d --build</span> levantó base, migraciones y WildFly desde cero y el humo pasó (run #4).</td><td>No verificado en una máquina Windows limpia (Docker no arrancó en la de verificación).</td></tr>
+<tr class="alt"><td>G2 Tag de release en <span class="c">main</span></td><td class="no">PENDIENTE</td><td>No existe tag de entrega. El PDF pide <span class="c">v1.0-testing</span> para la Clase 15; el equipo prevé <span class="c">v1.0-final</span>.</td><td>Mergear a <span class="c">facu</span>/<span class="c">main</span> y crear el tag (decisión del equipo).</td></tr>
+<tr><td>G3 CI en verde sobre el tag</td><td><span class="par">VERDE (rama)</span></td><td>Run #4 sobre <span class="c">integracion-final</span>.</td><td>Repetir sobre el tag; Sonar no se ejecuta.</td></tr>
+<tr class="alt"><td>G4 Plan, matriz, informe de ejecución y registro de defectos</td><td class="par">LISTO PARA ENTREGAR</td><td><span class="c">documentacion-final/</span></td><td>Subir a Teams; falta especificación de casos con ≥ 40 % negativos documentada caso por caso.</td></tr>
+<tr><td>G5 Jira actualizado</td><td class="nv">NO VERIFICABLE</td><td>Sin acceso a Jira desde el repositorio.</td><td>Cargar casos y defectos D-01…D-10 con estado y responsable.</td></tr>
+<tr class="alt"><td>G6 Sin secretos en el historial</td><td class="par">CUMPLE con riesgo</td><td>gitleaks: 0 hallazgos en CI.</td><td>Secreto JWT de desarrollo antiguo en el historial (§11.6); trufflehog podría marcarlo.</td></tr>
+<tr><td>G7 Demo en vivo</td><td class="nv">NO VERIFICABLE</td><td>Guion de demo y procedimientos en el plan de pruebas.</td><td>Se verifica en clase; ensayar con Docker Compose.</td></tr>
+<tr class="alt"><td>G8 Declaración de uso de IA</td><td class="par">BORRADOR</td><td><span class="c">documentacion-final/Declaracion_Uso_IA_Final.md</span></td><td>Completar prompts por integrante, caso de IA equivocada y firmas.</td></tr>
+<tr><td>G9 Honestidad del informe</td><td class="par">EN CURSO</td><td>Este informe declara brechas y defectos.</td><td>Contrastar con Jira.</td></tr>
+</table>
+<h2>16.2 Ejes A–E</h2>
+<table class="t">
+<tr><th style="width:24%">Requisito</th><th style="width:12%">Estado</th><th>Evidencia</th><th style="width:25%">Pendiente</th></tr>
+<tr><td>A · HU con ≥ 3 criterios Gherkin y MoSCoW</td><td class="nv">NO VERIFICABLE</td><td>Casos de uso con flujos alternativos (§4)</td><td>Cotejar con la entrega del diseño y Jira</td></tr>
+<tr class="alt"><td>A · ≥ 5 escenarios E2E automatizados (Cucumber/Playwright…) en CI</td><td class="no">NO CUMPLE</td><td>El humo es E2E de API, no de interfaz</td><td>Agregar Playwright/Cypress</td></tr>
+<tr><td>A · Responsive y accesibilidad ≥ 90</td><td class="nv">NO VERIFICABLE</td><td>Captura móvil existente; sin Lighthouse/axe</td><td>Medir con Lighthouse</td></tr>
+<tr class="alt"><td>B · Cobertura negocio ≥ 80 % / ≥ 70 %</td><td class="ok">CUMPLE</td><td>95,0 % / 82,6 % (CI)</td><td>—</td></tr>
+<tr><td>B · Mutation score ≥ 60 %</td><td class="ok">CUMPLE</td><td>85 % (CI)</td><td>—</td></tr>
+<tr class="alt"><td>B · Quality Gate Sonar</td><td class="no">NO EJECUTADO</td><td>Job omitido</td><td>Configurar SonarCloud</td></tr>
+<tr><td>B · Integración con BD y broker reales (Testcontainers/Arquillian)</td><td class="no">NO CUMPLE</td><td>Repos y consumidores se prueban en memoria; la base real solo en humo/migraciones</td><td>Agregar Testcontainers</td></tr>
+<tr class="alt"><td>B · Colección de API versionada en CI</td><td class="par">PARCIAL</td><td><span class="c">smoke-test.sh</span> en CI (no es Postman/REST Assured)</td><td>Confirmar con la cátedra</td></tr>
+<tr><td>B · Contrato OpenAPI y WSDL</td><td class="par">PARCIAL</td><td><span class="c">ContratoOpenApiTest</span> valida rutas; no valida respuestas ni WSDL</td><td>Schemathesis/SoapUI</td></tr>
+<tr class="alt"><td>B · Transiciones inválidas → 409 (parametrizado)</td><td class="ok">CUMPLE</td><td><span class="c">EstadoDelTurnoTest</span>, humo PATRON STATE</td><td>—</td></tr>
+<tr><td>B · Pipeline ≤ 15 min y 0 flaky</td><td class="par">PARCIAL</td><td>Run #4: 4 min 12 s en total. No se corrió la suite tres veces seguidas para descartar tests inestables.</td><td>Correr la suite 3 veces seguidas</td></tr>
+<tr class="alt"><td>C · Integración y resiliencia</td><td class="par">PARCIAL</td><td>§10.4</td><td>Reintento/circuit breaker; carga 50 usuarios × 5 min</td></tr>
+<tr><td>D · Seguridad</td><td class="par">PARCIAL</td><td>§11.7</td><td>XXE, SCA, ZAP activo autenticado</td></tr>
+<tr class="alt"><td>E · Declaración y plan de IA</td><td class="par">BORRADOR</td><td>Declaración final</td><td>Firmas y prompts</td></tr>
+<tr><td>E · Testing de la IA (casos, injection, fuera de dominio, fallback)</td><td class="par">PARCIAL</td><td>Casos definidos y unitarias en verde</td><td>Reejecutar con proveedor real y versionar salida</td></tr>
+</table>
+
+<!-- ====================== 17 ====================== -->
+<h1>17. Problemas encontrados y decisiones</h1>
+<table class="t">
+<tr><th style="width:28%">Problema</th><th>Decisión y justificación</th></tr>
+<tr><td>Dos implementaciones paralelas del checkpoint 3 (Morán <span class="c">947ba9d</span> y Bellinzona <span class="c">052aa90</span>) con ~66 archivos en conflicto</td><td>Merge real que conserva ambos historiales. Se adoptó el código de Bellinzona porque es la base acordada y es más completo en infraestructura (Docker Compose, Flyway, Checkstyle, Sonar, humo en CI). Mezclar partes de dos subsistemas equivalentes (idempotencia, rate limiting, DLQ, fallback) habría duplicado beans y tablas. El detalle por archivo está en <span class="c">Informe_Integracion_y_Conflictos.md</span>.</td></tr>
+<tr class="alt"><td>BOLA respondía 400</td><td>Se incorporó la semántica de Morán (403) porque es la que exige la cátedra.</td></tr>
+<tr><td>Documento sin validar</td><td>Se incorporó la validación de Morán, motivada por un hallazgo real de ZAP.</td></tr>
+<tr class="alt"><td>Circuit breaker de Morán vs. timeout + fallback de Bellinzona</td><td>No se portó: implicaba rediseñar los gestores de la base adoptada y la consigna pedía no modificar funcionalidades salvo errores de integración. Queda como brecha documentada.</td></tr>
+<tr><td>DLQ: 3 intentos (Morán) vs. 4 con espera creciente (Bellinzona)</td><td>Queda la configuración de Bellinzona (4 intentos, 1-2-4 s).</td></tr>
+<tr class="alt"><td>Esquema por <span class="c">hbm2ddl=update</span> vs. migraciones</td><td>Flyway + <span class="c">validate</span>: el esquema es versionado y reproducible en CI.</td></tr>
+<tr><td>Permiso de <span class="c">mvnw</span> perdido al resolver en Windows</td><td>Se restauró el modo 755; regla: revisar modos de archivo en cada merge.</td></tr>
+</table>
+
+<!-- ====================== 18 ====================== -->
+<h1>18. Resultados y conclusiones</h1>
+<p>MediConecta cumple los objetivos funcionales y de arquitectura del trabajo: componentes con y sin estado, Facade,
+State, Factory, Adapter y Repository aplicados a problemas concretos, transacción declarativa que abarca la base y la
+mensajería, integraciones SOAP y REST con timeout y fallback, mensajería confiable con idempotencia y DLQ, una API con
+Problem Details, Idempotency-Key y ETag, y un asistente de IA acotado y con respaldo.</p>
+<p>En calidad, la versión integrada supera con margen los umbrales cuantitativos de cobertura (95,0 % / 82,6 % en
+negocio) y mutación (85 %), y el pipeline verifica de punta a punta el sistema desplegado con Docker Compose. La
+integración también dejó a la vista tres lecciones: verificar los códigos HTTP que fija la cátedra y no solo el tipo de
+excepción, probar datos de borde en cada campo que llega a una URL, y revisar los modos de archivo al resolver conflictos.</p>
+<p>La entrega <b>no debe declararse lista</b> hasta resolver los pendientes de §16: Quality Gate de SonarCloud, E2E de
+interfaz y pruebas con contenedores, criterios Gherkin y Jira, declaración de IA firmada, evaluación de IA con evidencia,
+carga con 50 usuarios durante 5 minutos, y el merge y tag de release.</p>
+
+<!-- ====================== 19 ====================== -->
+<h1>19. Anexos</h1>
+<h2>19.1 Repositorio y ramas</h2>
+<ul>
+<li>Repositorio del equipo: https://github.com/tobiasbonomo29/desarrollo-de-apps2 — rama <span class="c">integracion-final</span>.</li>
+<li>Commits de origen: <span class="c">947ba9d</span> (facu del equipo) y <span class="c">052aa90</span> (facu de Bellinzona); merge <span class="c">4fa4efe</span>; correcciones <span class="c">9c4a39e</span> y <span class="c">eda4b02</span>.</li>
+<li>CI: https://github.com/tobiasbonomo29/desarrollo-de-apps2/actions/runs/44658335940</li>
+</ul>
+<h2>19.2 Documentación complementaria (<span class="c">documentacion-final/</span>)</h2>
+<table class="t">
+<tr><th>Documento</th><th>Contenido</th></tr>
+<tr><td>Informe_Integracion_y_Conflictos.md</td><td>Resolución archivo por archivo y justificación</td></tr>
+<tr class="alt"><td>Plan_de_Pruebas_Final.md</td><td>Estrategia, entornos, riesgos, criterios de entrada y salida, resultados</td></tr>
+<tr><td>Matriz_de_Trazabilidad_Final.md</td><td>Requisitos → componentes → tests → estado</td></tr>
+<tr class="alt"><td>Registro_de_Defectos.md</td><td>D-01 a D-10 con severidad, causa raíz y evidencia</td></tr>
+<tr><td>Informe_Seguridad_y_Calidad.md</td><td>Matriz SEC del eje D, secretos, calidad estática</td></tr>
+<tr class="alt"><td>Manual_Tecnico_y_Despliegue.md</td><td>Requisitos, configuración, despliegue y operación</td></tr>
+<tr><td>Declaracion_Uso_IA_Final.md</td><td>Borrador pendiente de validación y firma</td></tr>
+<tr class="alt"><td>Checklist_Requisitos_Finales.md</td><td>G1–G9 y ejes A–E con acciones</td></tr>
+<tr><td>README.md y evidencias/</td><td>Índice, resultados verificados y salidas de build, cobertura, PIT y CI</td></tr>
+</table>
+<p>Manual de usuario vigente: <span class="c">docs/Manual_de_Usuario.md</span>. Arquitectura detallada:
+<span class="c">docs/arquitectura.md</span>. Casos de uso: <span class="c">docs/casos-de-uso.md</span>. Material histórico de
+<span class="c">947ba9d</span>: <span class="c">docs/historico/entrega3-947ba9d/</span>.</p>
+<h2>19.3 Referencias</h2>
+<ul>
+<li>Cátedra Desarrollo de Aplicaciones II — UADE. <i>Criterios de Testing y Aseguramiento de Calidad</i>, TP Obligatorio, Clase 15, 2.º C 2026.</li>
+<li>Jakarta EE 10 Platform Specification. Eclipse Foundation.</li>
+<li>RFC 9457 — Problem Details for HTTP APIs. IETF, 2023.</li>
+<li>IETF HTTPAPI WG. <i>The Idempotency-Key HTTP Header Field</i> (Internet-Draft).</li>
+<li>OWASP API Security Top 10 (2023) y OWASP ASVS 5.0.</li>
+<li>OWASP Top 10 for Large Language Model Applications.</li>
+<li>Gamma, Helm, Johnson y Vlissides. <i>Design Patterns</i>. Addison-Wesley, 1994.</li>
+</ul>
+</div>
+</body>
+</html>

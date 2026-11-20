@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>MediConecta — Detalle del turno</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body data-pagina="turnos" data-titulo="Detalle del turno" data-subtitulo="Información completa de la atención">
@@ -51,6 +48,16 @@
                     </div>
                     <p class="campo__ayuda u-mt-12" id="nota-permisos"></p>
                 </div>
+            </section>
+
+            <section class="card u-mt-24">
+                <div class="card__cabecera">
+                    <div>
+                        <h2>Avisos enviados</h2>
+                        <p>Los generan los consumidores JMS (cola y tópico) al confirmarse el turno.</p>
+                    </div>
+                </div>
+                <div id="avisos-turno"></div>
             </section>
         </main>
     </div>

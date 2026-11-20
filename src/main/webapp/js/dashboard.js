@@ -53,7 +53,7 @@ function dibujarAgenda(contenedor, resumen) {
 
     contenedor.innerHTML = '<div class="profesional__datos">'
         + [...porProfesional.entries()].map(([nombre, cantidad]) =>
-            '<div class="u-fila-entre">'
+            '<div class="fila-espaciada">'
             + '<strong>' + esc(nombre) + '</strong>'
             + '<span>' + esc(cantidad) + (cantidad === 1 ? ' turno' : ' turnos') + '</span>'
             + '</div>').join('')

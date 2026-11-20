@@ -1,0 +1,67 @@
+grep -E "http_req_duration|http_req_failed|checks" k6.txt | sed 's/^/    /' > k6-resumen.txt
+running (0m01.0s), 02/20 VUs, 1 complete and 0 interrupted iterations
+running (0m02.0s), 04/20 VUs, 6 complete and 0 interrupted iterations
+running (0m03.0s), 06/20 VUs, 15 complete and 0 interrupted iterations
+running (0m04.0s), 08/20 VUs, 25 complete and 0 interrupted iterations
+running (0m05.0s), 10/20 VUs, 39 complete and 0 interrupted iterations
+running (0m06.0s), 12/20 VUs, 57 complete and 0 interrupted iterations
+running (0m07.0s), 14/20 VUs, 79 complete and 0 interrupted iterations
+running (0m08.0s), 16/20 VUs, 103 complete and 0 interrupted iterations
+running (0m09.0s), 17/20 VUs, 131 complete and 0 interrupted iterations
+running (0m10.0s), 19/20 VUs, 164 complete and 0 interrupted iterations
+running (0m11.0s), 20/20 VUs, 197 complete and 0 interrupted iterations
+running (0m12.0s), 20/20 VUs, 234 complete and 0 interrupted iterations
+running (0m13.0s), 20/20 VUs, 265 complete and 0 interrupted iterations
+running (0m14.0s), 20/20 VUs, 299 complete and 0 interrupted iterations
+running (0m15.0s), 20/20 VUs, 332 complete and 0 interrupted iterations
+running (0m16.0s), 20/20 VUs, 369 complete and 0 interrupted iterations
+running (0m17.0s), 20/20 VUs, 403 complete and 0 interrupted iterations
+running (0m18.0s), 20/20 VUs, 438 complete and 0 interrupted iterations
+running (0m19.0s), 20/20 VUs, 474 complete and 0 interrupted iterations
+running (0m20.0s), 20/20 VUs, 514 complete and 0 interrupted iterations
+running (0m21.0s), 20/20 VUs, 546 complete and 0 interrupted iterations
+running (0m22.0s), 20/20 VUs, 578 complete and 0 interrupted iterations
+running (0m23.0s), 20/20 VUs, 616 complete and 0 interrupted iterations
+running (0m24.0s), 20/20 VUs, 649 complete and 0 interrupted iterations
+running (0m25.0s), 20/20 VUs, 685 complete and 0 interrupted iterations
+running (0m26.0s), 20/20 VUs, 725 complete and 0 interrupted iterations
+running (0m27.0s), 20/20 VUs, 760 complete and 0 interrupted iterations
+running (0m28.0s), 20/20 VUs, 794 complete and 0 interrupted iterations
+running (0m29.0s), 20/20 VUs, 833 complete and 0 interrupted iterations
+running (0m30.0s), 20/20 VUs, 872 complete and 0 interrupted iterations
+running (0m31.0s), 20/20 VUs, 907 complete and 0 interrupted iterations
+running (0m32.0s), 20/20 VUs, 944 complete and 0 interrupted iterations
+running (0m33.0s), 20/20 VUs, 976 complete and 0 interrupted iterations
+running (0m34.0s), 20/20 VUs, 1016 complete and 0 interrupted iterations
+running (0m35.0s), 20/20 VUs, 1056 complete and 0 interrupted iterations
+running (0m36.0s), 20/20 VUs, 1083 complete and 0 interrupted iterations
+running (0m37.0s), 20/20 VUs, 1121 complete and 0 interrupted iterations
+running (0m38.0s), 20/20 VUs, 1161 complete and 0 interrupted iterations
+running (0m39.0s), 20/20 VUs, 1201 complete and 0 interrupted iterations
+running (0m40.0s), 20/20 VUs, 1230 complete and 0 interrupted iterations
+running (0m41.0s), 18/20 VUs, 1269 complete and 0 interrupted iterations
+running (0m42.0s), 13/20 VUs, 1302 complete and 0 interrupted iterations
+running (0m43.0s), 11/20 VUs, 1319 complete and 0 interrupted iterations
+running (0m44.0s), 07/20 VUs, 1339 complete and 0 interrupted iterations
+running (0m45.0s), 02/20 VUs, 1350 complete and 0 interrupted iterations
+     ✓ salud 200
+       ✓ agenda 200
+       ✓ padron 200
+       ✓ tablero 200
+       ✓ profesionales 200
+       ✓ horarios 200
+       ✓ ficha 200
+   ✓ checks.........................: 100.00% 9464 out of 9464
+     http_req_blocked...............: avg=5.06µs   med=3.6µs    p(90)=5.24µs   p(95)=6.12µs   max=734.14µs
+     http_req_connecting............: avg=586ns    med=0s       p(90)=0s       p(95)=0s       max=612.51µs
+   ✓ http_req_duration..............: avg=8.43ms   med=6.36ms   p(90)=17.3ms   p(95)=22.18ms  max=74.37ms 
+   ✓ http_req_failed................: 0.00%   0 out of 9467
+     http_req_receiving.............: avg=69.38µs  med=55.97µs  p(90)=95.64µs  p(95)=122.41µs max=5.79ms  
+     http_req_sending...............: avg=17.29µs  med=11.9µs   p(90)=26.27µs  p(95)=32.39µs  max=3.16ms  
+     http_req_tls_handshaking.......: avg=0s       med=0s       p(90)=0s       p(95)=0s       max=0s      
+     http_req_waiting...............: avg=8.35ms   med=6.27ms   p(90)=17.18ms  p(95)=22.1ms   max=74.24ms 
+     http_reqs......................: 9467    209.091408/s
+     iterations.....................: 1352    29.860736/s
+     vus_max........................: 20      min=20           max=20
+running (0m45.3s), 00/20 VUs, 1352 complete and 0 interrupted iterations
+uso_normal ✓ [ 100% ] 00/20 VUs  45s

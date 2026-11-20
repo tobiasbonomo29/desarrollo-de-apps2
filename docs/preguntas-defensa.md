@@ -221,9 +221,23 @@ Definiéndolo en el servidor no hay ninguna credencial de PostgreSQL en el repos
 cada integrante puede apuntar a su propia base sin tocar el WAR.
 
 **¿Quién crea las tablas?**
-Hibernate, con `hbm2ddl.auto=update`, al desplegar. Para la cátedra dejamos también el DDL
-equivalente documentado en `scripts/db/esquema.sql`, por si se prefiere crearlo a mano y
-poner Hibernate en modo `validate`.
+Las migraciones versionadas de `db/migraciones` (Flyway), antes de desplegar:
+`mvn flyway:migrate` en local, el servicio `migraciones` en Docker Compose y un job propio
+en CI. Hibernate ya no toca el esquema: con `hbm2ddl.auto=validate` solo comprueba al
+desplegar que las tablas coincidan con las entidades. Una migración publicada no se edita
+nunca; cada cambio es un `V<n>` nuevo.
+
+**¿Qué pasa si un consumidor JMS falla?**
+No se traga el error: marca la transacción del MDB para deshacerse y el mensaje vuelve a la
+cola. Artemis lo reintenta a 1, 2 y 4 segundos; después de la cuarta entrega lo mueve a la
+DLQ `MensajesFallidos`, donde `MonitorMensajesFallidos` lo registra para el ADMIN. Como cada
+aviso se identifica por `(eventoId, tipo)`, una entrega repetida no genera dos avisos
+(consumidor idempotente).
+
+**¿Para qué sirve `Idempotency-Key`?**
+Para que un reintento del mismo `POST /api/turnos` (corte de red, doble clic) no cree dos
+turnos. Con la misma clave y el mismo cuerpo se devuelve el turno ya creado; con otro cuerpo,
+`422`; si llegan dos a la vez, el segundo recibe `409` y su transacción se deshace.
 
 ---
 

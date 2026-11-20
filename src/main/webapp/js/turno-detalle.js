@@ -107,6 +107,53 @@ function notaSegunEstado(turno) {
     return 'Al cancelar, el horario vuelve a quedar disponible.';
 }
 
+const NOMBRE_AVISO = {
+    CONFIRMACION: 'Confirmación',
+    RECORDATORIO: 'Recordatorio',
+    AVISO_PROFESIONAL: 'Aviso al profesional'
+};
+
+const NOMBRE_CANAL = { EMAIL: 'Email', SMS: 'SMS', AGENDA: 'Agenda' };
+
+function dibujarAvisos(caja, avisos) {
+    if (!avisos.length) {
+        caja.innerHTML = '<p class="campo__ayuda">Todavía no hay avisos para este turno.</p>';
+        return;
+    }
+    caja.innerHTML = '<ul class="avisos-turno">' + avisos.map((aviso) =>
+        '<li class="avisos-turno__item">'
+        + '<div class="fila-espaciada"><strong>' + esc(NOMBRE_AVISO[aviso.tipo] || aviso.tipo) + '</strong>'
+        + '<span class="avisos-turno__canal">' + esc(NOMBRE_CANAL[aviso.canal] || aviso.canal)
+        + ' · ' + esc(aviso.destinatario) + '</span></div>'
+        + '<p class="avisos-turno__texto">' + esc(aviso.mensaje) + '</p>'
+        + (aviso.programadaPara
+            ? '<p class="campo__ayuda">Programado para ' + esc(fechaLarga(aviso.programadaPara)) + '</p>'
+            : '')
+        + '</li>').join('') + '</ul>';
+}
+
+/**
+ * Los avisos los generan los MDB de forma asincronica: si el turno se acaba de
+ * crear pueden tardar un instante. Se reintenta unas pocas veces.
+ */
+async function cargarAvisos(turnoId, intentos = 5) {
+    const caja = document.getElementById('avisos-turno');
+    if (!caja) {
+        return;
+    }
+    try {
+        const avisos = await api.notificacionesDeTurno(turnoId);
+        if (avisos.length < 3 && intentos > 1) {
+            dibujarAvisos(caja, avisos);
+            setTimeout(() => cargarAvisos(turnoId, intentos - 1), 1500);
+            return;
+        }
+        dibujarAvisos(caja, avisos);
+    } catch (error) {
+        mostrarError(caja, error.message);
+    }
+}
+
 async function iniciar() {
     const sesion = await iniciarLayout();
     const detalle = document.getElementById('detalle');
@@ -132,6 +179,8 @@ async function iniciar() {
         mostrarError(detalle, error.message);
         return;
     }
+
+    cargarAvisos(turno.id);
 
     dibujar(turno);
     nota.textContent = notaSegunEstado(turno);

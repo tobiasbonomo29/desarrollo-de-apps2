@@ -1,0 +1,9 @@
+body{margin:0;background:#fff;font-family:Calibri,Arial,sans-serif;color:#0F2A44}
+svg text{font-family:Calibri,Arial,sans-serif}
+.box{fill:#fff;stroke:#C9D6E3;stroke-width:1.5}
+.dark{fill:#0F2A44}.blue{fill:#2563EB}.soft{fill:#EAF1FE;stroke:#BBD0F7;stroke-width:1.2}
+.green{fill:#E6F6F1;stroke:#9ED9C5;stroke-width:1.2}.warn{fill:#FFF5E6;stroke:#F5C27A;stroke-width:1.2}
+.t{font-size:15px;font-weight:700;fill:#0F2A44}.s{font-size:12.5px;fill:#4A6178}.w{fill:#fff}
+.layer{font-size:13px;font-weight:700;fill:#2563EB;letter-spacing:.5px}
+.arrow{stroke:#0F2A44;stroke-width:1.6;fill:none;marker-end:url(#a)}
+.darrow{stroke:#0F9D76;stroke-width:1.6;fill:none;stroke-dasharray:5 4;marker-end:url(#ag)}

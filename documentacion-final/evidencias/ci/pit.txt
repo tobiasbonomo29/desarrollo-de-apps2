@@ -1,0 +1,365 @@
+2:06:10 AM PIT >> INFO : Verbose logging is disabled. If you encounter a problem, please enable it before reporting an issue.
+2:06:10 AM PIT >> INFO : Created 27 mutation test units in pre scan
+2:06:10 AM PIT >> INFO : Sending 170 test classes to minion
+2:06:10 AM PIT >> INFO : Sent tests to minion
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:10 AM com.mediconecta.integraciones.GestorCobertura respaldo
+2:06:11 AM PIT >> INFO : MINION : WARNING: [COBERTURA] El partner de obras sociales no respondio a tiempo. Se responde con el respaldo.
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:10 AM com.mediconecta.integraciones.GestorCobertura respaldo
+2:06:11 AM PIT >> INFO : MINION : WARNING: [COBERTURA] El partner de obras sociales no respondio a tiempo. Se responde con el respaldo.
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:10 AM com.mediconecta.integraciones.GestorOrientacion sugerirEspecialidad
+2:06:11 AM PIT >> INFO : MINION : WARNING: [IA] El asistente de IA no respondio. Se usa la orientacion de respaldo.
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.integraciones.TiemposDeEspera leer
+2:06:11 AM PIT >> INFO : MINION : WARNING: [INTEGRACION] mediconecta.integraciones.timeout.conexion.ms=infinito no es un numero positivo de milisegundos; se usa 2000.
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.integraciones.TiemposDeEspera leer
+2:06:11 AM PIT >> INFO : MINION : WARNING: [INTEGRACION] mediconecta.integraciones.timeout.respuesta.ms=0 no es un numero positivo de milisegundos; se usa 5000.
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.mensajeria.ConsumoDeEventos procesar
+2:06:11 AM PIT >> INFO : MINION : WARNING: [prueba] mensaje invalido (intento 1): El mensaje no es un objeto JSON valido. Se devuelve para que termine en la DLQ.
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.mensajeria.MonitorMensajesFallidos onMessage
+2:06:11 AM PIT >> INFO : MINION : SEVERE: [JMS-DLQ] mensaje ID:99 (evento evento-9, origen jms.queue.ColaConfirmacionesMediConecta) agoto los reintentos y quedo registrado en mensajes_fallidos.
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.mensajeria.ConsumoDeEventos procesar
+2:06:11 AM PIT >> INFO : MINION : INFO: [JMS-COLA] confirmacion: turno 42 procesado (evento 4ff85677-0b93-4638-a512-3f3060b6b75f, intento 1)
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.mensajeria.ConsumoDeEventos procesar
+2:06:11 AM PIT >> INFO : MINION : INFO: [JMS-TOPICO] recordatorio del paciente: turno 42 procesado (evento 4ff85677-0b93-4638-a512-3f3060b6b75f, intento 1)
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.mensajeria.ConsumoDeEventos procesar
+2:06:11 AM PIT >> INFO : MINION : INFO: [JMS-TOPICO] aviso al profesional: evento 4ff85677-0b93-4638-a512-3f3060b6b75f repetido: ya estaba procesado, se ignora
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.mensajeria.ConsumoDeEventos procesar
+2:06:11 AM PIT >> INFO : MINION : WARNING: [prueba] no se pudo procesar el mensaje (intento 3): se devuelve a la cola para reintentar.
+2:06:11 AM PIT >> INFO : MINION : java.lang.IllegalStateException: la base no responde
+2:06:11 AM PIT >> INFO : MINION : 	at com.mediconecta.mensajeria.ConsumoDeEventosTest.lambda$unaFallaDeLaAccionTambienHaceRollback$5(ConsumoDeEventosTest.java:160)
+2:06:11 AM PIT >> INFO : MINION : 	at com.mediconecta.mensajeria.ConsumoDeEventos.procesar(ConsumoDeEventos.java:46)
+2:06:11 AM PIT >> INFO : MINION : 	at com.mediconecta.mensajeria.ConsumoDeEventosTest.unaFallaDeLaAccionTambienHaceRollback(ConsumoDeEventosTest.java:159)
+2:06:11 AM PIT >> INFO : MINION : 	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+2:06:11 AM PIT >> INFO : MINION : 	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+2:06:11 AM PIT >> INFO : MINION : 	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+2:06:11 AM PIT >> INFO : MINION : 	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:767)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:60)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:131)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:156)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:147)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:86)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(InterceptingExecutableInvoker.java:103)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.lambda$invoke$0(InterceptingExecutableInvoker.java:93)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:106)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:64)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:45)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:37)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:92)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:86)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$8(TestMethodTestDescriptor.java:217)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:213)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:138)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:68)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:156)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:146)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:144)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:143)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:100)
+2:06:11 AM PIT >> INFO : MINION : 	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:160)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:146)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:144)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:143)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:100)
+2:06:11 AM PIT >> INFO : MINION : 	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:160)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:146)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:144)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:143)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:100)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:35)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:57)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:54)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:198)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:169)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:93)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:58)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:141)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:57)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:103)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:85)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:47)
+2:06:11 AM PIT >> INFO : MINION : 	at org.junit.platform.launcher.core.SessionPerRequestLauncher.execute(SessionPerRequestLauncher.java:63)
+2:06:11 AM PIT >> INFO : MINION : 	at org.pitest.junit5.JUnit5TestUnitFinder.findTestUnits(JUnit5TestUnitFinder.java:84)
+2:06:11 AM PIT >> INFO : MINION : 	at org.pitest.mutationtest.config.PrioritisingTestUnitFinder.findTestUnits(PrioritisingTestUnitFinder.java:20)
+2:06:11 AM PIT >> INFO : MINION : 	at org.pitest.testapi.execute.FindTestUnits.lambda$findTestUnitsForAllSuppliedClasses$1(FindTestUnits.java:34)
+2:06:11 AM PIT >> INFO : MINION : 	at java.base/java.util.stream.ReferencePipeline$7$1.accept(ReferencePipeline.java:273)
+2:06:11 AM PIT >> INFO : MINION : 	at java.base/java.util.stream.DistinctOps$1$2.accept(DistinctOps.java:174)
+2:06:11 AM PIT >> INFO : MINION : 	at java.base/java.util.stream.Streams$StreamBuilderImpl.forEachRemaining(Streams.java:411)
+2:06:11 AM PIT >> INFO : MINION : 	at java.base/java.util.stream.Streams$ConcatSpliterator.forEachRemaining(Streams.java:734)
+2:06:11 AM PIT >> INFO : MINION : 	at java.base/java.util.stream.ReferencePipeline$Head.forEach(ReferencePipeline.java:762)
+2:06:11 AM PIT >> INFO : MINION : 	at java.base/java.util.stream.ReferencePipeline$7$1.accept(ReferencePipeline.java:276)
+2:06:11 AM PIT >> INFO : MINION : 	at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1625)
+2:06:11 AM PIT >> INFO : MINION : 	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+2:06:11 AM PIT >> INFO : MINION : 	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+2:06:11 AM PIT >> INFO : MINION : 	at java.base/java.util.stream.ReduceOps$ReduceOp.evaluateSequential(ReduceOps.java:921)
+2:06:11 AM PIT >> INFO : MINION : 	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+2:06:11 AM PIT >> INFO : MINION : 	at java.base/java.util.stream.ReferencePipeline.collect(ReferencePipeline.java:682)
+2:06:11 AM PIT >> INFO : MINION : 	at org.pitest.testapi.execute.FindTestUnits.findTestUnitsForAllSuppliedClasses(FindTestUnits.java:35)
+2:06:11 AM PIT >> INFO : MINION : 	at org.pitest.coverage.execute.CoverageMinion.discoverTests(CoverageMinion.java:169)
+2:06:11 AM PIT >> INFO : MINION : 	at org.pitest.coverage.execute.CoverageMinion.getTestsFromParent(CoverageMinion.java:154)
+2:06:11 AM PIT >> INFO : MINION : 	at org.pitest.coverage.execute.CoverageMinion.main(CoverageMinion.java:82)
+2:06:11 AM PIT >> INFO : MINION : 
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.mensajeria.ConsumoDeEventos procesar
+2:06:11 AM PIT >> INFO : MINION : INFO: [prueba] evento 0c50fc68-eb55-4a0b-a69b-d1853aa4cb4b repetido: ya estaba procesado, se ignora
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.mensajeria.ConsumoDeEventos procesar
+2:06:11 AM PIT >> INFO : MINION : INFO: [prueba] turno 42 procesado (evento 9a1f9222-0c9a-40f6-9336-bd453d13671a, intento 1)
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.mensajeria.ConsumoDeEventos procesar
+2:06:11 AM PIT >> INFO : MINION : WARNING: [prueba] mensaje invalido (intento 1): Se esperaba un TextMessage con JSON y llego $Proxy17. Se devuelve para que termine en la DLQ.
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno alCrear
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] @PostConstruct - el contenedor creo el asistente 53e8ff5d (instancia 12a160c2)
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno alCrear
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] @PostConstruct - el contenedor creo el asistente 2cfc71bc (instancia 2ca6546f)
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno iniciar
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] conversacion 2cfc71bc iniciada para el paciente 30111222
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno elegirEspecialidad
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] conversacion 2cfc71bc recuerda especialidad=Cardiologia
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno elegirProfesional
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] conversacion 2cfc71bc recuerda profesional=Dra. Laura Fernandez
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno alCrear
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] @PostConstruct - el contenedor creo el asistente 40421267 (instancia 11841b15)
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno iniciar
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] conversacion 40421267 iniciada para el paciente 30111222
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno elegirEspecialidad
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] conversacion 40421267 recuerda especialidad=Cardiologia
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno elegirProfesional
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] conversacion 40421267 recuerda profesional=Dra. Laura Fernandez
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno volver
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] conversacion 40421267 retrocedio al paso 2
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno volver
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] conversacion 40421267 retrocedio al paso 1
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno alCrear
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] @PostConstruct - el contenedor creo el asistente 2ee10bc1 (instancia 34523d46)
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno iniciar
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] conversacion 2ee10bc1 iniciada para el paciente 30111222
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno elegirEspecialidad
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] conversacion 2ee10bc1 recuerda especialidad=Cardiologia
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno elegirProfesional
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] conversacion 2ee10bc1 recuerda profesional=Dra. Laura Fernandez
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno elegirHorario
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] conversacion 2ee10bc1 recuerda horario=2026-11-23T10:00
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno confirmar
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] conversacion 2ee10bc1 confirmada: turno 1
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno alCrear
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] @PostConstruct - el contenedor creo el asistente 69cd9e98 (instancia 51751e5f)
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno iniciar
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] conversacion 69cd9e98 iniciada para el paciente 30111222
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno alCrear
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] @PostConstruct - el contenedor creo el asistente 1b0e8000 (instancia 75b3673)
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno iniciar
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] conversacion 1b0e8000 iniciada para el paciente 30111222
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno alCrear
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] @PostConstruct - el contenedor creo el asistente 5fc922f5 (instancia 31fc71ab)
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno alCrear
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] @PostConstruct - el contenedor creo el asistente 4f961972 (instancia 12db3386)
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno iniciar
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] conversacion 4f961972 iniciada para el paciente 30111222
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno elegirEspecialidad
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] conversacion 4f961972 recuerda especialidad=Cardiologia
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno alCrear
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] @PostConstruct - el contenedor creo el asistente ccef931e (instancia 42c2f48c)
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno iniciar
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] conversacion ccef931e iniciada para el paciente 30111222
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno elegirEspecialidad
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] conversacion ccef931e recuerda especialidad=Cardiologia
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno elegirProfesional
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] conversacion ccef931e recuerda profesional=Dra. Laura Fernandez
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno elegirHorario
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] conversacion ccef931e recuerda horario=2026-11-23T09:00
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno confirmar
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] conversacion ccef931e confirmada: turno 1
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno alCrear
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] @PostConstruct - el contenedor creo el asistente 487572d8 (instancia 3005db4a)
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno iniciar
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] conversacion 487572d8 iniciada para el paciente 28999888
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno elegirEspecialidad
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] conversacion 487572d8 recuerda especialidad=Cardiologia
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno elegirProfesional
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] conversacion 487572d8 recuerda profesional=Dra. Laura Fernandez
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno alCrear
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] @PostConstruct - el contenedor creo el asistente 1dfcd2cb (instancia 52fc5eb1)
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno iniciar
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] conversacion 1dfcd2cb iniciada para el paciente 30111222
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno alCrear
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] @PostConstruct - el contenedor creo el asistente 86aea2b1 (instancia 66596a88)
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno iniciar
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] conversacion 86aea2b1 iniciada para el paciente 30111222
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno elegirEspecialidad
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] conversacion 86aea2b1 recuerda especialidad=Cardiologia
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno elegirProfesional
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] conversacion 86aea2b1 recuerda profesional=Dra. Laura Fernandez
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno elegirHorario
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] conversacion 86aea2b1 recuerda horario=2026-11-23T09:30
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno confirmar
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] conversacion 86aea2b1 confirmada: turno 1
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno finalizar
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] @Remove - fin de la conversacion 86aea2b1 en el paso 5
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.AsistenteReservaTurno alCrear
+2:06:11 AM PIT >> INFO : MINION : INFO: [STATEFUL] @PostConstruct - el contenedor creo el asistente 83869a04 (instancia 982bb90)
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.CargaDeDatosDemo cargarUsuarios
+2:06:11 AM PIT >> INFO : MINION : INFO: [DEMO] Usuarios de demostracion creados: paciente, recepcion, medico, admin.
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.CargaDeDatosDemo cargar
+2:06:11 AM PIT >> INFO : MINION : INFO: [DEMO] Juego de datos de ejemplo cargado: 4 profesionales, 4 pacientes, 3 turnos.
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.CargaDeDatosDemo cargar
+2:06:11 AM PIT >> INFO : MINION : INFO: [DEMO] La base ya tiene datos: no se carga el juego de ejemplo.
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.CargaDeDatosDemo cargarUsuarios
+2:06:11 AM PIT >> INFO : MINION : INFO: [DEMO] Usuarios de demostracion creados: paciente, recepcion, medico, admin.
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.CargaDeDatosDemo cargar
+2:06:11 AM PIT >> INFO : MINION : INFO: [DEMO] Juego de datos de ejemplo cargado: 4 profesionales, 4 pacientes, 3 turnos.
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.CargaDeDatosDemo cargarUsuarios
+2:06:11 AM PIT >> INFO : MINION : WARNING: [DEMO] No se crearon usuarios: falta la contrasena de demostracion (mediconecta.demo.clave / MEDICONECTA_DEMO_CLAVE).
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.CargaDeDatosDemo cargar
+2:06:11 AM PIT >> INFO : MINION : INFO: [DEMO] Juego de datos de ejemplo cargado: 4 profesionales, 4 pacientes, 3 turnos.
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.CargaDeDatosDemo cargarUsuarios
+2:06:11 AM PIT >> INFO : MINION : WARNING: [DEMO] No se crearon usuarios: la contrasena de demostracion debe tener al menos 8 caracteres.
+2:06:11 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:11 AM com.mediconecta.negocio.CargaDeDatosDemo cargar
+2:06:11 AM PIT >> INFO : MINION : INFO: [DEMO] Juego de datos de ejemplo cargado: 4 profesionales, 4 pacientes, 3 turnos.
+2:06:12 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:12 AM com.mediconecta.presentacion.Problemas inesperado
+2:06:12 AM PIT >> INFO : MINION : SEVERE: [API] Error inesperado 871db8cd-500d-42f8-bb04-1d22532936ee en /mediconecta/api/turnos
+2:06:12 AM PIT >> INFO : MINION : java.lang.NullPointerException: campo secreto de la implementacion
+2:06:12 AM PIT >> INFO : MINION : 	at com.mediconecta.presentacion.ProblemasTest.unErrorInesperadoNoMuestraDetallesInternosPeroDaUnId(ProblemasTest.java:94)
+2:06:12 AM PIT >> INFO : MINION : 	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+2:06:12 AM PIT >> INFO : MINION : 	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+2:06:12 AM PIT >> INFO : MINION : 	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+2:06:12 AM PIT >> INFO : MINION : 	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:767)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:60)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:131)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:156)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:147)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:86)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(InterceptingExecutableInvoker.java:103)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.lambda$invoke$0(InterceptingExecutableInvoker.java:93)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:106)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:64)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:45)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:37)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:92)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:86)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$8(TestMethodTestDescriptor.java:217)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:213)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:138)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:68)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:156)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:146)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:144)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:143)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:100)
+2:06:12 AM PIT >> INFO : MINION : 	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:160)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:146)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:144)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:143)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:100)
+2:06:12 AM PIT >> INFO : MINION : 	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:160)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:146)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:144)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:143)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:100)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:35)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:57)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:54)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:198)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:169)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:93)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:58)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:141)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:57)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:103)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:85)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:47)
+2:06:12 AM PIT >> INFO : MINION : 	at org.junit.platform.launcher.core.SessionPerRequestLauncher.execute(SessionPerRequestLauncher.java:63)
+2:06:12 AM PIT >> INFO : MINION : 	at org.pitest.junit5.JUnit5TestUnitFinder.findTestUnits(JUnit5TestUnitFinder.java:84)
+2:06:12 AM PIT >> INFO : MINION : 	at org.pitest.mutationtest.config.PrioritisingTestUnitFinder.findTestUnits(PrioritisingTestUnitFinder.java:20)
+2:06:12 AM PIT >> INFO : MINION : 	at org.pitest.testapi.execute.FindTestUnits.lambda$findTestUnitsForAllSuppliedClasses$1(FindTestUnits.java:34)
+2:06:12 AM PIT >> INFO : MINION : 	at java.base/java.util.stream.ReferencePipeline$7$1.accept(ReferencePipeline.java:273)
+2:06:12 AM PIT >> INFO : MINION : 	at java.base/java.util.stream.DistinctOps$1$2.accept(DistinctOps.java:174)
+2:06:12 AM PIT >> INFO : MINION : 	at java.base/java.util.stream.Streams$StreamBuilderImpl.forEachRemaining(Streams.java:411)
+2:06:12 AM PIT >> INFO : MINION : 	at java.base/java.util.stream.Streams$ConcatSpliterator.forEachRemaining(Streams.java:734)
+2:06:12 AM PIT >> INFO : MINION : 	at java.base/java.util.stream.ReferencePipeline$Head.forEach(ReferencePipeline.java:762)
+2:06:12 AM PIT >> INFO : MINION : 	at java.base/java.util.stream.ReferencePipeline$7$1.accept(ReferencePipeline.java:276)
+2:06:12 AM PIT >> INFO : MINION : 	at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1625)
+2:06:12 AM PIT >> INFO : MINION : 	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+2:06:12 AM PIT >> INFO : MINION : 	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+2:06:12 AM PIT >> INFO : MINION : 	at java.base/java.util.stream.ReduceOps$ReduceOp.evaluateSequential(ReduceOps.java:921)
+2:06:12 AM PIT >> INFO : MINION : 	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+2:06:12 AM PIT >> INFO : MINION : 	at java.base/java.util.stream.ReferencePipeline.collect(ReferencePipeline.java:682)
+2:06:12 AM PIT >> INFO : MINION : 	at org.pitest.testapi.execute.FindTestUnits.findTestUnitsForAllSuppliedClasses(FindTestUnits.java:35)
+2:06:12 AM PIT >> INFO : MINION : 	at org.pitest.coverage.execute.CoverageMinion.discoverTests(CoverageMinion.java:169)
+2:06:12 AM PIT >> INFO : MINION : 	at org.pitest.coverage.execute.CoverageMinion.getTestsFromParent(CoverageMinion.java:154)
+2:06:12 AM PIT >> INFO : MINION : 	at org.pitest.coverage.execute.CoverageMinion.main(CoverageMinion.java:82)
+2:06:12 AM PIT >> INFO : MINION : 
+2:06:13 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:13 AM com.mediconecta.seguridad.ServicioJwt resolverSecreto
+2:06:13 AM PIT >> INFO : MINION : WARNING: [JWT] No se configuro mediconecta.jwt.secreto / MEDICONECTA_JWT_SECRETO: se genero un secreto aleatorio para esta ejecucion. Los tokens emitidos dejan de valer al reiniciar el servidor.
+2:06:13 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:13 AM com.mediconecta.seguridad.ServicioJwt resolverSecreto
+2:06:13 AM PIT >> INFO : MINION : WARNING: [JWT] No se configuro mediconecta.jwt.secreto / MEDICONECTA_JWT_SECRETO: se genero un secreto aleatorio para esta ejecucion. Los tokens emitidos dejan de valer al reiniciar el servidor.
+2:06:13 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:13 AM com.mediconecta.seguridad.ServicioJwt resolverSecreto
+2:06:13 AM PIT >> INFO : MINION : WARNING: [JWT] No se configuro mediconecta.jwt.secreto / MEDICONECTA_JWT_SECRETO: se genero un secreto aleatorio para esta ejecucion. Los tokens emitidos dejan de valer al reiniciar el servidor.
+2:06:13 AM PIT >> INFO : MINION : Nov 20, 2026 2:06:13 AM com.mediconecta.seguridad.ServicioJwt resolverSecreto
+2:06:13 AM PIT >> INFO : MINION : WARNING: [JWT] No se configuro mediconecta.jwt.secreto / MEDICONECTA_JWT_SECRETO: se genero un secreto aleatorio para esta ejecucion. Los tokens emitidos dejan de valer al reiniciar el servidor.
+2:06:13 AM PIT >> INFO : Calculated coverage in 2 seconds.
+2:06:13 AM PIT >> INFO : 0 tests took longer than 2000 ms
+2:06:13 AM PIT >> INFO : Slowest test ([engine:junit-jupiter]/[class:com.mediconecta.negocio.ServicioAutenticacionTest]/[method:muchosFallosDesdeUnaMismaIpBloqueanEsaIp()]) took 743 ms
+2:06:13 AM PIT >> INFO : Largest test ([engine:junit-jupiter]/[class:com.mediconecta.negocio.AsistenteReservaTurnoTest]/[method:elFlujoCompletoCreaUnTurno()]) covered 416 blocks
+2:06:13 AM PIT >> INFO : Created 25 mutation test units
+2:06:36 AM PIT >> INFO : Completed in 26 seconds
+>> Generated 3 Killed 2 (67%)
+> KILLED 2 SURVIVED 1 TIMED_OUT 0 NON_VIABLE 0 
+> NO_COVERAGE 0 EQUIVALENT 0 
+>> Generated 6 Killed 4 (67%)
+> KILLED 4 SURVIVED 1 TIMED_OUT 0 NON_VIABLE 0 
+> NO_COVERAGE 1 EQUIVALENT 0 
+>> Generated 79 Killed 54 (68%)
+> KILLED 54 SURVIVED 24 TIMED_OUT 0 NON_VIABLE 0 
+> NO_COVERAGE 1 EQUIVALENT 0 
+>> Generated 26 Killed 17 (65%)
+> KILLED 17 SURVIVED 8 TIMED_OUT 0 NON_VIABLE 0 
+> NO_COVERAGE 1 EQUIVALENT 0 
+>> Generated 63 Killed 61 (97%)
+> KILLED 61 SURVIVED 0 TIMED_OUT 0 NON_VIABLE 0 
+> NO_COVERAGE 2 EQUIVALENT 0 
+>> Generated 4 Killed 2 (50%)
+> KILLED 2 SURVIVED 2 TIMED_OUT 0 NON_VIABLE 0 
+> NO_COVERAGE 0 EQUIVALENT 0 
+>> Generated 49 Killed 40 (82%)
+> KILLED 40 SURVIVED 7 TIMED_OUT 0 NON_VIABLE 0 
+> NO_COVERAGE 2 EQUIVALENT 0 
+>> Generated 13 Killed 11 (85%)
+> KILLED 11 SURVIVED 2 TIMED_OUT 0 NON_VIABLE 0 
+> NO_COVERAGE 0 EQUIVALENT 0 
+>> Generated 153 Killed 147 (96%)
+> KILLED 147 SURVIVED 2 TIMED_OUT 0 NON_VIABLE 0 
+> NO_COVERAGE 4 EQUIVALENT 0 
+>> Line Coverage (for mutated classes only): 684/721 (95%)
+>> 170 tests examined
+>> Generated 396 mutations Killed 338 (85%)
+>> Mutations with no coverage 11. Test strength 88%
+>> Ran 723 tests (1.83 tests per mutation)
+[INFO] BUILD SUCCESS
+[36;1m  muertas=$(grep -c "status='KILLED'\|status=\"KILLED\"" target/pit-reports/mutations.xml || true)[0m
+[36;1m  echo "### Mutation testing (PIT): $muertas de $total mutantes detectados" >> "$GITHUB_STEP_SUMMARY"[0m

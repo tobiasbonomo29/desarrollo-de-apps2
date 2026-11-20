@@ -35,6 +35,7 @@ public class RecursoPartnerCobertura {
     @GET
     public RespuestaPartner consultar(@QueryParam("obraSocial") String obraSocial,
                                        @QueryParam("afiliado") String afiliado) {
+        DemoraSimulada.aplicar();
         Plan plan = obraSocial == null ? null : PLANES.get(obraSocial.trim().toUpperCase());
         boolean vigente = plan != null && afiliado != null && !afiliado.isBlank();
 

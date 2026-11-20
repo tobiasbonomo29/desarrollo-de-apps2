@@ -4,50 +4,39 @@ import jakarta.jms.JMSDestinationDefinition;
 import jakarta.jms.JMSDestinationDefinitions;
 
 /**
- * Declara los destinos JMS que usa MediConecta de forma portable, en lugar de
- * crearlos a mano con la consola o el CLI de WildFly.
+ * Declara los dos destinos JMS que usa MediConecta de forma portable, en
+ * lugar de crearlos a mano con la consola o el CLI de WildFly.
  *
  * <p>Al estar en una anotacion, el contenedor crea estos destinos solo al
  * desplegar el WAR, siempre que el perfil del servidor tenga activo el
  * subsistema de mensajeria ({@code standalone-full.xml} o
- * {@code standalone-full-ha.xml}).</p>
+ * {@code standalone-full-ha.xml}; el perfil {@code standalone.xml} que usaba
+ * el proyecto hasta ahora no lo trae). Ver docs/Entrega_Obligatoria_2.md,
+ * seccion de mensajeria asincronica, para el detalle de como arrancar el
+ * servidor con ese perfil.</p>
  *
- * <ul>
- *   <li>{@code ColaConfirmaciones}: punto a punto, la consume
- *       {@link ReceptorConfirmacion}.</li>
- *   <li>{@code TopicoRecordatorios}: publicacion/suscripcion, con dos
- *       suscriptores durables.</li>
- *   <li>{@code ColaConfirmacionesDLQ} (Entrega 3): <b>Dead Letter Queue</b>.
- *       Los mensajes de la cola de confirmaciones que fallan todos sus
- *       reintentos terminan aca y los registra {@link MonitorColaMuerta}. La
- *       asociacion cola -&gt; DLQ y la cantidad de reintentos son un
- *       {@code address-setting} del broker: lo crea
- *       {@code scripts/wildfly/configurar-mensajeria.cli}. Sin ese script el
- *       broker igual aplica su configuracion por omision (10 intentos y la DLQ
- *       general {@code jms.queue.DLQ}).</li>
- * </ul>
+ * <p>{@code MensajesFallidos} es la <b>cola de mensajes muertos</b> (DLQ) de
+ * los otros dos destinos: ahi el broker deja lo que no se pudo procesar despues
+ * de todos los reintentos. Que destino usa cada cola como DLQ y cuantas veces se
+ * reintenta no se puede declarar con anotaciones: lo fija
+ * {@code scripts/wildfly/configurar-mensajeria.cli} en el servidor (Artemis
+ * "address-settings").</p>
  */
 @JMSDestinationDefinitions({
         @JMSDestinationDefinition(
-                name = DestinosJms.COLA_CONFIRMACIONES,
+                name = "java:/jms/queue/ColaConfirmaciones",
                 interfaceName = "jakarta.jms.Queue",
                 destinationName = "ColaConfirmacionesMediConecta"),
         @JMSDestinationDefinition(
-                name = DestinosJms.TOPICO_RECORDATORIOS,
+                name = "java:/jms/topic/TopicoRecordatorios",
                 interfaceName = "jakarta.jms.Topic",
                 destinationName = "TopicoRecordatoriosMediConecta"),
         @JMSDestinationDefinition(
-                name = DestinosJms.COLA_CONFIRMACIONES_DLQ,
+                name = "java:/jms/queue/MensajesFallidos",
                 interfaceName = "jakarta.jms.Queue",
-                destinationName = "ColaConfirmacionesDLQMediConecta")
+                destinationName = "MensajesFallidosMediConecta")
 })
 public final class DestinosJms {
-
-    public static final String COLA_CONFIRMACIONES = "java:/jms/queue/ColaConfirmaciones";
-
-    public static final String TOPICO_RECORDATORIOS = "java:/jms/topic/TopicoRecordatorios";
-
-    public static final String COLA_CONFIRMACIONES_DLQ = "java:/jms/queue/ColaConfirmacionesDLQ";
 
     private DestinosJms() {
     }

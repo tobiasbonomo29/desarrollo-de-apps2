@@ -7,11 +7,14 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ServicioJwtTest {
@@ -89,5 +92,31 @@ class ServicioJwtTest {
     void unSecretoCortoNoSeAcepta() {
         assertThrows(IllegalArgumentException.class, () -> new ServicioJwt(
                 "corto".getBytes(StandardCharsets.UTF_8), Duration.ofMinutes(5), Clock.systemUTC()));
+    }
+
+    @Test
+    void sinSecretoConfiguradoSeGeneraUnoAleatorio() {
+        byte[] uno = ServicioJwt.resolverSecreto(null);
+        byte[] otro = ServicioJwt.resolverSecreto("  ");
+
+        assertEquals(ServicioJwt.BYTES_SECRETO_ALEATORIO, uno.length);
+        assertFalse(Arrays.equals(uno, otro),
+                "dos arranques no comparten secreto: no hay uno fijo en el codigo");
+    }
+
+    @Test
+    void elSecretoConfiguradoSeUsaTalCual() {
+        String configurado = "un-secreto-de-al-menos-treinta-y-dos-bytes!!";
+        assertArrayEquals(configurado.getBytes(StandardCharsets.UTF_8),
+                ServicioJwt.resolverSecreto(configurado));
+    }
+
+    @Test
+    void dosSecretosAleatoriosNoSeAceptanEntreSi() {
+        ServicioJwt emisor = new ServicioJwt(ServicioJwt.resolverSecreto(null), Duration.ofMinutes(5), Clock.systemUTC());
+        ServicioJwt otro = new ServicioJwt(ServicioJwt.resolverSecreto(null), Duration.ofMinutes(5), Clock.systemUTC());
+
+        String token = emisor.emitir("admin", List.of("ADMIN"));
+        assertThrows(TokenInvalidoException.class, () -> otro.validar(token));
     }
 }

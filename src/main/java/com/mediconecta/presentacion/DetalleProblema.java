@@ -1,90 +1,106 @@
 package com.mediconecta.presentacion;
 
+import jakarta.json.Json;
+import jakarta.json.JsonObjectBuilder;
+
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 /**
- * Cuerpo de error de la API con el formato <b>Problem Details</b> (RFC 9457),
- * tipo de contenido {@code application/problem+json}.
+ * Cuerpo de error de la API en formato <b>Problem Details for HTTP APIs</b>
+ * (RFC 9457, {@code application/problem+json}). Reemplaza al
+ * {@code {"error": ..., "codigo": ...}} propio de las primeras entregas.
  *
  * <pre>
- * {"type":"urn:mediconecta:problema:regla-de-negocio","title":"Bad Request","status":400,
- *  "detail":"No se puede agendar un turno en el pasado.","instance":"/mediconecta/api/turnos",
- *  "error":"No se puede agendar un turno en el pasado.","codigo":400}
+ * {
+ *   "type": "urn:mediconecta:problema:regla-negocio",
+ *   "title": "Regla de negocio incumplida",
+ *   "status": 400,
+ *   "detail": "El profesional ya tiene un turno en ese horario.",
+ *   "instance": "/mediconecta/api/turnos"
+ * }
  * </pre>
  *
- * <p>{@code error} y {@code codigo} son <i>miembros de extension</i> (la RFC los
- * permite): repiten {@code detail} y {@code status} para que los clientes de
- * las entregas anteriores, que leian {@code {"error","codigo"}}, sigan
- * funcionando sin cambios.</p>
+ * <p>Se serializa con JSON-P y no con JSON-B a proposito: asi el formato no
+ * depende de que el proveedor JSON-B del servidor reconozca el tipo de medio
+ * {@code application/problem+json}.</p>
  */
-public class DetalleProblema {
+public final class DetalleProblema {
 
-    private String type;
+    /** Tipo de medio de RFC 9457. */
+    public static final String TIPO_MEDIO = "application/problem+json";
 
-    private String title;
+    /** Tipo generico de RFC 9457, para errores HTTP sin semantica propia. */
+    public static final String SIN_TIPO = "about:blank";
 
-    private int status;
+    private final String tipo;
 
-    private String detail;
+    private final String titulo;
 
-    private String instance;
+    private final int estado;
 
-    public DetalleProblema() {
+    private final String detalle;
+
+    private final String instancia;
+
+    private final Map<String, String> extensiones;
+
+    public DetalleProblema(String tipo, String titulo, int estado, String detalle, String instancia) {
+        this(tipo, titulo, estado, detalle, instancia, Map.of());
     }
 
-    public DetalleProblema(String type, String title, int status, String detail, String instance) {
-        this.type = type;
-        this.title = title;
-        this.status = status;
-        this.detail = detail;
-        this.instance = instance;
+    public DetalleProblema(String tipo, String titulo, int estado, String detalle, String instancia,
+                           Map<String, String> extensiones) {
+        this.tipo = tipo;
+        this.titulo = titulo;
+        this.estado = estado;
+        this.detalle = detalle;
+        this.instancia = instancia;
+        this.extensiones = Collections.unmodifiableMap(new LinkedHashMap<>(extensiones));
     }
 
-    public String getType() {
-        return type;
+    public static DetalleProblema de(TipoProblema tipo, String detalle, String instancia) {
+        return new DetalleProblema(tipo.uri(), tipo.titulo(), tipo.estado(), detalle, instancia);
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public String tipo() {
+        return tipo;
     }
 
-    public String getTitle() {
-        return title;
+    public String titulo() {
+        return titulo;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
+    public int estado() {
+        return estado;
     }
 
-    public int getStatus() {
-        return status;
+    public String detalle() {
+        return detalle;
     }
 
-    public void setStatus(int status) {
-        this.status = status;
+    public String instancia() {
+        return instancia;
     }
 
-    public String getDetail() {
-        return detail;
+    public Map<String, String> extensiones() {
+        return extensiones;
     }
 
-    public void setDetail(String detail) {
-        this.detail = detail;
-    }
-
-    public String getInstance() {
-        return instance;
-    }
-
-    public void setInstance(String instance) {
-        this.instance = instance;
-    }
-
-    /** Extension de compatibilidad: mismo valor que {@code detail}. */
-    public String getError() {
-        return detail;
-    }
-
-    /** Extension de compatibilidad: mismo valor que {@code status}. */
-    public int getCodigo() {
-        return status;
+    /** JSON con los miembros estandar en el orden de la RFC, mas las extensiones. */
+    public String aJson() {
+        JsonObjectBuilder json = Json.createObjectBuilder()
+                .add("type", tipo)
+                .add("title", titulo)
+                .add("status", estado);
+        if (detalle != null) {
+            json.add("detail", detalle);
+        }
+        if (instancia != null) {
+            json.add("instance", instancia);
+        }
+        extensiones.forEach(json::add);
+        return json.build().toString();
     }
 }

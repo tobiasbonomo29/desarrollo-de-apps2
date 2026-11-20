@@ -1,0 +1,74 @@
+# =============================================================================
+#  MediConecta - entorno completo con Docker Compose
+# =============================================================================
+#
+#      cp .env.example .env        # y completar los secretos
+#      docker compose up -d --build
+#      docker compose logs -f app
+#
+#  Levanta, en este orden:
+#    1. db:          PostgreSQL 16 con un volumen persistente;
+#    2. migraciones: Flyway aplica db/migraciones y termina;
+#    3. app:         WildFly 36 con el WAR (arranca recien cuando las
+#                    migraciones terminaron bien).
+#
+#  La aplicacion queda en http://localhost:${MEDICONECTA_PUERTO:-8080}/mediconecta/
+#  Los secretos salen de .env (que esta en .gitignore): si falta alguno,
+#  compose se niega a arrancar y dice cual.
+# =============================================================================
+
+name: mediconecta
+
+services:
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: mediconecta
+      POSTGRES_USER: mediconecta
+      POSTGRES_PASSWORD: ${MEDICONECTA_DB_CLAVE:?Defini MEDICONECTA_DB_CLAVE en .env}
+    volumes:
+      - datos-postgres:/var/lib/postgresql/data
+    # Solo en la maquina local (127.0.0.1), para entrar con psql o un cliente SQL.
+    ports:
+      - "127.0.0.1:${MEDICONECTA_DB_PUERTO:-5434}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mediconecta -d mediconecta"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  migraciones:
+    image: flyway/flyway:11.20.3
+    command: -connectRetries=10 migrate
+    environment:
+      FLYWAY_URL: jdbc:postgresql://db:5432/mediconecta
+      FLYWAY_USER: mediconecta
+      FLYWAY_PASSWORD: ${MEDICONECTA_DB_CLAVE:?Defini MEDICONECTA_DB_CLAVE en .env}
+      FLYWAY_BASELINE_ON_MIGRATE: "true"
+      FLYWAY_BASELINE_VERSION: "1"
+      FLYWAY_CLEAN_DISABLED: "true"
+    volumes:
+      - ./db/migraciones:/flyway/sql:ro
+    depends_on:
+      db:
+        condition: service_healthy
+
+  app:
+    build: .
+    image: mediconecta:local
+    environment:
+      MEDICONECTA_DB_URL: jdbc:postgresql://db:5432/mediconecta
+      MEDICONECTA_DB_USUARIO: mediconecta
+      MEDICONECTA_DB_CLAVE: ${MEDICONECTA_DB_CLAVE:?Defini MEDICONECTA_DB_CLAVE en .env}
+      MEDICONECTA_JWT_SECRETO: ${MEDICONECTA_JWT_SECRETO:?Defini MEDICONECTA_JWT_SECRETO en .env (al menos 32 caracteres)}
+      MEDICONECTA_DEMO_CLAVE: ${MEDICONECTA_DEMO_CLAVE:-}
+      MEDICONECTA_IA_CLAVE: ${MEDICONECTA_IA_CLAVE:-}
+    ports:
+      - "${MEDICONECTA_PUERTO:-8080}:8080"
+    depends_on:
+      migraciones:
+        condition: service_completed_successfully
+
+volumes:
+  datos-postgres:

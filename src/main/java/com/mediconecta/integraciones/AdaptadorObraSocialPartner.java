@@ -22,21 +22,19 @@ import java.util.concurrent.TimeUnit;
  * {@code mediconecta.partner.baseUrl} porque en produccion apuntaria al
  * dominio real del partner, no al propio WAR de MediConecta.</p>
  *
- * <p>Timeouts de conexion y lectura de {@value #TIMEOUT_SEGUNDOS} segundos; el
- * fallback (ultimo dato bueno o "sin verificar") lo decide
- * {@link GestorCobertura} a traves de {@link ProteccionIntegracion}.</p>
+ * <p>La llamada tiene timeout de conexion y de respuesta
+ * ({@link TiemposDeEspera}): si el partner no contesta a tiempo se corta y se
+ * informa un {@code 504}.</p>
  */
 // @LocalBean: un EJB que implementa una interfaz solo expone esa interfaz;
 // GestorCobertura inyecta cada adaptador por su clase concreta para elegir cual usar.
-// NOT_SUPPORTED: una llamada remota no debe retener una transaccion de base de
-// datos abierta, y una falla aca no tiene que marcar para rollback la del llamador.
 @LocalBean
+// NOT_SUPPORTED: una llamada remota no tiene que retener una transaccion, y asi
+// una falla del sistema externo no marca para rollback la del llamador (que
+// necesita seguir viva para responder con el fallback).
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class AdaptadorObraSocialPartner implements ValidadorCobertura {
-
-    /** Timeout de conexion y de lectura del cliente HTTP. */
-    static final int TIMEOUT_SEGUNDOS = 5;
 
     private static final String URL_BASE_POR_DEFECTO =
             "http://localhost:8080/mediconecta/partner/cobertura";
@@ -44,8 +42,8 @@ public class AdaptadorObraSocialPartner implements ValidadorCobertura {
     @Override
     public ResultadoCobertura validar(String obraSocial, String numeroAfiliado) {
         Client cliente = ClientBuilder.newBuilder()
-                .connectTimeout(TIMEOUT_SEGUNDOS, TimeUnit.SECONDS)
-                .readTimeout(TIMEOUT_SEGUNDOS, TimeUnit.SECONDS)
+                .connectTimeout(TiemposDeEspera.conexion().toMillis(), TimeUnit.MILLISECONDS)
+                .readTimeout(TiemposDeEspera.respuesta().toMillis(), TimeUnit.MILLISECONDS)
                 .build();
         try {
             String urlBase = System.getProperty("mediconecta.partner.baseUrl", URL_BASE_POR_DEFECTO);
@@ -65,7 +63,10 @@ public class AdaptadorObraSocialPartner implements ValidadorCobertura {
                 return new ResultadoCobertura(cuerpo.isVigente(), cuerpo.getPlan(), cuerpo.getCopago(), "PARTNER");
             }
         } catch (ProcessingException error) {
-            throw new IntegracionExternaException("El partner de obras sociales no respondio.", error);
+            String mensaje = IntegracionExternaException.fueTiempoAgotado(error)
+                    ? "El partner de obras sociales no respondio a tiempo."
+                    : "El partner de obras sociales no respondio.";
+            throw new IntegracionExternaException(mensaje, error);
         } finally {
             cliente.close();
         }

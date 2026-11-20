@@ -16,11 +16,8 @@ public class SugerenciaEspecialidad {
 
     private boolean urgente;
 
-    /**
-     * Quien hizo la sugerencia: {@code IA} (el modelo de lenguaje) o
-     * {@code REGLAS} (el fallback por palabras clave, cuando la IA no responde).
-     */
-    private String origen;
+    /** {@code true} si la sugerencia la dio la orientacion de respaldo y no el modelo de IA. */
+    private boolean contingencia;
 
     public SugerenciaEspecialidad() {
     }
@@ -47,19 +44,19 @@ public class SugerenciaEspecialidad {
         this.especialidad = especialidad;
     }
 
-    public String getOrigen() {
-        return origen;
-    }
-
-    public void setOrigen(String origen) {
-        this.origen = origen;
-    }
-
     public boolean isUrgente() {
         return urgente;
     }
 
     public void setUrgente(boolean urgente) {
         this.urgente = urgente;
+    }
+
+    public boolean isContingencia() {
+        return contingencia;
+    }
+
+    public void setContingencia(boolean contingencia) {
+        this.contingencia = contingencia;
     }
 }

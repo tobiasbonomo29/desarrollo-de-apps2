@@ -2,10 +2,10 @@ package com.mediconecta.negocio;
 
 import com.mediconecta.datos.RepositorioIdempotencia;
 import com.mediconecta.mensajeria.NotificadorTurnos;
+import com.mediconecta.modelo.ClaveIdempotencia;
 import com.mediconecta.modelo.EstadoTurno;
 import com.mediconecta.modelo.Paciente;
 import com.mediconecta.modelo.Profesional;
-import com.mediconecta.modelo.RegistroIdempotencia;
 import com.mediconecta.modelo.Turno;
 
 import jakarta.annotation.Resource;
@@ -16,14 +16,10 @@ import jakarta.ejb.TransactionAttribute;
 import jakarta.ejb.TransactionAttributeType;
 import jakarta.inject.Inject;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Comparator;
-import java.util.HexFormat;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -69,11 +65,11 @@ public class FachadaReservas {
     @Resource
     private SessionContext contexto;
 
-    /** Cuanto tiempo se recuerda una {@code Idempotency-Key} ya usada. */
-    static final Duration VIGENCIA_CLAVE = Duration.ofHours(24);
+    /** Cuanto tiempo protege una {@code Idempotency-Key} contra reintentos. */
+    public static final Duration VIGENCIA_CLAVE = Duration.ofHours(24);
 
-    /** Claves aceptadas: lo que generan los clientes (UUID, ULID, etc.), hasta 255 caracteres. */
-    private static final Pattern FORMATO_CLAVE = Pattern.compile("[A-Za-z0-9._:-]{1,255}");
+    /** Formato aceptado para la clave: el de un UUID o cualquier token similar. */
+    private static final Pattern FORMATO_CLAVE = Pattern.compile("[A-Za-z0-9._:-]{8,100}");
 
     // ---------- Consultas que alimentan la pantalla de reserva ----------
 
@@ -175,100 +171,79 @@ public class FachadaReservas {
     }
 
     /**
-     * Reserva con {@code Idempotency-Key}: si el cliente reintenta el mismo
-     * pedido (por un timeout, un doble clic o una red inestable) recibe el
-     * turno que ya se habia creado, en lugar de un segundo turno.
+     * Reserva con proteccion contra reintentos ({@code Idempotency-Key}).
      *
-     * <p>Todo ocurre en la misma transaccion JTA que {@link #reservar}: el
-     * registro de la clave y el turno se confirman o se deshacen juntos.
-     * Reglas (draft IETF "The Idempotency-Key HTTP Header Field"):</p>
+     * <p>Una red inestable o un doble clic pueden hacer que el mismo
+     * {@code POST /api/turnos} llegue dos veces. Si el cliente manda la misma
+     * clave en los dos, el segundo no crea otro turno: recibe el que se creo con
+     * el primero. Reglas (basadas en el borrador IETF
+     * "The Idempotency-Key HTTP Header Field"):</p>
      * <ul>
-     *   <li>sin clave, se comporta igual que {@link #reservar};</li>
-     *   <li>misma clave y mismo pedido: se devuelve el turno original
-     *       ({@code repetida = true}) y no se envia otro mensaje JMS;</li>
-     *   <li>misma clave y otro pedido: {@link IdempotenciaException} REUTILIZADA;</li>
-     *   <li>misma clave mientras el primer pedido sigue en curso:
-     *       {@link IdempotenciaException} EN_CURSO.</li>
+     *   <li>sin clave, es una reserva comun ({@link #reservar});</li>
+     *   <li>misma clave y mismo pedido, dentro de {@link #VIGENCIA_CLAVE}: se
+     *       devuelve el turno ya creado, marcado como repetido;</li>
+     *   <li>misma clave y <b>otro</b> pedido: {@code 422}, es un error del
+     *       cliente;</li>
+     *   <li>dos pedidos simultaneos con la misma clave: el segundo recibe
+     *       {@code 409} y su turno se deshace junto con sus mensajes JMS.</li>
      * </ul>
-     * <p>La clave es por usuario: dos usuarios pueden usar el mismo valor.</p>
+     *
+     * <p>La clave es por usuario: dos usuarios distintos pueden usar la misma sin
+     * pisarse, y nadie puede "recuperar" el turno de otro adivinando su clave.</p>
      */
     @RolesAllowed({Roles.PACIENTE, Roles.RECEPCION, Roles.ADMIN})
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public ResultadoReserva reservarIdempotente(SolicitudTurno solicitud, String claveIdempotencia) {
-        if (claveIdempotencia == null) {
+    public ResultadoReserva reservarConClave(SolicitudTurno solicitud, String claveRecibida) {
+        String clave = normalizarClave(claveRecibida);
+        if (clave == null) {
             return new ResultadoReserva(reservar(solicitud), false);
         }
         if (solicitud == null) {
             throw new ReglaNegocioException("Debe enviar los datos del turno.");
         }
-        String clave = normalizarClave(claveIdempotencia);
+
         String usuario = contexto.getCallerPrincipal().getName();
-        String huella = huella(solicitud);
+        String huella = HuellaSolicitud.de(solicitud);
         LocalDateTime ahora = LocalDateTime.now();
 
-        Optional<RegistroIdempotencia> previo = repositorioIdempotencia.buscar(usuario, clave);
-        RegistroIdempotencia registro;
-        if (previo.isEmpty()) {
-            registro = new RegistroIdempotencia(usuario, clave, huella, ahora);
-            if (!repositorioIdempotencia.registrar(registro)) {
-                throw new IdempotenciaException(IdempotenciaException.Motivo.EN_CURSO,
-                        "Ya hay un pedido en curso con la misma Idempotency-Key. Reintente en unos segundos.");
+        Optional<ClaveIdempotencia> previa = repositorioIdempotencia.buscar(usuario, clave);
+        if (previa.isPresent()) {
+            ClaveIdempotencia registrada = previa.get();
+            if (registrada.getCreadaEn().isBefore(ahora.minus(VIGENCIA_CLAVE))) {
+                repositorioIdempotencia.eliminar(registrada);
+            } else if (!registrada.getHuella().equals(huella)) {
+                throw new ConflictoIdempotenciaException(ConflictoIdempotenciaException.Motivo.PEDIDO_DISTINTO,
+                        "Esa Idempotency-Key ya se uso para otro pedido. Genere una clave nueva para cada turno.");
+            } else {
+                return new ResultadoReserva(registrada.getTurno(), true);
             }
-        } else if (previo.get().getCreadaEn().isBefore(ahora.minus(VIGENCIA_CLAVE))) {
-            // Clave vencida: se trata como nueva.
-            registro = previo.get();
-            registro.setHuella(huella);
-            registro.setCreadaEn(ahora);
-            registro.setTurnoId(null);
-        } else {
-            registro = previo.get();
-            if (!registro.getHuella().equals(huella)) {
-                throw new IdempotenciaException(IdempotenciaException.Motivo.REUTILIZADA,
-                        "La Idempotency-Key ya se uso con otros datos. Genere una clave nueva para este pedido.");
-            }
-            if (registro.getTurnoId() != null) {
-                return new ResultadoReserva(gestionTurnos.obtenerTurno(registro.getTurnoId()), true);
-            }
-            // El intento anterior con esta clave no llego a crear el turno
-            // (fallo una regla de negocio): se vuelve a intentar.
         }
 
         Turno turno = reservar(solicitud);
-        registro.setTurnoId(turno.getId());
-        repositorioIdempotencia.actualizar(registro);
+        if (!repositorioIdempotencia.registrar(new ClaveIdempotencia(clave, usuario, huella, turno, ahora))) {
+            throw new ConflictoIdempotenciaException(ConflictoIdempotenciaException.Motivo.EN_CURSO,
+                    "Otro pedido con la misma Idempotency-Key se esta procesando. Reintente en unos segundos.");
+        }
         return new ResultadoReserva(turno, false);
     }
 
-    /** Acepta la clave tal cual o como cadena de Structured Fields ({@code "..."}). */
+    /**
+     * Acepta la clave tal cual o entre comillas (forma de "structured field"
+     * de la especificacion). Devuelve {@code null} si no vino.
+     */
     static String normalizarClave(String clave) {
-        String texto = clave.trim();
-        if (texto.length() >= 2 && texto.startsWith("\"") && texto.endsWith("\"")) {
-            texto = texto.substring(1, texto.length() - 1);
+        if (clave == null || clave.isBlank()) {
+            return null;
         }
-        if (!FORMATO_CLAVE.matcher(texto).matches()) {
-            throw new ReglaNegocioException("La cabecera Idempotency-Key debe tener entre 1 y 255 caracteres"
-                    + " (letras, numeros, punto, guion, guion bajo o dos puntos).");
+        String limpia = clave.trim();
+        if (limpia.length() >= 2 && limpia.startsWith("\"") && limpia.endsWith("\"")) {
+            limpia = limpia.substring(1, limpia.length() - 1);
         }
-        return texto;
-    }
-
-    /** SHA-256 de los datos del pedido: identifica "el mismo pedido" aunque cambie el orden del JSON. */
-    static String huella(SolicitudTurno s) {
-        String texto = String.join("\n",
-                valor(s.getDocumentoPaciente()), valor(s.getNombrePaciente()),
-                s.getProfesionalId() == null ? "" : s.getProfesionalId().toString(),
-                valor(s.getNombreProfesional()), valor(s.getEspecialidad()),
-                valor(s.getFechaHora()), valor(s.getMotivo()));
-        try {
-            byte[] hash = MessageDigest.getInstance("SHA-256").digest(texto.getBytes(StandardCharsets.UTF_8));
-            return HexFormat.of().formatHex(hash);
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("La JVM no soporta SHA-256", e);
+        if (!FORMATO_CLAVE.matcher(limpia).matches()) {
+            throw new ReglaNegocioException("La cabecera Idempotency-Key debe tener entre 8 y 100 caracteres "
+                    + "(letras, numeros, '.', '_', ':' o '-'). Se recomienda un UUID.");
         }
-    }
-
-    private static String valor(String texto) {
-        return texto == null ? "" : texto.trim();
+        return limpia;
     }
 
     private Paciente resolverPaciente(SolicitudTurno solicitud) {

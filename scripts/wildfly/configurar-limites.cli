@@ -1,0 +1,27 @@
+# =============================================================================
+#  MediConecta - timeouts del lado del servidor
+# =============================================================================
+#
+#  Complementan los timeouts de los clientes (adaptadores SOAP/REST/IA) y el de
+#  las consultas JPA (persistence.xml). Ningun recurso queda tomado sin limite:
+#
+#    * transacciones JTA: 60 s como maximo (por omision WildFly da 300 s);
+#    * HTTP: una conexion que no manda ni recibe datos en 30 s se corta, y una
+#      conexion abierta sin pedidos se cierra a los 60 s;
+#    * pool de conexiones a la base: un pedido espera como maximo 5 s a que se
+#      libere una conexion (si no, falla en lugar de encolarse para siempre).
+#
+#  Se usa en local (configurar-wildfly.ps1) y en Docker (Dockerfile).
+# =============================================================================
+
+/subsystem=transactions:write-attribute(name=default-timeout, value=60)
+
+/subsystem=undertow/server=default-server/http-listener=default:write-attribute(name=read-timeout, value=30000)
+/subsystem=undertow/server=default-server/http-listener=default:write-attribute(name=write-timeout, value=30000)
+/subsystem=undertow/server=default-server/http-listener=default:write-attribute(name=no-request-timeout, value=60000)
+
+if (outcome == success) of /subsystem=datasources/data-source=MediConectaDS:read-resource
+    /subsystem=datasources/data-source=MediConectaDS:write-attribute(name=blocking-timeout-wait-millis, value=5000)
+end-if
+
+echo "Timeouts del servidor configurados (JTA 60 s, HTTP 30/60 s, pool 5 s)."

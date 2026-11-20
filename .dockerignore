@@ -1,0 +1,12 @@
+# Solo hace falta el codigo fuente, la configuracion del linter y los scripts
+# de WildFly; todo lo demas agranda el contexto de build sin aportar nada.
+target/
+.git/
+.github/
+docs/
+*.zip
+*.pdf
+.env
+.env.*
+.idea/
+.vscode/

@@ -10,6 +10,7 @@ import jakarta.security.enterprise.authentication.mechanism.http.HttpMessageCont
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import java.io.IOException;
 import java.util.HashSet;
 
 /**
@@ -26,9 +27,9 @@ import java.util.HashSet;
  *       {@code getCallerPrincipal} y el {@code SecurityContext} de JAX-RS
  *       funcionan con esa identidad.</li>
  *   <li>Si el recurso esta protegido en {@code web.xml} y no hay token (o es
- *       invalido), corta la peticion con un <b>401</b> en formato Problem
- *       Details, igual que el resto de la API (lo escribe
- *       {@link RespuestaNoAutenticado}).</li>
+ *       invalido), corta la peticion con un <b>401</b> en el mismo formato que
+ *       el resto de los errores de la API: Problem Details (RFC 9457,
+ *       {@code application/problem+json}).</li>
  *   <li>Si el recurso es publico ({@code /api/salud}, {@code /api/auth/login},
  *       las pantallas estaticas) y no hay token, deja pasar sin identidad.</li>
  * </ol>
@@ -47,12 +48,8 @@ public class MecanismoAutenticacionJwt implements HttpAuthenticationMechanism {
 
     private static final String PREFIJO = "Bearer ";
 
-    /** Atributo del pedido con el motivo del 401, para {@link RespuestaNoAutenticado}. */
-    static final String ATRIBUTO_MOTIVO = "mediconecta.autenticacion.motivo";
-
-    static final String MOTIVO_SIN_TOKEN = "Debe iniciar sesion para usar esta operacion.";
-
-    static final String DESAFIO = "Bearer realm=\"mediconecta\"";
+    /** Mismo identificador de tipo que usa la capa de presentacion para el 401. */
+    static final String TIPO_NO_AUTENTICADO = "urn:mediconecta:problema:no-autenticado";
 
     @Inject
     private ServicioJwt servicioJwt;
@@ -70,14 +67,14 @@ public class MecanismoAutenticacionJwt implements HttpAuthenticationMechanism {
                 return contexto.notifyContainerAboutLogin(claims.usuario(), new HashSet<>(claims.roles()));
             } catch (TokenInvalidoException e) {
                 if (contexto.isProtected()) {
-                    return rechazar(peticion, respuesta, e.getMessage(), contexto);
+                    return rechazar(respuesta, e.getMessage(), contexto);
                 }
                 return contexto.doNothing();
             }
         }
 
         if (contexto.isProtected()) {
-            return rechazar(peticion, respuesta, MOTIVO_SIN_TOKEN, contexto);
+            return rechazar(respuesta, "Debe iniciar sesion para usar esta operacion.", contexto);
         }
         return contexto.doNothing();
     }
@@ -91,41 +88,32 @@ public class MecanismoAutenticacionJwt implements HttpAuthenticationMechanism {
         return token.isEmpty() ? null : token;
     }
 
-    /**
-     * Rechaza con 401 delegando el cuerpo en la pagina de error del contenedor.
-     *
-     * <p>Antes el mecanismo escribia el JSON y hacia {@code flushBuffer()}; despues
-     * Undertow intentaba su propio {@code sendError(401)} sobre una respuesta ya
-     * confirmada y registraba un ERROR con el stack trace completo (unos 6 KB) por
-     * cada pedido sin token: un atacante sin credenciales podia llenar el disco con
-     * el log (se observo en el escaneo de OWASP ZAP). Ahora se pide el 401 al
-     * contenedor ({@code responseUnauthorized()}, es decir {@code sendError}) y el
-     * Problem Details lo escribe {@link RespuestaNoAutenticado}, declarada como
-     * {@code <error-page>} del 401 en {@code web.xml}. El motivo concreto (token
-     * vencido, firma invalida...) viaja como atributo del pedido.</p>
-     */
-    private AuthenticationStatus rechazar(HttpServletRequest peticion, HttpServletResponse respuesta,
-                                          String mensaje, HttpMessageContext contexto) {
-        peticion.setAttribute(ATRIBUTO_MOTIVO, mensaje);
-        respuesta.setHeader("WWW-Authenticate", DESAFIO);
-        return contexto.responseUnauthorized();
+    private AuthenticationStatus rechazar(HttpServletResponse respuesta, String mensaje,
+                                          HttpMessageContext contexto) {
+        try {
+            HttpServletRequest peticion = contexto.getRequest();
+            // Esta respuesta sale antes de pasar por los filtros del WAR.
+            CabecerasSeguridad.aplicar(peticion, respuesta);
+            respuesta.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            respuesta.setHeader("WWW-Authenticate", "Bearer realm=\"mediconecta\"");
+            respuesta.setContentType("application/problem+json;charset=UTF-8");
+            respuesta.getWriter().write(problema(mensaje, peticion.getRequestURI()));
+            respuesta.flushBuffer();
+            return AuthenticationStatus.SEND_FAILURE;
+        } catch (IOException e) {
+            return contexto.responseUnauthorized();
+        }
     }
 
-    /**
-     * Problem Details (RFC 9457) del 401, armado con JSON-P para que el mensaje
-     * y la ruta queden bien escapados. Lleva tambien {@code error} y
-     * {@code codigo}, igual que el resto de los errores de la API.
-     */
-    static String cuerpoProblema(String mensaje, String ruta) {
+    /** Cuerpo Problem Details del 401. JSON-P escapa el texto. */
+    static String problema(String mensaje, String instancia) {
         JsonObjectBuilder cuerpo = Json.createObjectBuilder()
-                .add("type", "urn:mediconecta:problema:no-autenticado")
-                .add("title", "Unauthorized")
+                .add("type", TIPO_NO_AUTENTICADO)
+                .add("title", "No autenticado")
                 .add("status", HttpServletResponse.SC_UNAUTHORIZED)
-                .add("detail", mensaje)
-                .add("error", mensaje)
-                .add("codigo", HttpServletResponse.SC_UNAUTHORIZED);
-        if (ruta != null) {
-            cuerpo.add("instance", ruta);
+                .add("detail", mensaje);
+        if (instancia != null) {
+            cuerpo.add("instance", instancia);
         }
         return cuerpo.build().toString();
     }

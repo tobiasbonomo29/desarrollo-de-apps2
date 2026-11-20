@@ -1,0 +1,42 @@
+# =============================================================================
+#  MediConecta - configuracion de WildFly dentro de la imagen Docker
+# =============================================================================
+#
+#  Lo ejecuta el Dockerfile con el servidor EMBEBIDO (sin levantarlo), asi la
+#  imagen ya sale configurada. Despues del bloque propio de Docker, el
+#  Dockerfile agrega los mismos scripts que se usan en una instalacion local:
+#  scripts/wildfly/configurar-mensajeria.cli y configurar-limites.cli.
+#
+#  La URL, el usuario y la contrasena de la base quedan como expresiones
+#  ${env.*}: WildFly las resuelve al arrancar el contenedor, a partir de las
+#  variables de entorno. No hay ninguna credencial dentro de la imagen y, si
+#  falta una variable, el datasource no arranca (falla rapido y con un mensaje
+#  claro en el log).
+# =============================================================================
+
+embed-server --server-config=standalone-full.xml --std-out=echo
+
+/subsystem=datasources/jdbc-driver=postgresql:add( \
+    driver-name=postgresql, \
+    driver-module-name=org.postgresql, \
+    driver-class-name=org.postgresql.Driver, \
+    driver-xa-datasource-class-name=org.postgresql.xa.PGXADataSource)
+
+/subsystem=datasources/data-source=MediConectaDS:add( \
+    jndi-name="java:/jdbc/MediConectaDS", \
+    driver-name=postgresql, \
+    connection-url="${env.MEDICONECTA_DB_URL}", \
+    user-name="${env.MEDICONECTA_DB_USUARIO}", \
+    password="${env.MEDICONECTA_DB_CLAVE}", \
+    min-pool-size=5, \
+    max-pool-size=20, \
+    enabled=true, \
+    use-java-context=true, \
+    background-validation=true, \
+    background-validation-millis=60000, \
+    check-valid-connection-sql="SELECT 1")
+
+/subsystem=undertow/application-security-domain=other:write-attribute(name=integrated-jaspi, value=false)
+
+# Los logs van a la consola del contenedor ("docker compose logs app").
+/subsystem=logging/console-handler=CONSOLE:write-attribute(name=level, value=INFO)

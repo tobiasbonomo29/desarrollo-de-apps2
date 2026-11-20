@@ -1,25 +1,24 @@
 package com.mediconecta.datos;
 
-import com.mediconecta.modelo.RegistroIdempotencia;
+import com.mediconecta.modelo.ClaveIdempotencia;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-/** Acceso a las {@code Idempotency-Key} ya usadas (patron DAO / Repository). */
+/** Claves {@code Idempotency-Key} ya procesadas en el alta de turnos. */
 public interface RepositorioIdempotencia {
 
-    Optional<RegistroIdempotencia> buscar(String usuario, String clave);
+    Optional<ClaveIdempotencia> buscar(String usuario, String clave);
 
     /**
-     * Guarda una clave nueva y la escribe en la base en el acto.
-     *
-     * @return {@code false} si otro pedido ya registro la misma clave para el
-     *         mismo usuario (la restriccion unica la rechazo)
+     * Registra la clave. Devuelve {@code false} si otra transaccion registro la
+     * misma {@code (usuario, clave)} primero: la restriccion unica de la base es
+     * la que decide.
      */
-    boolean registrar(RegistroIdempotencia registro);
+    boolean registrar(ClaveIdempotencia clave);
 
-    RegistroIdempotencia actualizar(RegistroIdempotencia registro);
+    void eliminar(ClaveIdempotencia clave);
 
-    /** Borra las claves anteriores al limite; devuelve cuantas borro. */
-    int borrarAnterioresA(LocalDateTime limite);
+    /** Borra las claves vencidas. Devuelve cuantas se borraron. */
+    int eliminarAnterioresA(LocalDateTime limite);
 }

@@ -1,0 +1,185 @@
+SALUD (publico, sin autenticacion)
+  [OK]    GET /api/salud responde 200
+  [OK]    El estado general es UP
+  [OK]    La base de datos responde
+  [OK]    El broker JMS responde
+  [OK]    GET /api/salud/vivo (liveness) responde 200
+
+CABECERAS DE SEGURIDAD
+  [OK]    Las pantallas tienen Content-Security-Policy estricta
+  [OK]    X-Content-Type-Options: nosniff
+  [OK]    X-Frame-Options: DENY
+  [OK]    Referrer-Policy: no-referrer
+  [OK]    Permissions-Policy apaga camara, microfono y ubicacion
+  [OK]    La API no se cachea (Cache-Control: no-store)
+  [OK]    La API tiene CSP default-src 'none'
+
+CONTRATO OPENAPI
+  [OK]    GET /openapi.json publica el contrato OpenAPI 3.1
+  [OK]    El contrato documenta todas las operaciones
+  [OK]    GET /api-docs.html sirve la documentacion interactiva
+
+SEGURIDAD
+  [OK]    Endpoint protegido sin iniciar sesion devuelve 401
+  [OK]    El 401 viene en Problem Details
+  [OK]    Login con contrasena incorrecta devuelve 401
+  [OK]    Login correcto devuelve un JWT (tres partes)
+  [OK]    El login informa los roles del usuario
+  [OK]    Con el JWT de 'recepcion' el servidor reconoce al usuario
+  [OK]    Un token con la firma alterada devuelve 401
+  [OK]    Un PACIENTE no puede ver la agenda completa (403)
+  [OK]    El 403 viene en Problem Details
+  [OK]    Alta de profesional con rol RECEPCION devuelve 403
+  [OK]    Alta de profesional con rol ADMIN devuelve 201
+  [OK]    Definir disponibilidad con rol PACIENTE devuelve 403
+  [OK]    RECEPCION puede definir la disponibilidad de cualquier profesional
+  [OK]    Un MEDICO no puede definir la disponibilidad de otro profesional (403)
+  [OK]    GET /api/profesionales/mi-perfil devuelve la ficha del medico logueado
+  [OK]    Un MEDICO si puede definir su propia disponibilidad
+
+ERRORES EN PROBLEM DETAILS (RFC 9457)
+  [OK]    Una ruta inexistente devuelve 404 en application/problem+json
+  [OK]    Un JSON roto devuelve 400 pedido-invalido (no 500)
+  [OK]    Un metodo no permitido devuelve 405 con la cabecera Allow
+
+PROFESIONALES
+  [OK]    GET /api/profesionales devuelve la lista
+  [OK]    El filtro por especialidad devuelve solo Cardiologia
+  [OK]    GET /api/profesionales/especialidades devuelve valores
+  [OK]    GET /api/profesionales/{id}/horarios-libres devuelve horarios
+  [OK]    Una fecha mal formada devuelve 400
+  [OK]    GET de un profesional inexistente devuelve 404
+
+PACIENTES
+  [OK]    GET /api/pacientes devuelve el padron
+  [OK]    POST /api/pacientes registra un paciente (201)
+  [OK]    Un documento duplicado devuelve 400
+  [OK]    Un paciente sin documento devuelve 400
+  [OK]    GET /api/pacientes/{documento} encuentra al paciente
+  [OK]    GET de un paciente inexistente devuelve 404
+  [OK]    PUT /api/pacientes/{documento} actualiza los datos
+  [OK]    GET /api/pacientes/{documento}/turnos devuelve el historial
+
+TURNOS
+  [OK]    GET /api/turnos devuelve la agenda
+  [OK]    GET /api/turnos/{id} devuelve un turno existente
+  [OK]    GET /api/turnos/999999 devuelve 404
+  [OK]    El 404 trae el mensaje de negocio en detail
+  [OK]    POST /api/turnos agenda un turno (201)
+  [OK]    La respuesta trae Location
+  [OK]    El turno nace en estado PROGRAMADO
+  [OK]    Un turno superpuesto del mismo profesional devuelve 400
+  [OK]    El mensaje explica la superposicion
+  [OK]    Un turno en el pasado devuelve 400
+  [OK]    Una fecha con formato invalido devuelve 400
+  [OK]    Un turno sin paciente devuelve 400
+  [OK]    El cuerpo JSON de la Entrega 1 sigue funcionando (201)
+  [OK]    Un PACIENTE no puede leer el turno de otro paciente por id (403)
+  [OK]    Un PACIENTE no puede cancelar el turno de otro paciente (403)
+  [OK]    PUT /api/turnos/{id}/cancelar cancela el turno
+  [OK]    Cancelar dos veces devuelve 409 (patron State) con un mensaje claro
+  [OK]    El horario de un turno cancelado vuelve a estar libre (201)
+
+IDEMPOTENCY-KEY EN POST /api/turnos
+  [OK]    Primer pedido con Idempotency-Key crea el turno (201)
+  [OK]    El mismo pedido repetido devuelve el MISMO turno (no crea otro)
+  [OK]    La repeticion se marca con Idempotent-Replayed: true
+  [OK]    La misma clave con otro cuerpo devuelve 422
+  [OK]    Una clave con formato invalido devuelve 400
+  [OK]    La clave es por usuario: otro usuario con la misma clave no recibe ese turno
+
+OWNERSHIP DE CANCELACION Y ARCHIVADO
+  [OK]    Se crea un turno de Ana Gomez con un profesional que MEDICO no es
+  [OK]    Un PACIENTE si puede leer su propio turno
+  [OK]    Un MEDICO no puede cancelar un turno fuera de su agenda (403)
+  [OK]    Un PACIENTE puede cancelar su propio turno (200)
+  [OK]    Un PACIENTE no puede archivar turnos (403)
+  [OK]    Un MEDICO no puede archivar turnos (403)
+  [OK]    El turno cancelado todavia aparece en la agenda antes de archivar
+  [OK]    RECEPCION puede archivar un turno cancelado (200)
+  [OK]    Archivar dos veces devuelve 409 (patron State)
+  [OK]    El turno archivado desaparece de la agenda general
+  [OK]    El turno archivado sigue en el historial del paciente, como CANCELADO
+  [OK]    El turno archivado se puede seguir consultando por id
+  [OK]    El horario de un turno archivado no queda bloqueado (201)
+  [OK]    Un MEDICO puede cancelar un turno de su propia agenda (200)
+
+PATRON STATE: TRANSICIONES DEL TURNO (409 ante una invalida)
+  [OK]    Se crea un turno PROGRAMADO para probar las transiciones
+  [OK]    PROGRAMADO -> archivar es invalido (409)
+  [OK]    RECEPCION no puede registrar la atencion (403)
+  [OK]    PROGRAMADO -> ATENDIDO lo hace el MEDICO de esa agenda (200)
+  [OK]    ATENDIDO -> atender es invalido (409)
+  [OK]    ATENDIDO -> cancelar es invalido (409)
+  [OK]    El 409 viene en Problem Details con status y detail
+
+COBERTURA: PATRON ADAPTER (SOAP legado + REST partner)
+  [OK]    OSDE se valida contra el sistema legado por SOAP
+  [OK]    Swiss Medical se valida contra el partner por REST
+  [OK]    Un PACIENTE no puede consultar la cobertura de otro (403)
+  [OK]    El WSDL del sistema legado esta publicado
+
+ASISTENTE DE RESERVA (@Stateful)
+  [OK]    GET /api/reserva abre una conversacion nueva
+  [OK]    Saltearse un paso devuelve 400
+  [OK]    Paso 0: iniciar la reserva identifica al paciente
+  [OK]    Paso 1: elegir especialidad avanza a ELEGIR_PROFESIONAL
+  [OK]    Una especialidad inexistente devuelve 400
+  [OK]    Paso 2: elegir profesional avanza a ELEGIR_HORARIO
+  [OK]    El servidor recuerda la especialidad sin que el cliente la reenvie
+  [OK]    El servidor recuerda el profesional sin que el cliente lo reenvie
+  [OK]    Es la misma conversacion desde el inicio
+  [OK]    Volver atras es una operacion del servidor y olvida el profesional
+  [OK]    GET /api/reserva/horarios usa el profesional recordado
+  [OK]    Paso 3: elegir horario avanza a CONFIRMAR
+  [OK]    Paso 4: confirmar crea el turno
+  [OK]    Tras confirmar, el contenedor descarto el asistente
+  [OK]    El turno creado por el asistente existe y esta PROGRAMADO
+  [OK]    Un PACIENTE no puede ver el historial de otro (403)
+
+MENSAJERIA JMS (cola + topico, idempotencia, reintentos y DLQ)
+  [OK]    La cola genero la confirmacion por mail
+  [OK]    Un suscriptor del topico programo el recordatorio
+  [OK]    El otro suscriptor del topico aviso al profesional
+  [OK]    Los tres avisos comparten el mismo eventoId
+  [OK]    RECEPCION tambien ve los avisos del turno
+  [OK]    Solo un ADMIN puede inyectar un mensaje defectuoso (403)
+  [OK]    ADMIN envia un mensaje que ningun consumidor entiende (202)
+  [OK]    Despues de los reintentos el mensaje llega a la DLQ y queda registrado
+  [OK]    Se registra de que destino vino
+  [OK]    Solo un ADMIN ve los mensajes fallidos (403)
+
+SEGURIDAD EN VIVO: JWT, BOLA, BFLA, INYECCIONES Y FUERZA BRUTA
+  [OK]    Un JWT con alg=none (sin firma) se rechaza con 401
+  [OK]    Un JWT firmado con otro secreto se rechaza con 401
+  [OK]    Un JWT mal formado se rechaza con 401
+  [OK]    BOLA: un PACIENTE no puede leer la ficha de otro (403)
+  [OK]    Un PACIENTE si puede leer su propia ficha
+  [OK]    BFLA: un PACIENTE no puede listar la agenda (403)
+  [OK]    BFLA: un MEDICO no puede dar de alta profesionales (403)
+  [OK]    BFLA: un MEDICO no puede ver la DLQ (403)
+  [OK]    Inyeccion SQL en la busqueda no devuelve todo el padron
+  [OK]    Inyeccion SQL en el documento da 404, no un paciente
+  [OK]    Inyeccion SQL en el login devuelve 401
+  [OK]    Un intento de XSS se guarda como texto y se devuelve como JSON
+  [OK]    Los primeros 5 intentos fallidos devuelven 401
+  [OK]    Fuerza bruta: el sexto intento devuelve 429
+  [OK]    El 429 trae Retry-After
+
+ETAG Y CONCURRENCIA OPTIMISTA
+  [OK]    GET /api/turnos/{id} devuelve ETag
+  [OK]    Con If-None-Match igual responde 304 sin cuerpo
+  [OK]    Con If-Match de una version vieja responde 412
+  [OK]    Con If-Match correcto cancela y devuelve el ETag nuevo
+  [OK]    GET /api/pacientes/{documento} devuelve ETag
+
+ASISTENTE DE IA (gateway con timeout de 5 s y fallback)
+  [OK]    El gateway de IA responde (modelo o respaldo)
+  [OK]    Sugiere Traumatologia para un golpe en la rodilla
+         (respuesta del respaldo por palabras clave)
+  [OK]    Ante una emergencia marca urgente y deriva al 107/911
+  [OK]    Una conversacion vacia se rechaza con 400
+  [OK]    La cobertura informa si es de contingencia
+
+============================================================
+Resultado: 148 pruebas OK, 0 fallidas

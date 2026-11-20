@@ -1,0 +1,30 @@
+# =============================================================================
+#  MediConecta - secretos de la aplicacion como propiedades del sistema
+# =============================================================================
+#
+#  En el codigo NO hay secretos por defecto. En una instalacion local se
+#  guardan como propiedades del sistema de WildFly (standalone-full.xml, fuera
+#  del repositorio); en Docker llegan como variables de entorno.
+#
+#    * mediconecta.jwt.secreto: firma de los JWT (al menos 32 caracteres).
+#      configurar-wildfly.ps1 genera uno aleatorio si no se le pasa ninguno.
+#    * mediconecta.demo.clave: contrasena de los usuarios de demostracion.
+#
+#  Se ejecuta con --resolve-parameter-values y los valores como -D:
+#
+#      jboss-cli --connect --resolve-parameter-values ^
+#          -Dmediconecta.cli.jwt=... -Dmediconecta.cli.demo=... ^
+#          --file=configurar-propiedades.cli
+# =============================================================================
+
+if (outcome == success) of /system-property=mediconecta.jwt.secreto:read-resource
+    /system-property=mediconecta.jwt.secreto:remove
+end-if
+/system-property=mediconecta.jwt.secreto:add(value="${mediconecta.cli.jwt}")
+
+if (outcome == success) of /system-property=mediconecta.demo.clave:read-resource
+    /system-property=mediconecta.demo.clave:remove
+end-if
+/system-property=mediconecta.demo.clave:add(value="${mediconecta.cli.demo}")
+
+echo "Propiedades mediconecta.jwt.secreto y mediconecta.demo.clave configuradas."

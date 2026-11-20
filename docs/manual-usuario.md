@@ -103,25 +103,6 @@ pantalla propia en el frontend; queda identificado como trabajo pendiente (ver
 
 ---
 
-## Cuando algo externo no responde (nuevo, checkpoint 3)
-
-MediConecta depende de sistemas externos (obras sociales y proveedor de IA). Si alguno no
-responde en 5 segundos, la aplicación **no se queda esperando**:
-
-- **Asistente "Prefiero escribirlo".** Si la IA no está disponible, igual recibís una
-  sugerencia, hecha por reglas simples a partir de las palabras que escribiste, con el
-  aviso "El asistente inteligente no está disponible en este momento". Podés confirmarla o
-  elegir otra especialidad de la lista. Si contás algo que parece una emergencia, el
-  asistente siempre te indica llamar al 107 o al 911.
-- **Cobertura.** Si la obra social no responde, se muestra el último dato obtenido (con la
-  fecha de esa consulta) o la leyenda "No se pudo verificar la cobertura... Verifíquela en
-  recepción". La reserva del turno no se bloquea por esto.
-- **Turnos repetidos.** Si al confirmar un turno se corta la conexión y volvés a apretar
-  "Confirmar turno", no se crea un segundo turno: el sistema reconoce el reintento y
-  devuelve el mismo.
-
----
-
 ## Qué hacer si algo falla
 
 - **"Su rol no tiene permiso..." (403).** La operación que se intentó no está habilitada para
@@ -130,11 +111,3 @@ responde en 5 segundos, la aplicación **no se queda esperando**:
   (por ejemplo, un horario ya tomado, un turno ya cancelado): el mensaje explica cuál.
 - **"El sistema externo no respondió" al consultar cobertura.** El sistema legado o el
   partner de obras sociales no están disponibles en ese momento; reintentar más tarde.
-- **"Demasiados intentos fallidos. Espere N minutos..." al iniciar sesión.** Después de 5
-  contraseñas incorrectas seguidas la cuenta se bloquea por unos minutos (protección contra
-  ataques de fuerza bruta). Esperar el tiempo indicado; un ingreso correcto reinicia el
-  contador.
-- **"Hiciste muchas consultas seguidas al asistente..."** El asistente admite hasta 10
-  consultas por minuto por usuario. Esperar unos segundos o elegir de la lista.
-- **"El recurso cambió desde la última vez que lo leyó" (412).** Otra persona modificó ese
-  turno o esa ficha mientras la tenías abierta. Recargar la pantalla y repetir la acción.

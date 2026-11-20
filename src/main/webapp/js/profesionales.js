@@ -193,7 +193,7 @@ function filaFranja(franja) {
         '<option value="' + dia.valor + '"' + (franja && franja.diaSemana === dia.valor ? ' selected' : '')
         + '>' + dia.texto + '</option>').join('');
 
-    return '<div class="franja franja--grilla">'
+    return '<div class="franja franja--editable">'
         + '<div class="campo u-m-0"><label>Día</label><select class="f-dia">' + opciones + '</select></div>'
         + '<div class="campo u-m-0"><label>Desde</label>'
         + '<input type="time" class="f-desde" value="' + esc(franja ? franja.horaDesde.substring(0, 5) : '09:00') + '"></div>'

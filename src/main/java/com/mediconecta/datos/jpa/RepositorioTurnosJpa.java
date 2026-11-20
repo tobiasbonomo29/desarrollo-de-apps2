@@ -61,7 +61,11 @@ public class RepositorioTurnosJpa implements RepositorioTurnos {
 
     @Override
     public Turno actualizar(Turno turno) {
-        return em.merge(turno);
+        // flush: que la version (@Version) ya este incrementada cuando el
+        // recurso arme el ETag de la respuesta.
+        Turno actualizado = em.merge(turno);
+        em.flush();
+        return actualizado;
     }
 
     @Override

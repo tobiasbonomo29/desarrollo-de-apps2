@@ -1,0 +1,613 @@
+{
+  "total_count": 6,
+  "jobs": [
+    {
+      "id": 136030015010,
+      "run_id": 44658335940,
+      "workflow_name": "CI",
+      "head_branch": "integracion-final",
+      "run_url": "https://api.github.com/repos/tobiasbonomo29/desarrollo-de-apps2/actions/runs/44658335940",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOUMg-Ts8AAAAfrAVOIg",
+      "head_sha": "eda4b02335a0d3871ebe23f774e1ecbf0bf24750",
+      "url": "https://api.github.com/repos/tobiasbonomo29/desarrollo-de-apps2/actions/jobs/136030015010",
+      "html_url": "https://github.com/tobiasbonomo29/desarrollo-de-apps2/actions/runs/44658335940/job/136030015010",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-20T02:05:50Z",
+      "started_at": "2026-11-20T02:05:52Z",
+      "completed_at": "2026-11-20T02:06:28Z",
+      "name": "Migraciones sobre una base vacia",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-20T02:05:53Z",
+          "completed_at": "2026-11-20T02:05:56Z"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-20T02:05:56Z",
+          "completed_at": "2026-11-20T02:06:09Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-20T02:06:09Z",
+          "completed_at": "2026-11-20T02:06:14Z"
+        },
+        {
+          "name": "Run actions/setup-java@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-20T02:06:14Z",
+          "completed_at": "2026-11-20T02:06:17Z"
+        },
+        {
+          "name": "flyway:migrate",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-20T02:06:17Z",
+          "completed_at": "2026-11-20T02:06:23Z"
+        },
+        {
+          "name": "flyway:migrate otra vez (no debe aplicar nada) y flyway:validate",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-20T02:06:23Z",
+          "completed_at": "2026-11-20T02:06:25Z"
+        },
+        {
+          "name": "Post Run actions/setup-java@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-20T02:06:25Z",
+          "completed_at": "2026-11-20T02:06:25Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-20T02:06:25Z",
+          "completed_at": "2026-11-20T02:06:25Z"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-11-20T02:06:25Z",
+          "completed_at": "2026-11-20T02:06:25Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-11-20T02:06:25Z",
+          "completed_at": "2026-11-20T02:06:25Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/tobiasbonomo29/desarrollo-de-apps2/check-runs/136030015010",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000000070,
+      "runner_name": "GitHub Actions 1000000070",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 136030015398,
+      "run_id": 44658335940,
+      "workflow_name": "CI",
+      "head_branch": "integracion-final",
+      "run_url": "https://api.github.com/repos/tobiasbonomo29/desarrollo-de-apps2/actions/runs/44658335940",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOUMg-Ts8AAAAfrAVPpg",
+      "head_sha": "eda4b02335a0d3871ebe23f774e1ecbf0bf24750",
+      "url": "https://api.github.com/repos/tobiasbonomo29/desarrollo-de-apps2/actions/jobs/136030015398",
+      "html_url": "https://github.com/tobiasbonomo29/desarrollo-de-apps2/actions/runs/44658335940/job/136030015398",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-20T02:05:50Z",
+      "started_at": "2026-11-20T02:05:51Z",
+      "completed_at": "2026-11-20T02:05:57Z",
+      "name": "Sin secretos en el historial (gitleaks)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-20T02:05:52Z",
+          "completed_at": "2026-11-20T02:05:52Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-20T02:05:52Z",
+          "completed_at": "2026-11-20T02:05:53Z"
+        },
+        {
+          "name": "gitleaks sobre todos los commits",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-20T02:05:53Z",
+          "completed_at": "2026-11-20T02:05:56Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-20T02:05:56Z",
+          "completed_at": "2026-11-20T02:05:56Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-20T02:05:56Z",
+          "completed_at": "2026-11-20T02:05:56Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/tobiasbonomo29/desarrollo-de-apps2/check-runs/136030015398",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000000071,
+      "runner_name": "GitHub Actions 1000000071",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 136030015411,
+      "run_id": 44658335940,
+      "workflow_name": "CI",
+      "head_branch": "integracion-final",
+      "run_url": "https://api.github.com/repos/tobiasbonomo29/desarrollo-de-apps2/actions/runs/44658335940",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOUMg-Ts8AAAAfrAVPsw",
+      "head_sha": "eda4b02335a0d3871ebe23f774e1ecbf0bf24750",
+      "url": "https://api.github.com/repos/tobiasbonomo29/desarrollo-de-apps2/actions/jobs/136030015411",
+      "html_url": "https://github.com/tobiasbonomo29/desarrollo-de-apps2/actions/runs/44658335940/job/136030015411",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-20T02:05:50Z",
+      "started_at": "2026-11-20T02:05:51Z",
+      "completed_at": "2026-11-20T02:05:58Z",
+      "name": "SonarCloud (Quality Gate)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-20T02:05:52Z",
+          "completed_at": "2026-11-20T02:05:53Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-20T02:05:53Z",
+          "completed_at": "2026-11-20T02:05:54Z"
+        },
+        {
+          "name": "Run actions/setup-java@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-20T02:05:54Z",
+          "completed_at": "2026-11-20T02:05:55Z"
+        },
+        {
+          "name": "Sin SONAR_TOKEN no se analiza",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-20T02:05:55Z",
+          "completed_at": "2026-11-20T02:05:55Z"
+        },
+        {
+          "name": "Analisis y espera del Quality Gate",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 5,
+          "started_at": "2026-11-20T02:05:55Z",
+          "completed_at": "2026-11-20T02:05:55Z"
+        },
+        {
+          "name": "Post Run actions/setup-java@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-20T02:05:55Z",
+          "completed_at": "2026-11-20T02:05:55Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-20T02:05:55Z",
+          "completed_at": "2026-11-20T02:05:56Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-20T02:05:56Z",
+          "completed_at": "2026-11-20T02:05:56Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/tobiasbonomo29/desarrollo-de-apps2/check-runs/136030015411",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000000072,
+      "runner_name": "GitHub Actions 1000000072",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 136030015492,
+      "run_id": 44658335940,
+      "workflow_name": "CI",
+      "head_branch": "integracion-final",
+      "run_url": "https://api.github.com/repos/tobiasbonomo29/desarrollo-de-apps2/actions/runs/44658335940",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOUMg-Ts8AAAAfrAVQBA",
+      "head_sha": "eda4b02335a0d3871ebe23f774e1ecbf0bf24750",
+      "url": "https://api.github.com/repos/tobiasbonomo29/desarrollo-de-apps2/actions/jobs/136030015492",
+      "html_url": "https://github.com/tobiasbonomo29/desarrollo-de-apps2/actions/runs/44658335940/job/136030015492",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-20T02:05:50Z",
+      "started_at": "2026-11-20T02:05:51Z",
+      "completed_at": "2026-11-20T02:06:38Z",
+      "name": "Mutation testing (PIT)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-20T02:05:51Z",
+          "completed_at": "2026-11-20T02:05:52Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-20T02:05:52Z",
+          "completed_at": "2026-11-20T02:05:53Z"
+        },
+        {
+          "name": "Run actions/setup-java@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-20T02:05:53Z",
+          "completed_at": "2026-11-20T02:05:54Z"
+        },
+        {
+          "name": "PIT sobre la capa de negocio (minimo 60 %)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-20T02:05:54Z",
+          "completed_at": "2026-11-20T02:06:36Z"
+        },
+        {
+          "name": "Resumen de mutacion",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-20T02:06:36Z",
+          "completed_at": "2026-11-20T02:06:36Z"
+        },
+        {
+          "name": "Informe de PIT",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-20T02:06:36Z",
+          "completed_at": "2026-11-20T02:06:37Z"
+        },
+        {
+          "name": "Post Run actions/setup-java@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-20T02:06:37Z",
+          "completed_at": "2026-11-20T02:06:37Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-11-20T02:06:37Z",
+          "completed_at": "2026-11-20T02:06:37Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-11-20T02:06:37Z",
+          "completed_at": "2026-11-20T02:06:37Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/tobiasbonomo29/desarrollo-de-apps2/check-runs/136030015492",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000000073,
+      "runner_name": "GitHub Actions 1000000073",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 136030015587,
+      "run_id": 44658335940,
+      "workflow_name": "CI",
+      "head_branch": "integracion-final",
+      "run_url": "https://api.github.com/repos/tobiasbonomo29/desarrollo-de-apps2/actions/runs/44658335940",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOUMg-Ts8AAAAfrAVQYw",
+      "head_sha": "eda4b02335a0d3871ebe23f774e1ecbf0bf24750",
+      "url": "https://api.github.com/repos/tobiasbonomo29/desarrollo-de-apps2/actions/jobs/136030015587",
+      "html_url": "https://github.com/tobiasbonomo29/desarrollo-de-apps2/actions/runs/44658335940/job/136030015587",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-20T02:05:50Z",
+      "started_at": "2026-11-20T02:05:52Z",
+      "completed_at": "2026-11-20T02:06:31Z",
+      "name": "Linter, tests y cobertura",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-20T02:05:52Z",
+          "completed_at": "2026-11-20T02:05:54Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-20T02:05:54Z",
+          "completed_at": "2026-11-20T02:05:55Z"
+        },
+        {
+          "name": "Run actions/setup-java@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-20T02:05:55Z",
+          "completed_at": "2026-11-20T02:05:57Z"
+        },
+        {
+          "name": "./mvnw verify (enforcer + Checkstyle + JUnit + JaCoCo)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-20T02:05:57Z",
+          "completed_at": "2026-11-20T02:06:25Z"
+        },
+        {
+          "name": "Resumen de cobertura",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-20T02:06:25Z",
+          "completed_at": "2026-11-20T02:06:25Z"
+        },
+        {
+          "name": "Informe de cobertura",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-20T02:06:25Z",
+          "completed_at": "2026-11-20T02:06:27Z"
+        },
+        {
+          "name": "WAR",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-20T02:06:27Z",
+          "completed_at": "2026-11-20T02:06:28Z"
+        },
+        {
+          "name": "Post Run actions/setup-java@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-11-20T02:06:28Z",
+          "completed_at": "2026-11-20T02:06:28Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-11-20T02:06:28Z",
+          "completed_at": "2026-11-20T02:06:29Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-11-20T02:06:29Z",
+          "completed_at": "2026-11-20T02:06:29Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/tobiasbonomo29/desarrollo-de-apps2/check-runs/136030015587",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000000074,
+      "runner_name": "GitHub Actions 1000000074",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 136030299314,
+      "run_id": 44658335940,
+      "workflow_name": "CI",
+      "head_branch": "integracion-final",
+      "run_url": "https://api.github.com/repos/tobiasbonomo29/desarrollo-de-apps2/actions/runs/44658335940",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOUMg-Ts8AAAAfrAmksg",
+      "head_sha": "eda4b02335a0d3871ebe23f774e1ecbf0bf24750",
+      "url": "https://api.github.com/repos/tobiasbonomo29/desarrollo-de-apps2/actions/jobs/136030299314",
+      "html_url": "https://github.com/tobiasbonomo29/desarrollo-de-apps2/actions/runs/44658335940/job/136030299314",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-20T02:06:32Z",
+      "started_at": "2026-11-20T02:06:34Z",
+      "completed_at": "2026-11-20T02:10:00Z",
+      "name": "Docker Compose + humo + carga + ZAP",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-20T02:06:35Z",
+          "completed_at": "2026-11-20T02:06:35Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-20T02:06:35Z",
+          "completed_at": "2026-11-20T02:06:37Z"
+        },
+        {
+          "name": "Secretos de esta corrida",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-20T02:06:37Z",
+          "completed_at": "2026-11-20T02:06:37Z"
+        },
+        {
+          "name": "docker compose up",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-20T02:06:37Z",
+          "completed_at": "2026-11-20T02:07:45Z"
+        },
+        {
+          "name": "Esperar al health check",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-20T02:07:45Z",
+          "completed_at": "2026-11-20T02:07:55Z"
+        },
+        {
+          "name": "Prueba de humo (seguridad en vivo, ETag, idempotencia, JMS, DLQ, IA)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-20T02:07:55Z",
+          "completed_at": "2026-11-20T02:08:09Z"
+        },
+        {
+          "name": "Prueba de carga k6 (p95 < 500 ms, errores < 1 %)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-20T02:08:09Z",
+          "completed_at": "2026-11-20T02:08:56Z"
+        },
+        {
+          "name": "Escaneo OWASP ZAP (baseline, sin alertas High)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-20T02:08:56Z",
+          "completed_at": "2026-11-20T02:09:55Z"
+        },
+        {
+          "name": "Informes de carga y ZAP",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-20T02:09:55Z",
+          "completed_at": "2026-11-20T02:09:56Z"
+        },
+        {
+          "name": "Logs de los contenedores",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 10,
+          "started_at": "2026-11-20T02:09:56Z",
+          "completed_at": "2026-11-20T02:09:56Z"
+        },
+        {
+          "name": "Apagar",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-20T02:09:56Z",
+          "completed_at": "2026-11-20T02:09:57Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 22,
+          "started_at": "2026-11-20T02:09:57Z",
+          "completed_at": "2026-11-20T02:09:58Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 23,
+          "started_at": "2026-11-20T02:09:58Z",
+          "completed_at": "2026-11-20T02:09:58Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/tobiasbonomo29/desarrollo-de-apps2/check-runs/136030299314",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000000075,
+      "runner_name": "GitHub Actions 1000000075",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    }
+  ]
+}

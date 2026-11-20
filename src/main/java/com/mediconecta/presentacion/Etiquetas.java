@@ -1,111 +1,59 @@
 package com.mediconecta.presentacion;
 
-import com.mediconecta.modelo.Paciente;
-import com.mediconecta.modelo.Turno;
+import com.mediconecta.negocio.ReglaNegocioException;
 
-import jakarta.ws.rs.core.CacheControl;
 import jakarta.ws.rs.core.EntityTag;
-import jakarta.ws.rs.core.HttpHeaders;
-import jakarta.ws.rs.core.Request;
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.UriInfo;
-
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.HexFormat;
-import java.util.Objects;
 
 /**
- * {@code ETag} y pedidos condicionales (RFC 9110, seccion 13).
+ * ETag de los recursos que se pueden modificar (turnos y pacientes).
  *
- * <p>La etiqueta es un hash de los campos que el cliente ve del recurso: si
- * cualquiera cambia (estado del turno, datos de contacto del paciente), cambia
- * la etiqueta. Se calcula en la presentacion porque es un detalle de HTTP; las
- * entidades no tienen columna de version y no hizo falta agregarla.</p>
- *
+ * <p>El ETag es {@code "<recurso>-<id>-v<version>"}, donde la version es la de
+ * JPA ({@code @Version}). Sirve para dos cosas:</p>
  * <ul>
- *   <li>{@code GET} con {@code If-None-Match} igual a la etiqueta actual:
- *       {@code 304 Not Modified}, sin cuerpo.</li>
- *   <li>{@code PUT} con {@code If-Match} distinto de la etiqueta actual:
- *       {@code 412 Precondition Failed}: otro usuario cambio el recurso desde
- *       que el cliente lo leyo (control de concurrencia optimista).</li>
- *   <li>Sin esas cabeceras todo funciona igual que antes: son opcionales para
- *       no romper a los clientes existentes.</li>
+ *   <li><b>GET condicional:</b> con {@code If-None-Match} igual al ETag, el
+ *       servidor responde {@code 304 Not Modified} sin cuerpo.</li>
+ *   <li><b>Concurrencia optimista:</b> un PUT con {@code If-Match} solo se
+ *       aplica si el recurso sigue en esa version; si no, {@code 412}. Asi dos
+ *       recepcionistas no se pisan los cambios.</li>
  * </ul>
+ * <p>{@code If-Match} es opcional: sin la cabecera, el PUT se aplica como antes.</p>
  */
-public final class Etiquetas {
-
-    /** Las respuestas con ETag se pueden guardar, pero hay que revalidarlas siempre. */
-    static final CacheControl REVALIDAR = revalidar();
+final class Etiquetas {
 
     private Etiquetas() {
     }
 
-    private static CacheControl revalidar() {
-        CacheControl politica = new CacheControl();
-        politica.setPrivate(true);
-        politica.setNoCache(true);
-        politica.setNoTransform(false);
-        return politica;
+    static EntityTag de(String recurso, Object id, long version) {
+        return new EntityTag(valor(recurso, id, version));
     }
 
-    public static EntityTag de(Turno turno) {
-        return etiqueta(turno.getId(), turno.getEstado(), turno.isArchivado(), turno.getFechaHora(),
-                turno.getEspecialidad(), turno.getMotivo(),
-                turno.getPaciente() == null ? null : turno.getPaciente().getId(),
-                turno.getProfesional() == null ? null : turno.getProfesional().getId());
-    }
-
-    public static EntityTag de(Paciente paciente) {
-        return etiqueta(paciente.getId(), paciente.getDocumento(), paciente.getNombre(), paciente.getEmail(),
-                paciente.getTelefono(), paciente.getCobertura(), paciente.isActivo(), paciente.getUsuario());
+    /** El valor del ETag, sin comillas. */
+    static String valor(String recurso, Object id, long version) {
+        return recurso + "-" + id + "-v" + version;
     }
 
     /**
-     * Evalua {@code If-Match}/{@code If-None-Match} contra la etiqueta actual.
-     *
-     * @return la respuesta a devolver (304 o 412) o {@code null} si el pedido
-     *         puede seguir
+     * La version que el cliente espera segun su {@code If-Match}; {@code null}
+     * si no mando la cabecera o mando {@code *}. Un ETag de otro recurso o mal
+     * formado devuelve {@code -1}, que nunca coincide (y termina en 412).
      */
-    static Response precondicionFallida(Request pedido, EntityTag actual, UriInfo uri) {
-        Response.ResponseBuilder corte = pedido == null ? null : pedido.evaluatePreconditions(actual);
-        if (corte == null) {
+    static Long versionEsperada(String siCoincide, String recurso, Object id) {
+        if (siCoincide == null || siCoincide.isBlank() || siCoincide.trim().equals("*")) {
             return null;
         }
-        Response provisoria = corte.build();
-        if (provisoria.getStatus() == Response.Status.NOT_MODIFIED.getStatusCode()) {
-            return Response.notModified(actual).cacheControl(REVALIDAR).build();
+        String valor = siCoincide.trim();
+        if (valor.startsWith("W/")) {
+            throw new ReglaNegocioException("If-Match no admite ETags debiles (W/...).");
         }
-        return Problemas.respuesta(Response.Status.PRECONDITION_FAILED.getStatusCode(), "precondicion-fallida",
-                        "El recurso cambio desde la ultima vez que lo leyo. Vuelva a consultarlo e intente de nuevo.",
-                        uri)
-                .tag(actual)
-                .build();
-    }
-
-    /** {@code true} si el pedido trae {@code If-Match} o {@code If-None-Match}. */
-    static boolean tieneCondicion(HttpHeaders cabeceras) {
-        return cabeceras != null
-                && (cabeceras.getHeaderString(HttpHeaders.IF_MATCH) != null
-                || cabeceras.getHeaderString(HttpHeaders.IF_NONE_MATCH) != null);
-    }
-
-    /** {@code 200} con el cuerpo, su etiqueta y la politica de cache. */
-    static Response ok(Object cuerpo, EntityTag etiqueta) {
-        return Response.ok(cuerpo).tag(etiqueta).cacheControl(REVALIDAR).build();
-    }
-
-    private static EntityTag etiqueta(Object... campos) {
-        StringBuilder texto = new StringBuilder();
-        for (Object campo : campos) {
-            texto.append(Objects.toString(campo, "")).append('\u001f');
+        valor = valor.replace("\"", "");
+        String prefijo = recurso + "-" + id + "-v";
+        if (!valor.startsWith(prefijo)) {
+            return -1L;
         }
         try {
-            byte[] hash = MessageDigest.getInstance("SHA-256").digest(texto.toString().getBytes(StandardCharsets.UTF_8));
-            return new EntityTag(HexFormat.of().formatHex(hash, 0, 16));
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("La JVM no soporta SHA-256", e);
+            return Long.parseLong(valor.substring(prefijo.length()));
+        } catch (NumberFormatException e) {
+            return -1L;
         }
     }
 }

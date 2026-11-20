@@ -7,7 +7,7 @@
  * turnos ya tomados. No hay ni un dato escrito a mano.
  */
 
-import { api, contexto } from './api.js';
+import { api, contexto, nuevaClaveIdempotencia } from './api.js';
 import { iniciarLayout, tieneRol, reportar } from './layout.js';
 import {
     esc, hora, hoyIso, fechaLarga, avisoExito, mensajeEnCaja,
@@ -264,6 +264,18 @@ async function iniciar() {
         cargarHorarios();
     });
 
+    // Idempotency-Key: el MISMO pedido reintentado (doble clic, se corto la red
+    // y se vuelve a apretar) viaja con la misma clave y el servidor no crea un
+    // segundo turno. Si el usuario cambia algun dato, es otro pedido: otra clave.
+    let ultimoIntento = null;
+    function claveParaElPedido(pedido) {
+        const huella = JSON.stringify(pedido);
+        if (!ultimoIntento || ultimoIntento.huella !== huella) {
+            ultimoIntento = { huella, clave: nuevaClaveIdempotencia() };
+        }
+        return ultimoIntento.clave;
+    }
+
     $('form-turno').addEventListener('submit', async (evento) => {
         evento.preventDefault();
         const boton = $('confirmar');
@@ -271,14 +283,16 @@ async function iniciar() {
         boton.textContent = 'Confirmando...';
         mensajeEnCaja($('mensaje'), '');
 
+        const pedido = {
+            documentoPaciente: elegido.documento,
+            profesionalId: Number(elegido.profesionalId),
+            especialidad: elegido.especialidad,
+            fechaHora: elegido.fechaHora,
+            motivo: $('motivo').value
+        };
+
         try {
-            const turno = await api.crearTurno({
-                documentoPaciente: elegido.documento,
-                profesionalId: Number(elegido.profesionalId),
-                especialidad: elegido.especialidad,
-                fechaHora: elegido.fechaHora,
-                motivo: $('motivo').value
-            });
+            const turno = await api.crearTurno(pedido, claveParaElPedido(pedido));
             avisoExito('Turno #' + turno.id + ' agendado.');
             window.location.href = contexto + '/app/turno.html?id=' + encodeURIComponent(turno.id);
         } catch (error) {

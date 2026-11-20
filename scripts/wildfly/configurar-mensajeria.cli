@@ -1,37 +1,48 @@
 # =============================================================================
-#  MediConecta - confiabilidad de la mensajeria (Entrega 3) en WildFly
+#  MediConecta - reintentos y cola de mensajes muertos (DLQ) de JMS
 # =============================================================================
 #
-#  Se ejecuta con el servidor YA LEVANTADO con el perfil standalone-full.xml:
+#  Los destinos (ColaConfirmaciones, TopicoRecordatorios y la DLQ
+#  MensajesFallidos) los crea el propio WAR con @JMSDestinationDefinition.
+#  Lo que no se puede declarar con anotaciones es la politica de entrega de
+#  Artemis ("address-settings"), que se fija aca:
 #
-#      bin\jboss-cli.bat --connect --file=configurar-mensajeria.cli
+#    * max-delivery-attempts=4: la entrega original + 3 reintentos;
+#    * redelivery-delay=1000 con multiplier 2.0: espera 1 s, 2 s y 4 s entre
+#      intentos (backoff exponencial, tope 8 s) para no martillar a un
+#      consumidor que esta fallando por una causa pasajera (la base caida);
+#    * dead-letter-address: despues del ultimo intento el mensaje va a
+#      MensajesFallidos, donde lo registra MonitorMensajesFallidos.
 #
-#  Es idempotente: se puede correr varias veces.
+#  Sin este script la aplicacion funciona igual, pero con la politica por
+#  defecto de WildFly (10 intentos seguidos y la DLQ generica jms.queue.DLQ).
 #
-#  1) Persistencia del broker (ActiveMQ Artemis embebido). Los mensajes
-#     PERSISTENT que envia NotificadorTurnos se escriben en el journal
-#     (standalone/data/activemq/journal) antes de confirmarse, asi que un
-#     reinicio del servidor no los pierde. Es el valor por omision de WildFly;
-#     se fija explicitamente para que quede documentado.
-#
-#  2) Reintentos y Dead Letter Queue de la cola de confirmaciones. Si
-#     ReceptorConfirmacion falla con un mensaje (rollback de su transaccion),
-#     el broker lo reintenta hasta 3 veces con 1 s de espera y despues lo mueve
-#     a ColaConfirmacionesDLQ, que consume MonitorColaMuerta.
-#     Las colas declaradas con @JMSDestinationDefinition usan la direccion
-#     "jms.queue.<destinationName>" (ver mensajeria.DestinosJms).
+#  Se usa en dos lugares:
+#    * local:  jboss-cli --connect --file=configurar-mensajeria.cli
+#              (lo llama configurar-wildfly.ps1);
+#    * Docker: el Dockerfile lo ejecuta con el servidor embebido.
 # =============================================================================
 
-/subsystem=messaging-activemq/server=default:write-attribute(name=persistence-enabled, value=true)
-
-if (outcome != success) of /subsystem=messaging-activemq/server=default/address-setting=jms.queue.ColaConfirmacionesMediConecta:read-resource
-    /subsystem=messaging-activemq/server=default/address-setting=jms.queue.ColaConfirmacionesMediConecta:add(dead-letter-address=jms.queue.ColaConfirmacionesDLQMediConecta, expiry-address=jms.queue.ExpiryQueue, max-delivery-attempts=3, redelivery-delay=1000)
-else
-    /subsystem=messaging-activemq/server=default/address-setting=jms.queue.ColaConfirmacionesMediConecta:write-attribute(name=dead-letter-address, value=jms.queue.ColaConfirmacionesDLQMediConecta)
-    /subsystem=messaging-activemq/server=default/address-setting=jms.queue.ColaConfirmacionesMediConecta:write-attribute(name=max-delivery-attempts, value=3)
-    /subsystem=messaging-activemq/server=default/address-setting=jms.queue.ColaConfirmacionesMediConecta:write-attribute(name=redelivery-delay, value=1000)
+if (outcome == success) of /subsystem=messaging-activemq/server=default/address-setting=jms.queue.ColaConfirmacionesMediConecta:read-resource
+    /subsystem=messaging-activemq/server=default/address-setting=jms.queue.ColaConfirmacionesMediConecta:remove
 end-if
+/subsystem=messaging-activemq/server=default/address-setting=jms.queue.ColaConfirmacionesMediConecta:add( \
+    dead-letter-address=jms.queue.MensajesFallidosMediConecta, \
+    expiry-address=jms.queue.ExpiryQueue, \
+    max-delivery-attempts=4, \
+    redelivery-delay=1000, \
+    redelivery-multiplier=2.0, \
+    max-redelivery-delay=8000)
 
-echo "Mensajeria: journal persistente, 3 reintentos y DLQ ColaConfirmacionesDLQMediConecta. Recargando el servidor..."
+if (outcome == success) of /subsystem=messaging-activemq/server=default/address-setting=jms.topic.TopicoRecordatoriosMediConecta:read-resource
+    /subsystem=messaging-activemq/server=default/address-setting=jms.topic.TopicoRecordatoriosMediConecta:remove
+end-if
+/subsystem=messaging-activemq/server=default/address-setting=jms.topic.TopicoRecordatoriosMediConecta:add( \
+    dead-letter-address=jms.queue.MensajesFallidosMediConecta, \
+    expiry-address=jms.queue.ExpiryQueue, \
+    max-delivery-attempts=4, \
+    redelivery-delay=1000, \
+    redelivery-multiplier=2.0, \
+    max-redelivery-delay=8000)
 
-reload
+echo "Reintentos (4 entregas, backoff 1-2-4 s) y DLQ MensajesFallidos configurados."

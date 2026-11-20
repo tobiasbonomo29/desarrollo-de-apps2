@@ -1,0 +1,8 @@
+Complete job name: Sin secretos en el historial (gitleaks)
+##[group]Run docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:v8.21.2 git /repo --redact --no-banner -v
+docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:v8.21.2 git /repo --redact --no-banner -v
+Unable to find image 'zricethezav/gitleaks:v8.21.2' locally
+v8.21.2: Pulling from zricethezav/gitleaks
+Status: Downloaded newer image for zricethezav/gitleaks:v8.21.2
+2:05AM INF 36 commits scanned.
+2:05AM INF no leaks found

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE module PUBLIC
+        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+<!--
+    Reglas de estilo de MediConecta (linter de Java).
+
+    No es la configuracion de Sun ni la de Google tal cual: esas exigen Javadoc
+    en cada metodo y un formato que el proyecto no sigue. Esta se queda con las
+    reglas que detectan errores reales o codigo confuso:
+
+      * imports sin usar, duplicados o con comodin;
+      * comparar Strings con == o equals/hashCode a medias;
+      * bloques vacios, if/for sin llaves, varias sentencias en una linea;
+      * nombres que no respetan las convenciones de Java;
+      * clases utilitarias instanciables, modificadores redundantes o fuera de orden;
+      * tabs, lineas larguisimas y archivos sin salto de linea final.
+
+    Corre en cada build (fase validate) y en CI. Una violacion corta el build.
+-->
+<module name="Checker">
+    <property name="charset" value="UTF-8"/>
+    <property name="severity" value="error"/>
+    <property name="fileExtensions" value="java"/>
+
+    <module name="FileTabCharacter"/>
+    <module name="NewlineAtEndOfFile">
+        <property name="lineSeparator" value="lf_cr_crlf"/>
+    </module>
+    <module name="LineLength">
+        <property name="max" value="150"/>
+        <property name="ignorePattern" value="^\s*(\*|//).*https?://|^import |^package "/>
+    </module>
+
+    <module name="TreeWalker">
+        <!-- Imports -->
+        <module name="AvoidStarImport"/>
+        <module name="RedundantImport"/>
+        <module name="UnusedImports"/>
+        <module name="IllegalImport"/>
+
+        <!-- Nombres -->
+        <module name="PackageName"/>
+        <module name="TypeName"/>
+        <module name="MethodName"/>
+        <module name="MemberName"/>
+        <module name="ParameterName"/>
+        <module name="LocalVariableName"/>
+        <module name="LocalFinalVariableName"/>
+        <module name="StaticVariableName"/>
+        <module name="ConstantName"/>
+
+        <!-- Bloques -->
+        <module name="NeedBraces"/>
+        <module name="EmptyBlock">
+            <property name="option" value="text"/>
+        </module>
+        <module name="EmptyCatchBlock">
+            <property name="commentFormat" value=".+"/>
+        </module>
+        <module name="AvoidNestedBlocks"/>
+
+        <!-- Errores frecuentes -->
+        <module name="EqualsHashCode"/>
+        <module name="StringLiteralEquality"/>
+        <module name="SimplifyBooleanExpression"/>
+        <module name="SimplifyBooleanReturn"/>
+        <module name="EmptyStatement"/>
+        <module name="OneStatementPerLine"/>
+        <module name="MultipleVariableDeclarations"/>
+        <module name="FallThrough"/>
+        <module name="MissingSwitchDefault"/>
+        <module name="DefaultComesLast"/>
+        <module name="CovariantEquals"/>
+        <module name="UpperEll"/>
+        <module name="ArrayTypeStyle"/>
+
+        <!-- Diseno de clases -->
+        <module name="HideUtilityClassConstructor"/>
+        <module name="FinalClass"/>
+        <module name="ModifierOrder"/>
+        <module name="RedundantModifier"/>
+        <module name="InterfaceIsType"/>
+
+        <!-- Espacios -->
+        <module name="WhitespaceAfter">
+            <property name="tokens" value="COMMA, SEMI"/>
+        </module>
+        <module name="NoWhitespaceBefore">
+            <property name="tokens" value="COMMA, SEMI, POST_INC, POST_DEC"/>
+        </module>
+        <module name="GenericWhitespace"/>
+        <module name="MethodParamPad"/>
+        <module name="ParenPad"/>
+    </module>
+</module>

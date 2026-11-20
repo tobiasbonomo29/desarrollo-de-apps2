@@ -1,0 +1,5 @@
+  SONAR_TOKEN: 
+  SONAR_TOKEN: 
+##[group]Run echo "Configurar el secreto SONAR_TOKEN y las variables SONAR_ORGANIZACION y SONAR_PROYECTO (ver docs/Plan_de_Pruebas.md)." >> "$GITHUB_STEP_SUMMARY"
+[36;1mecho "Configurar el secreto SONAR_TOKEN y las variables SONAR_ORGANIZACION y SONAR_PROYECTO (ver docs/Plan_de_Pruebas.md)." >> "$GITHUB_STEP_SUMMARY"[0m
+  SONAR_TOKEN: 

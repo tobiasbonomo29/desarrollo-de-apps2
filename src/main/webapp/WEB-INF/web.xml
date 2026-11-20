@@ -21,13 +21,15 @@
 
     <display-name>MediConecta</display-name>
 
-    <!-- 1) Prueba de vida publica. El patron exacto gana sobre /api/*, asi que
-         este recurso queda accesible sin autenticar: es la comprobacion de que
-         el WAR esta desplegado. No tiene auth-constraint a proposito. -->
+    <!-- 1) Health checks publicos (/api/salud y /api/salud/vivo). El patron mas
+         especifico gana sobre /api/*, asi que quedan accesibles sin
+         autenticar: los consultan Docker y el pipeline de CI, que no tienen
+         usuario. No tienen auth-constraint a proposito. -->
     <security-constraint>
         <web-resource-collection>
-            <web-resource-name>Prueba de vida</web-resource-name>
+            <web-resource-name>Salud</web-resource-name>
             <url-pattern>/api/salud</url-pattern>
+            <url-pattern>/api/salud/*</url-pattern>
         </web-resource-collection>
     </security-constraint>
 
@@ -82,22 +84,17 @@
 
     <session-config>
         <session-timeout>30</session-timeout>
+        <!-- La cookie de sesion solo la usa el asistente @Stateful. HttpOnly:
+             ningun script la puede leer. SameSite=Strict lo agrega
+             WEB-INF/undertow-handlers.conf con el handler samesite-cookie de
+             WildFly: el atributo no existe en el esquema 6.0 de web.xml y
+             Undertow ignora SessionCookieConfig.setAttribute("SameSite"). Ese
+             archivo no admite comentarios, por eso la explicacion esta aca. -->
         <cookie-config>
             <http-only>true</http-only>
-            <!-- SameSite=Strict se agrega en WEB-INF/undertow-handlers.conf
-                 (el esquema web-app 6.0 no tiene un elemento para eso). -->
         </cookie-config>
         <tracking-mode>COOKIE</tracking-mode>
     </session-config>
-
-    <!-- 401 de MecanismoAutenticacionJwt: el cuerpo Problem Details lo escribe
-         seguridad.RespuestaNoAutenticado. El mecanismo no escribe la respuesta
-         por su cuenta para no chocar con el sendError de Undertow (que dejaba un
-         stack trace en el log por cada pedido sin token). -->
-    <error-page>
-        <error-code>401</error-code>
-        <location>/errores/no-autenticado</location>
-    </error-page>
 
     <welcome-file-list>
         <welcome-file>index.html</welcome-file>

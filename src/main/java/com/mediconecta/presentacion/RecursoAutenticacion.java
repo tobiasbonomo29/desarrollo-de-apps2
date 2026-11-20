@@ -28,8 +28,7 @@ import java.util.List;
  * POST /api/auth/login  {"usuario":"recepcion","clave":"Demo.2026"}
  * 200 {"token":"eyJ...","tipo":"Bearer","expiraEnSegundos":7200,
  *      "usuario":"recepcion","roles":["RECEPCION"]}
- * 401 application/problem+json {"title":"Unauthorized","status":401,"detail":"Usuario o contrasena incorrectos.",...}
- * 429 application/problem+json + Retry-After (demasiados intentos fallidos)
+ * 401 {"error":"Usuario o contrasena incorrectos.","codigo":401}
  * </pre>
  */
 @Path("/auth")
@@ -43,14 +42,10 @@ public class RecursoAutenticacion {
     @Inject
     private ServicioJwt servicioJwt;
 
+    /** Para la IP de origen: el limite de intentos fallidos tambien cuenta por IP. */
     @Context
     private HttpServletRequest peticion;
 
-    /**
-     * Varios intentos fallidos seguidos devuelven {@code 429 Too Many Requests}
-     * con {@code Retry-After}: la proteccion contra fuerza bruta vive en el
-     * negocio ({@link ServicioAutenticacion}); aca solo se le pasa la IP.
-     */
     @POST
     @Path("/login")
     public RespuestaLogin login(PedidoLogin pedido) {

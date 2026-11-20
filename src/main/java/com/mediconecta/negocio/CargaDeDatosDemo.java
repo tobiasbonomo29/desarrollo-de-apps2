@@ -35,6 +35,13 @@ import java.util.logging.Logger;
  * <p>Escribe a traves de los repositorios y no de los componentes de negocio a
  * proposito: los componentes exigen un rol y aca no hay ningun usuario
  * autenticado, porque el que invoca es el contenedor durante el arranque.</p>
+ *
+ * <p><b>Sin contrasenas en el codigo.</b> Los usuarios de demostracion se crean
+ * solo si se configuro su contrasena con la propiedad
+ * {@code mediconecta.demo.clave} o la variable de entorno
+ * {@code MEDICONECTA_DEMO_CLAVE}. Si no esta, no se crea ningun usuario y se
+ * avisa en el log: una instalacion nueva nunca queda con un {@code admin} de
+ * contrasena conocida.</p>
  */
 @Singleton
 @Startup
@@ -68,8 +75,8 @@ public class CargaDeDatosDemo {
     @Inject
     private RepositorioUsuarios repositorioUsuarios;
 
-    /** Contrasena de los usuarios de demostracion (ficticios, solo para la defensa). */
-    static final String CLAVE_DEMO = "Demo.2026";
+    /** Largo minimo aceptado para la contrasena de los usuarios de demostracion. */
+    static final int LARGO_MINIMO_CLAVE = 8;
 
     @PostConstruct
     void cargar() {
@@ -112,15 +119,34 @@ public class CargaDeDatosDemo {
         if (repositorioUsuarios.contar() > 0) {
             return;
         }
-        crearUsuario("paciente", Roles.PACIENTE);
-        crearUsuario("recepcion", Roles.RECEPCION);
-        crearUsuario("medico", Roles.MEDICO);
-        crearUsuario("admin", Roles.ADMIN);
+        String clave = claveDemo();
+        if (clave == null) {
+            LOG.warning("[DEMO] No se crearon usuarios: falta la contrasena de demostracion "
+                    + "(mediconecta.demo.clave / MEDICONECTA_DEMO_CLAVE).");
+            return;
+        }
+        if (clave.length() < LARGO_MINIMO_CLAVE) {
+            LOG.warning("[DEMO] No se crearon usuarios: la contrasena de demostracion debe tener al menos "
+                    + LARGO_MINIMO_CLAVE + " caracteres.");
+            return;
+        }
+        crearUsuario("paciente", Roles.PACIENTE, clave);
+        crearUsuario("recepcion", Roles.RECEPCION, clave);
+        crearUsuario("medico", Roles.MEDICO, clave);
+        crearUsuario("admin", Roles.ADMIN, clave);
         LOG.info("[DEMO] Usuarios de demostracion creados: paciente, recepcion, medico, admin.");
     }
 
-    private void crearUsuario(String nombre, String rol) {
-        repositorioUsuarios.guardar(new Usuario(nombre, HashDeClaves.calcular(CLAVE_DEMO), Set.of(rol)));
+    private static String claveDemo() {
+        String valor = System.getProperty("mediconecta.demo.clave");
+        if (valor == null || valor.isBlank()) {
+            valor = System.getenv("MEDICONECTA_DEMO_CLAVE");
+        }
+        return (valor == null || valor.isBlank()) ? null : valor;
+    }
+
+    private void crearUsuario(String nombre, String rol, String clave) {
+        repositorioUsuarios.guardar(new Usuario(nombre, HashDeClaves.calcular(clave), Set.of(rol)));
     }
 
     private Profesional crearProfesional(String nombre, String especialidad, String matricula,

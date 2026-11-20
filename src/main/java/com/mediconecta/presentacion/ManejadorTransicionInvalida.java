@@ -1,6 +1,7 @@
 package com.mediconecta.presentacion;
 
 import com.mediconecta.modelo.estado.TransicionInvalidaException;
+
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
@@ -20,11 +21,10 @@ import jakarta.ws.rs.ext.Provider;
 public class ManejadorTransicionInvalida implements ExceptionMapper<TransicionInvalidaException> {
 
     @Context
-    private UriInfo uri;
+    private UriInfo uriInfo;
 
     @Override
     public Response toResponse(TransicionInvalidaException excepcion) {
-        return Problemas.respuesta(Response.Status.CONFLICT.getStatusCode(), "transicion-invalida",
-                excepcion.getMessage(), uri).build();
+        return Problemas.respuesta(excepcion, uriInfo);
     }
 }

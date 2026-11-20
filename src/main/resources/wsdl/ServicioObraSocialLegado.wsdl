@@ -1,0 +1,105 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!--
+    Contrato del sistema legado de obras sociales (SOAP), tal como lo publica
+    ServicioObraSocialLegadoImpl. Viaja dentro del WAR para que el cliente
+    (AdaptadorObraSocialLegado) no tenga que descargarlo en cada llamada. La
+    direccion de abajo es solo la de referencia: el adaptador la reemplaza por
+    la configurada (mediconecta.soap.url).
+-->
+<wsdl:definitions xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:tns="http://simulacion.integraciones.mediconecta.com/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:ns1="http://schemas.xmlsoap.org/soap/http" name="ServicioObraSocialLegadoImplService" targetNamespace="http://simulacion.integraciones.mediconecta.com/">
+  <wsdl:types>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://simulacion.integraciones.mediconecta.com/" elementFormDefault="unqualified" targetNamespace="http://simulacion.integraciones.mediconecta.com/" version="1.0">
+
+  <xs:element name="consultarPlan" type="tns:consultarPlan"/>
+
+  <xs:element name="consultarPlanResponse" type="tns:consultarPlanResponse"/>
+
+  <xs:element name="consultarVigencia" type="tns:consultarVigencia"/>
+
+  <xs:element name="consultarVigenciaResponse" type="tns:consultarVigenciaResponse"/>
+
+  <xs:complexType name="consultarPlan">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="arg0" type="xs:string"/>
+      <xs:element minOccurs="0" name="arg1" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="consultarPlanResponse">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="return" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="consultarVigencia">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="arg0" type="xs:string"/>
+      <xs:element minOccurs="0" name="arg1" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="consultarVigenciaResponse">
+    <xs:sequence>
+      <xs:element name="return" type="xs:boolean"/>
+    </xs:sequence>
+  </xs:complexType>
+
+</xs:schema>
+  </wsdl:types>
+  <wsdl:message name="consultarVigenciaResponse">
+    <wsdl:part element="tns:consultarVigenciaResponse" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="consultarPlan">
+    <wsdl:part element="tns:consultarPlan" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="consultarPlanResponse">
+    <wsdl:part element="tns:consultarPlanResponse" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="consultarVigencia">
+    <wsdl:part element="tns:consultarVigencia" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:portType name="ServicioObraSocialLegado">
+    <wsdl:operation name="consultarPlan">
+      <wsdl:input message="tns:consultarPlan" name="consultarPlan">
+    </wsdl:input>
+      <wsdl:output message="tns:consultarPlanResponse" name="consultarPlanResponse">
+    </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="consultarVigencia">
+      <wsdl:input message="tns:consultarVigencia" name="consultarVigencia">
+    </wsdl:input>
+      <wsdl:output message="tns:consultarVigenciaResponse" name="consultarVigenciaResponse">
+    </wsdl:output>
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="ServicioObraSocialLegadoImplServiceSoapBinding" type="tns:ServicioObraSocialLegado">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="consultarPlan">
+      <soap:operation soapAction="" style="document"/>
+      <wsdl:input name="consultarPlan">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="consultarPlanResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="consultarVigencia">
+      <soap:operation soapAction="" style="document"/>
+      <wsdl:input name="consultarVigencia">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="consultarVigenciaResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="ServicioObraSocialLegadoImplService">
+    <wsdl:port binding="tns:ServicioObraSocialLegadoImplServiceSoapBinding" name="ServicioObraSocialLegadoImplPort">
+      <soap:address location="http://localhost:8080/mediconecta/ServicioObraSocialLegadoImpl"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

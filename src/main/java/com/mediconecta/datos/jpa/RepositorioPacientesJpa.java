@@ -62,6 +62,10 @@ public class RepositorioPacientesJpa implements RepositorioPacientes {
 
     @Override
     public Paciente actualizar(Paciente paciente) {
-        return em.merge(paciente);
+        // flush: que la version (@Version) ya este incrementada cuando el
+        // recurso arme el ETag de la respuesta.
+        Paciente actualizado = em.merge(paciente);
+        em.flush();
+        return actualizado;
     }
 }

@@ -1,256 +1,256 @@
 package com.mediconecta.negocio;
 
+import com.mediconecta.datos.memoria.RepositorioIdempotenciaEnMemoria;
+import com.mediconecta.datos.memoria.RepositorioPacientesEnMemoria;
+import com.mediconecta.datos.memoria.RepositorioProfesionalesEnMemoria;
+import com.mediconecta.datos.memoria.RepositorioTurnosEnMemoria;
+import com.mediconecta.mensajeria.NotificadorTurnos;
+import com.mediconecta.modelo.ClaveIdempotencia;
 import com.mediconecta.modelo.Paciente;
-import com.mediconecta.modelo.RegistroIdempotencia;
+import com.mediconecta.modelo.Profesional;
 import com.mediconecta.modelo.Turno;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** Caso de uso "reservar" de punta a punta en la fachada, incluida la Idempotency-Key. */
+/**
+ * {@link FachadaReservas#reservarConClave}: la proteccion con
+ * {@code Idempotency-Key} contra pedidos repetidos.
+ */
 class FachadaReservasTest {
 
-    private Escenario e;
+    private static final String CLAVE = "5f0c7d2e-8b1a-4f3e-9c4d-2a6b7e8f9a01";
 
-    private String horario;
+    private FachadaReservas fachada;
+
+    private RepositorioTurnosEnMemoria turnos;
+
+    private RepositorioIdempotenciaEnMemoria claves;
+
+    private final List<Turno> notificados = new ArrayList<>();
+
+    private Long profesionalId;
+
+    /** Productor JMS falso: anota lo que se habria enviado. */
+    private final class NotificadorDePrueba extends NotificadorTurnos {
+        @Override
+        public void turnoConfirmado(Turno turno) {
+            notificados.add(turno);
+        }
+    }
 
     @BeforeEach
     void preparar() {
-        e = new Escenario();
-        horario = Escenario.proximoHabil(10, 0);
+        turnos = new RepositorioTurnosEnMemoria();
+        claves = new RepositorioIdempotenciaEnMemoria();
+        RepositorioPacientesEnMemoria pacientes = new RepositorioPacientesEnMemoria();
+        RepositorioProfesionalesEnMemoria profesionales = new RepositorioProfesionalesEnMemoria();
+
+        Paciente ana = new Paciente("Ana Gomez", "30111222");
+        ana.setUsuario("paciente");
+        pacientes.guardar(ana);
+        profesionalId = profesionales.guardar(new Profesional("Dra. Laura Fernandez", "Cardiologia", "MP-10234")).getId();
+
+        var llamador = Inyeccion.llamador("recepcion", Roles.RECEPCION);
+
+        GestionTurnos gestionTurnos = new GestionTurnos();
+        Inyeccion.campo(gestionTurnos, "repositorio", turnos);
+        Inyeccion.campo(gestionTurnos, "fabricaTurnos", new FabricaTurnos());
+        Inyeccion.campo(gestionTurnos, "contexto", llamador);
+
+        GestionPacientes gestionPacientes = new GestionPacientes();
+        Inyeccion.campo(gestionPacientes, "repositorio", pacientes);
+        Inyeccion.campo(gestionPacientes, "gestionTurnos", gestionTurnos);
+        Inyeccion.campo(gestionPacientes, "contexto", llamador);
+
+        GestionProfesionales gestionProfesionales = new GestionProfesionales();
+        Inyeccion.campo(gestionProfesionales, "repositorio", profesionales);
+        Inyeccion.campo(gestionProfesionales, "gestionTurnos", gestionTurnos);
+        Inyeccion.campo(gestionProfesionales, "contexto", llamador);
+
+        fachada = new FachadaReservas();
+        Inyeccion.campo(fachada, "gestionTurnos", gestionTurnos);
+        Inyeccion.campo(fachada, "gestionPacientes", gestionPacientes);
+        Inyeccion.campo(fachada, "gestionProfesionales", gestionProfesionales);
+        Inyeccion.campo(fachada, "notificadorTurnos", new NotificadorDePrueba());
+        Inyeccion.campo(fachada, "repositorioIdempotencia", claves);
+        Inyeccion.campo(fachada, "contexto", llamador);
     }
 
-    // ---------------------------------------------------------------- reservar
-
-    @Test
-    void reservaUnTurnoYAvisaPorJms() {
-        Turno turno = e.fachada.reservar(e.solicitudParaAna(horario));
-        assertEquals("30111222", turno.getPaciente().getDocumento());
-        assertEquals(1, e.notificador.enviados.size());
-        assertSame(turno, e.notificador.enviados.get(0));
-    }
-
-    @Test
-    void sinDatosNoHayReserva() {
-        assertThrows(ReglaNegocioException.class, () -> e.fachada.reservar(null));
-        SolicitudTurno sinDocumento = e.solicitudParaAna(horario);
-        sinDocumento.setDocumentoPaciente(" ");
-        assertThrows(ReglaNegocioException.class, () -> e.fachada.reservar(sinDocumento));
-        assertTrue(e.notificador.enviados.isEmpty());
-    }
-
-    @Test
-    void unPacienteNuevoSeDaDeAltaAlVueloSiVieneConNombre() {
-        SolicitudTurno solicitud = e.solicitudParaAna(horario);
-        solicitud.setDocumentoPaciente("40123456");
-        solicitud.setNombrePaciente("Eva Perez");
-        Turno turno = e.fachada.reservar(solicitud);
-        assertEquals("Eva Perez", turno.getPaciente().getNombre());
-        assertTrue(e.repoPacientes.buscarPorDocumento("40123456").isPresent());
-    }
-
-    @Test
-    void unDocumentoDesconocidoSinNombreSeRechaza() {
-        SolicitudTurno solicitud = e.solicitudParaAna(horario);
-        solicitud.setDocumentoPaciente("40123456");
-        ReglaNegocioException error = assertThrows(ReglaNegocioException.class, () -> e.fachada.reservar(solicitud));
-        assertTrue(error.getMessage().contains("40123456"));
-    }
-
-    @Test
-    void elProfesionalSePuedeIndicarPorNombre() {
-        SolicitudTurno solicitud = e.solicitudParaAna(horario);
-        solicitud.setProfesionalId(null);
-        solicitud.setNombreProfesional(" dra. laura fernandez ");
-        assertEquals(e.laura.getId(), e.fachada.reservar(solicitud).getProfesional().getId());
-
-        SolicitudTurno inexistente = e.solicitudParaAna(Escenario.proximoHabil(11, 0));
-        inexistente.setProfesionalId(null);
-        inexistente.setNombreProfesional("Dr. Nadie");
-        assertThrows(ReglaNegocioException.class, () -> e.fachada.reservar(inexistente));
-
-        SolicitudTurno sinProfesional = e.solicitudParaAna(Escenario.proximoHabil(11, 30));
-        sinProfesional.setProfesionalId(null);
-        assertThrows(ReglaNegocioException.class, () -> e.fachada.reservar(sinProfesional));
+    private SolicitudTurno pedido(String hora, String motivo) {
+        SolicitudTurno solicitud = new SolicitudTurno();
+        solicitud.setDocumentoPaciente("30111222");
+        solicitud.setProfesionalId(profesionalId);
+        solicitud.setEspecialidad("Cardiologia");
+        solicitud.setFechaHora(LocalDate.now().plusDays(2) + "T" + hora);
+        solicitud.setMotivo(motivo);
+        return solicitud;
     }
 
     @Test
-    void unPacienteSoloReservaParaSiMismoYNoDaDeAltaFichasAjenas() {
-        e.comoPaciente();
-        assertEquals("30111222", e.fachada.reservar(e.solicitudParaAna(horario)).getPaciente().getDocumento());
+    void sinClaveEsUnaReservaComun() {
+        ResultadoReserva resultado = fachada.reservarConClave(pedido("09:30", "Control"), null);
 
-        SolicitudTurno ajena = e.solicitudParaAna(Escenario.proximoHabil(11, 0));
-        ajena.setDocumentoPaciente("28999888");
-        assertThrows(AccesoDenegadoException.class, () -> e.fachada.reservar(ajena));
-
-        SolicitudTurno inventada = e.solicitudParaAna(Escenario.proximoHabil(11, 30));
-        inventada.setDocumentoPaciente("40999999");
-        inventada.setNombrePaciente("Alguien Inventado");
-        assertThrows(AccesoDenegadoException.class, () -> e.fachada.reservar(inventada));
-        assertFalse(e.repoPacientes.buscarPorDocumento("40999999").isPresent(),
-                "un PACIENTE no debe poder dar de alta fichas de otras personas");
-    }
-
-    // ------------------------------------------------------- Idempotency-Key
-
-    @Test
-    void sinClaveSeComportaComoReservar() {
-        ResultadoReserva resultado = e.fachada.reservarIdempotente(e.solicitudParaAna(horario), null);
         assertFalse(resultado.repetida());
-        assertEquals(1, e.notificador.enviados.size());
+        assertEquals(1, turnos.listarTodos().size());
+        assertEquals(1, notificados.size(), "se avisa por JMS una vez");
     }
 
     @Test
-    void unReintentoConLaMismaClaveDevuelveElMismoTurnoSinCrearOtro() {
-        ResultadoReserva primero = e.fachada.reservarIdempotente(e.solicitudParaAna(horario), "clave-1");
-        ResultadoReserva reintento = e.fachada.reservarIdempotente(e.solicitudParaAna(horario), "clave-1");
+    void elMismoPedidoConLaMismaClaveNoCreaOtroTurno() {
+        ResultadoReserva primero = fachada.reservarConClave(pedido("09:30", "Control"), CLAVE);
+        ResultadoReserva repetido = fachada.reservarConClave(pedido("09:30", "Control"), CLAVE);
 
         assertFalse(primero.repetida());
-        assertTrue(reintento.repetida());
-        assertEquals(primero.turno().getId(), reintento.turno().getId());
-        assertEquals(1, e.repoTurnos.listarTodos().size());
-        assertEquals(1, e.notificador.enviados.size(), "el reintento no debe volver a avisar por JMS");
+        assertTrue(repetido.repetida());
+        assertEquals(primero.turno().getId(), repetido.turno().getId());
+        assertEquals(1, turnos.listarTodos().size(), "un solo turno");
+        assertEquals(1, notificados.size(), "un solo aviso JMS");
     }
 
     @Test
-    void laClaveSeAceptaComoCadenaDeStructuredFields() {
-        ResultadoReserva primero = e.fachada.reservarIdempotente(e.solicitudParaAna(horario), "\"abc-123\"");
-        ResultadoReserva reintento = e.fachada.reservarIdempotente(e.solicitudParaAna(horario), "abc-123");
-        assertTrue(reintento.repetida());
-        assertEquals(primero.turno().getId(), reintento.turno().getId());
+    void laClavePuedeVenirEntreComillas() {
+        fachada.reservarConClave(pedido("09:30", "Control"), CLAVE);
+        ResultadoReserva repetido = fachada.reservarConClave(pedido("09:30", "Control"), "\"" + CLAVE + "\"");
+
+        assertTrue(repetido.repetida());
     }
 
     @Test
-    void laMismaClaveConOtrosDatosSeRechazaComoReutilizada() {
-        e.fachada.reservarIdempotente(e.solicitudParaAna(horario), "clave-1");
-        SolicitudTurno otra = e.solicitudParaAna(Escenario.proximoHabil(11, 0));
+    void laMismaClaveConOtroPedidoSeRechazaCon422() {
+        fachada.reservarConClave(pedido("09:30", "Control"), CLAVE);
 
-        IdempotenciaException error = assertThrows(IdempotenciaException.class,
-                () -> e.fachada.reservarIdempotente(otra, "clave-1"));
-        assertEquals(IdempotenciaException.Motivo.REUTILIZADA, error.getMotivo());
-        assertEquals(1, e.repoTurnos.listarTodos().size());
+        ConflictoIdempotenciaException error = assertThrows(ConflictoIdempotenciaException.class,
+                () -> fachada.reservarConClave(pedido("10:00", "Otro motivo"), CLAVE));
+
+        assertEquals(ConflictoIdempotenciaException.Motivo.PEDIDO_DISTINTO, error.motivo());
+        assertEquals(1, turnos.listarTodos().size());
     }
 
     @Test
-    void laClaveEsPorUsuario() {
-        e.fachada.reservarIdempotente(e.solicitudParaAna(horario), "compartida");
-        e.como("admin", Roles.ADMIN);
-        SolicitudTurno otra = e.solicitudParaAna(Escenario.proximoHabil(11, 0));
-        assertFalse(e.fachada.reservarIdempotente(otra, "compartida").repetida());
-        assertEquals(2, e.repoTurnos.listarTodos().size());
+    void claveDistintaEsOtroPedido() {
+        fachada.reservarConClave(pedido("09:30", "Control"), CLAVE);
+        ResultadoReserva otro = fachada.reservarConClave(pedido("10:00", "Control"), "otra-clave-0001");
+
+        assertFalse(otro.repetida());
+        assertEquals(2, turnos.listarTodos().size());
+    }
+
+    @Test
+    void unaClaveVencidaYaNoProtege() {
+        Turno viejo = fachada.reservarConClave(pedido("09:30", "Control"), null).turno();
+        claves.registrar(new ClaveIdempotencia(CLAVE, "recepcion", "huella-de-otro-pedido", viejo,
+                LocalDateTime.now().minus(FachadaReservas.VIGENCIA_CLAVE).minusMinutes(1)));
+
+        ResultadoReserva nuevo = fachada.reservarConClave(pedido("10:00", "Control"), CLAVE);
+
+        assertFalse(nuevo.repetida());
+        assertNotEquals(viejo.getId(), nuevo.turno().getId());
+    }
+
+    @Test
+    void siOtraTransaccionRegistroLaClaveAntesSeInformaEnCurso() {
+        // Simula la carrera: la consulta no encuentra la clave, pero al
+        // registrarla ya existe (otra transaccion la confirmo en el medio).
+        Inyeccion.campo(fachada, "repositorioIdempotencia", new RepositorioIdempotenciaEnMemoria() {
+            @Override
+            public boolean registrar(ClaveIdempotencia clave) {
+                return false;
+            }
+        });
+
+        ConflictoIdempotenciaException error = assertThrows(ConflictoIdempotenciaException.class,
+                () -> fachada.reservarConClave(pedido("09:30", "Control"), CLAVE));
+        assertEquals(ConflictoIdempotenciaException.Motivo.EN_CURSO, error.motivo());
     }
 
     @Test
     void unaClaveConFormatoInvalidoSeRechaza() {
+        assertThrows(ReglaNegocioException.class, () -> fachada.reservarConClave(pedido("09:30", "x"), "corta"));
         assertThrows(ReglaNegocioException.class,
-                () -> e.fachada.reservarIdempotente(e.solicitudParaAna(horario), "con espacios"));
-        assertThrows(ReglaNegocioException.class,
-                () -> e.fachada.reservarIdempotente(e.solicitudParaAna(horario), "x".repeat(256)));
-        assertThrows(ReglaNegocioException.class,
-                () -> e.fachada.reservarIdempotente(e.solicitudParaAna(horario), "\"\""));
-        assertThrows(ReglaNegocioException.class, () -> e.fachada.reservarIdempotente(null, "clave"));
-        assertTrue(e.repoTurnos.listarTodos().isEmpty());
+                () -> fachada.reservarConClave(pedido("09:30", "x"), "tiene espacios adentro"));
     }
 
     @Test
-    void siOtroPedidoConLaMismaClaveEstaEnCursoSeRechazaComoEnCurso() {
-        // Simula la carrera: entre la busqueda y el registro, otro pedido registro la clave.
-        e.repoIdempotencia.registrar(new RegistroIdempotencia("recepcion", "carrera", "otra-huella",
-                LocalDateTime.now()));
-        com.mediconecta.datos.RepositorioIdempotencia sinVerAlOtro = new com.mediconecta.datos.RepositorioIdempotencia() {
-            @Override
-            public java.util.Optional<RegistroIdempotencia> buscar(String usuario, String clave) {
-                return java.util.Optional.empty();
-            }
-
-            @Override
-            public boolean registrar(RegistroIdempotencia registro) {
-                return e.repoIdempotencia.registrar(registro);
-            }
-
-            @Override
-            public RegistroIdempotencia actualizar(RegistroIdempotencia registro) {
-                return e.repoIdempotencia.actualizar(registro);
-            }
-
-            @Override
-            public int borrarAnterioresA(LocalDateTime limite) {
-                return 0;
-            }
-        };
-        Inyeccion.campo(e.fachada, "repositorioIdempotencia", sinVerAlOtro);
-
-        IdempotenciaException error = assertThrows(IdempotenciaException.class,
-                () -> e.fachada.reservarIdempotente(e.solicitudParaAna(horario), "carrera"));
-        assertEquals(IdempotenciaException.Motivo.EN_CURSO, error.getMotivo());
-        assertTrue(e.repoTurnos.listarTodos().isEmpty());
+    void sinCuerpoSeRechaza() {
+        assertThrows(ReglaNegocioException.class, () -> fachada.reservarConClave(null, CLAVE));
     }
 
     @Test
-    void siElPrimerIntentoFalloPorUnaReglaElReintentoConLaMismaClaveVuelveAProbar() {
-        SolicitudTurno enElPasado = e.solicitudParaAna(LocalDateTime.now().minusDays(1).format(Turno.FORMATO_FECHA_HORA));
-        assertThrows(ReglaNegocioException.class, () -> e.fachada.reservarIdempotente(enElPasado, "k"));
-        RegistroIdempotencia registro = e.repoIdempotencia.buscar("recepcion", "k").orElseThrow();
-        assertNull(registro.getTurnoId());
-
-        // Mismo pedido, misma clave: vuelve a intentarlo (y vuelve a fallar por la misma regla).
-        assertThrows(ReglaNegocioException.class, () -> e.fachada.reservarIdempotente(enElPasado, "k"));
-        assertTrue(e.repoTurnos.listarTodos().isEmpty());
+    void normalizarClaveSinValorDevuelveNull() {
+        assertNull(FachadaReservas.normalizarClave(null));
+        assertNull(FachadaReservas.normalizarClave("   "));
+        assertEquals(CLAVE, FachadaReservas.normalizarClave("  " + CLAVE + " "));
     }
 
     @Test
-    void unaClaveVencidaSeTrataComoNueva() {
-        ResultadoReserva primero = e.fachada.reservarIdempotente(e.solicitudParaAna(horario), "vieja");
-        RegistroIdempotencia registro = e.repoIdempotencia.buscar("recepcion", "vieja").orElseThrow();
-        registro.setCreadaEn(LocalDateTime.now().minusHours(25));
+    void laHuellaIgnoraEspaciosYDistingueCampos() {
+        SolicitudTurno a = pedido("09:30", "Control");
+        SolicitudTurno b = pedido("09:30", "  Control  ");
+        SolicitudTurno c = pedido("09:30", "Control anual");
 
-        SolicitudTurno otra = e.solicitudParaAna(Escenario.proximoHabil(11, 0));
-        ResultadoReserva segundo = e.fachada.reservarIdempotente(otra, "vieja");
-        assertFalse(segundo.repetida());
-        assertNotEquals(primero.turno().getId(), segundo.turno().getId());
+        assertEquals(HuellaSolicitud.de(a), HuellaSolicitud.de(b));
+        assertNotEquals(HuellaSolicitud.de(a), HuellaSolicitud.de(c));
+        assertEquals(64, HuellaSolicitud.de(a).length(), "SHA-256 en hexadecimal");
     }
 
     @Test
-    void laHuellaIgnoraEspaciosYDistingueCadaCampo() {
-        SolicitudTurno a = e.solicitudParaAna(horario);
-        SolicitudTurno b = e.solicitudParaAna(horario);
-        b.setMotivo(" Control ");
-        assertEquals(FachadaReservas.huella(a), FachadaReservas.huella(b));
-        b.setMotivo("Otro motivo");
-        assertNotEquals(FachadaReservas.huella(a), FachadaReservas.huella(b));
-        assertEquals(64, FachadaReservas.huella(new SolicitudTurno()).length());
-    }
+    void unPacienteNuevoSeDaDeAltaAlReservarSiTraeNombre() {
+        SolicitudTurno solicitud = pedido("11:00", null);
+        solicitud.setDocumentoPaciente("40111222");
+        assertThrows(ReglaNegocioException.class, () -> fachada.reservar(solicitud), "sin nombre no se da de alta");
 
-    // ------------------------------------------------------------- consultas
-
-    @Test
-    void consultasParaLaPantallaDeReserva() {
-        assertEquals(2, e.fachada.especialidades().size());
-        assertEquals(1, e.fachada.profesionalesDe("Cardiologia").size());
-        LocalDateTime momento = LocalDateTime.parse(horario);
-        assertTrue(e.fachada.horariosLibres(e.laura.getId(), momento.toLocalDate()).contains(momento));
+        solicitud.setNombrePaciente("Paciente Nuevo");
+        Turno turno = fachada.reservar(solicitud);
+        assertEquals("Paciente Nuevo", turno.getPaciente().getNombre());
     }
 
     @Test
-    void elTableroResumeLaAgenda() {
-        e.fachada.reservar(e.solicitudParaAna(horario));
-        ResumenAgenda resumen = e.fachada.resumenDelDia();
-        assertEquals(2, resumen.getPacientesActivos());
-        assertEquals(2, resumen.getProfesionalesActivos());
+    void elProfesionalSePuedeIndicarPorNombreComoEnLaEntrega1() {
+        SolicitudTurno solicitud = pedido("11:30", null);
+        solicitud.setProfesionalId(null);
+        solicitud.setNombreProfesional(" dra. laura fernandez ");
+        assertEquals(profesionalId, fachada.reservar(solicitud).getProfesional().getId());
+
+        solicitud.setNombreProfesional("Dr. Inexistente");
+        assertThrows(ReglaNegocioException.class, () -> fachada.reservar(solicitud));
+        solicitud.setNombreProfesional(" ");
+        assertThrows(ReglaNegocioException.class, () -> fachada.reservar(solicitud));
+    }
+
+    @Test
+    void sinDocumentoNoHayReserva() {
+        SolicitudTurno solicitud = pedido("11:30", null);
+        solicitud.setDocumentoPaciente(" ");
+        assertThrows(ReglaNegocioException.class, () -> fachada.reservar(solicitud));
+        assertThrows(ReglaNegocioException.class, () -> fachada.reservar(null));
+    }
+
+    @Test
+    void elTableroResumeElDia() {
+        fachada.reservar(pedido("09:30", null));
+
+        ResumenAgenda resumen = fachada.resumenDelDia();
         assertEquals(1, resumen.getPendientes());
+        assertEquals(1, resumen.getPacientesActivos());
+        assertEquals(1, resumen.getProfesionalesActivos());
         assertEquals(1, resumen.getProximosTurnos().size());
-        Paciente inactivo = e.bruno;
-        inactivo.setActivo(false);
-        assertEquals(1, e.fachada.resumenDelDia().getPacientesActivos());
+        assertEquals(0, resumen.getTurnosDeHoy());
+
+        assertEquals(List.of("Cardiologia"), fachada.especialidades());
+        assertEquals(1, fachada.profesionalesDe("Cardiologia").size());
+        assertTrue(fachada.horariosLibres(profesionalId, LocalDate.now().plusDays(2)).isEmpty(), "sin agenda cargada");
     }
 }

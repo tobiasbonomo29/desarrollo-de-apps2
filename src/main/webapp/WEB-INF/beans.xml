@@ -14,11 +14,8 @@
     implementaciones JPA. Para levantar la aplicacion en una maquina sin
     PostgreSQL hay que hacer dos cosas:
 
-      1) descomentar el bloque que esta debajo de este comentario: activa
-         los repositorios en memoria (<alternatives>) y saca del escaneo de CDI
-         los repositorios JPA (<scan><exclude>). Sin esa exclusion Weld intenta
-         inyectarles la unidad de persistencia "mediconectaPU", que en el plan B
-         no existe, y el despliegue falla (WFLYWELD0037, verificado el 18/11);
+      1) descomentar el bloque de alternativas que esta debajo de este
+         comentario;
       2) borrar src/main/resources/META-INF/persistence.xml antes de empaquetar
          (si queda, WildFly intenta crear la unidad de persistencia y el
          despliegue falla porque no encuentra el datasource).
@@ -40,11 +37,10 @@
         <class>com.mediconecta.datos.memoria.RepositorioProfesionalesEnMemoria</class>
         <class>com.mediconecta.datos.memoria.RepositorioUsuariosEnMemoria</class>
         <class>com.mediconecta.datos.memoria.RepositorioIdempotenciaEnMemoria</class>
-        <class>com.mediconecta.datos.memoria.RepositorioMensajesProcesadosEnMemoria</class>
+        <class>com.mediconecta.datos.memoria.RepositorioNotificacionesEnMemoria</class>
+        <class>com.mediconecta.datos.memoria.RepositorioMensajesFallidosEnMemoria</class>
+        <class>com.mediconecta.datos.memoria.SondaBaseDeDatosEnMemoria</class>
     </alternatives>
-    <scan>
-        <exclude name="com.mediconecta.datos.jpa.*"/>
-    </scan>
     -->
 
 </beans>

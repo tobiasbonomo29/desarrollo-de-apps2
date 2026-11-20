@@ -52,22 +52,25 @@ public class GestionTurnos {
     }
 
     /**
-     * Un turno por id.
-     *
-     * <p>Control de BOLA/IDOR: un usuario que es <b>solo</b> PACIENTE recibe un
-     * 403 si el turno no es suyo. Sin esta comprobacion bastaba con recorrer los
-     * ids de la URL para leer los turnos (y los datos personales) de otros
-     * pacientes.</p>
+     * Un turno por id. Un PACIENTE solo puede consultar los suyos: sin este
+     * control, cualquier paciente podria recorrer los ids y leer los turnos de
+     * los demas (IDOR).
      */
     @RolesAllowed({Roles.PACIENTE, Roles.RECEPCION, Roles.MEDICO, Roles.ADMIN})
     public Turno obtenerTurno(Long id) {
-        Turno turno = repositorio.buscarPorId(id)
-                .orElseThrow(() -> NoEncontradoException.turno(id));
-        if (esSoloPaciente()
-                && !contexto.getCallerPrincipal().getName().equals(turno.getPaciente().getUsuario())) {
-            throw new AccesoDenegadoException("Solo puede consultar sus propios turnos.");
+        Turno turno = buscar(id);
+        if (esSoloPaciente()) {
+            String usuario = contexto.getCallerPrincipal().getName();
+            if (!usuario.equals(turno.getPaciente().getUsuario())) {
+                throw new AccesoDenegadoException("Solo puede consultar sus propios turnos.");
+            }
         }
         return turno;
+    }
+
+    private Turno buscar(Long id) {
+        return repositorio.buscarPorId(id)
+                .orElseThrow(() -> NoEncontradoException.turno(id));
     }
 
     /** Turnos de un dia, para el tablero de inicio. */
@@ -141,7 +144,19 @@ public class GestionTurnos {
      */
     @RolesAllowed({Roles.PACIENTE, Roles.RECEPCION, Roles.MEDICO, Roles.ADMIN})
     public Turno cancelarTurno(Long id) {
-        Turno turno = obtenerTurno(id);
+        return cancelarTurno(id, null);
+    }
+
+    /**
+     * Igual que {@link #cancelarTurno(Long)}, con control de concurrencia
+     * optimista: si {@code versionEsperada} no es la version actual (otro
+     * usuario lo modifico despues de que el cliente lo leyo), no se toca y se
+     * responde 412. La version llega en el ETag ({@code If-Match}).
+     */
+    @RolesAllowed({Roles.PACIENTE, Roles.RECEPCION, Roles.MEDICO, Roles.ADMIN})
+    public Turno cancelarTurno(Long id, Long versionEsperada) {
+        Turno turno = buscar(id);
+        VersionDesactualizadaException.exigir(turno.getVersion(), versionEsperada, "turno");
 
         exigirPuedeCancelar(turno);
 
@@ -160,7 +175,14 @@ public class GestionTurnos {
      */
     @RolesAllowed({Roles.MEDICO, Roles.ADMIN})
     public Turno atenderTurno(Long id) {
-        Turno turno = obtenerTurno(id);
+        return atenderTurno(id, null);
+    }
+
+    /** {@link #atenderTurno(Long)} con control de concurrencia optimista (If-Match). */
+    @RolesAllowed({Roles.MEDICO, Roles.ADMIN})
+    public Turno atenderTurno(Long id, Long versionEsperada) {
+        Turno turno = buscar(id);
+        VersionDesactualizadaException.exigir(turno.getVersion(), versionEsperada, "turno");
 
         if (esSoloMedico()) {
             String usuario = contexto.getCallerPrincipal().getName();
@@ -213,7 +235,14 @@ public class GestionTurnos {
      */
     @RolesAllowed({Roles.RECEPCION, Roles.ADMIN})
     public Turno archivarTurno(Long id) {
-        Turno turno = obtenerTurno(id);
+        return archivarTurno(id, null);
+    }
+
+    /** {@link #archivarTurno(Long)} con control de concurrencia optimista (If-Match). */
+    @RolesAllowed({Roles.RECEPCION, Roles.ADMIN})
+    public Turno archivarTurno(Long id, Long versionEsperada) {
+        Turno turno = buscar(id);
+        VersionDesactualizadaException.exigir(turno.getVersion(), versionEsperada, "turno");
 
         // Solo TurnoCancelado acepta archivar, y una unica vez (409 si no).
         turno.archivar();

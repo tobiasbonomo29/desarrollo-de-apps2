@@ -1,0 +1,42 @@
+# =============================================================================
+#  MediConecta - endurecimiento del servidor (fuera del WAR)
+# =============================================================================
+#
+#  El escaneo OWASP ZAP marcaba alertas Medium en la raiz del servidor
+#  (http://host:8080/), que no es de la aplicacion sino la pagina de bienvenida
+#  de WildFly. Este script:
+#
+#    * quita esa pagina de bienvenida (no exponer el producto ni su version);
+#    * agrega cabeceras de seguridad a todo lo que NO es /mediconecta (la
+#      aplicacion pone las suyas con seguridad.CabecerasSeguridad; duplicar la
+#      CSP la volveria mas restrictiva y romperia las pantallas).
+#
+#  Se usa en local (configurar-wildfly.ps1) y en Docker (Dockerfile).
+# =============================================================================
+
+if (outcome == success) of /subsystem=undertow/server=default-server/host=default-host/location=\/:read-resource
+    /subsystem=undertow/server=default-server/host=default-host/location=\/:remove
+end-if
+
+if (outcome != success) of /subsystem=undertow/configuration=filter/response-header=servidor-csp:read-resource
+    /subsystem=undertow/configuration=filter/response-header=servidor-csp:add(header-name="Content-Security-Policy", header-value="default-src 'none'; frame-ancestors 'none'")
+    /subsystem=undertow/configuration=filter/response-header=servidor-nosniff:add(header-name="X-Content-Type-Options", header-value="nosniff")
+    /subsystem=undertow/configuration=filter/response-header=servidor-frame:add(header-name="X-Frame-Options", header-value="DENY")
+    /subsystem=undertow/configuration=filter/response-header=servidor-permisos:add(header-name="Permissions-Policy", header-value="camera=(), microphone=(), geolocation=()")
+    /subsystem=undertow/configuration=filter/response-header=servidor-corp:add(header-name="Cross-Origin-Resource-Policy", header-value="same-origin")
+    /subsystem=undertow/configuration=filter/response-header=servidor-coop:add(header-name="Cross-Origin-Opener-Policy", header-value="same-origin")
+    /subsystem=undertow/configuration=filter/response-header=servidor-coep:add(header-name="Cross-Origin-Embedder-Policy", header-value="require-corp")
+    /subsystem=undertow/server=default-server/host=default-host/filter-ref=servidor-csp:add(predicate="not path-prefix('/mediconecta')")
+    /subsystem=undertow/server=default-server/host=default-host/filter-ref=servidor-nosniff:add(predicate="not path-prefix('/mediconecta')")
+    /subsystem=undertow/server=default-server/host=default-host/filter-ref=servidor-frame:add(predicate="not path-prefix('/mediconecta')")
+    /subsystem=undertow/server=default-server/host=default-host/filter-ref=servidor-permisos:add(predicate="not path-prefix('/mediconecta')")
+    /subsystem=undertow/server=default-server/host=default-host/filter-ref=servidor-corp:add(predicate="not path-prefix('/mediconecta')")
+    /subsystem=undertow/server=default-server/host=default-host/filter-ref=servidor-coop:add(predicate="not path-prefix('/mediconecta')")
+    /subsystem=undertow/server=default-server/host=default-host/filter-ref=servidor-coep:add(predicate="not path-prefix('/mediconecta')")
+end-if
+
+# Las directivas sin "fallback" (base-uri, form-action, frame-ancestors) se
+# declaran explicitamente; si no, ZAP lo marca como alerta Medium.
+/subsystem=undertow/configuration=filter/response-header=servidor-csp:write-attribute(name=header-value, value="default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
+
+echo "Pagina de bienvenida de WildFly quitada y cabeceras de seguridad en la raiz del servidor."

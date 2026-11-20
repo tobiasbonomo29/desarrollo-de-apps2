@@ -1,11 +1,13 @@
 package com.mediconecta.modelo;
 
+import jakarta.json.bind.annotation.JsonbTransient;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 
 /**
  * Paciente de la clinica.
@@ -25,6 +27,16 @@ public class Paciente {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    /**
+     * Version para el control de concurrencia optimista (JPA {@code @Version}):
+     * cada modificacion la incrementa y viaja al cliente en el ETag. No forma
+     * parte del JSON.
+     */
+    @Version
+    @JsonbTransient
+    @Column(nullable = false)
+    private long version;
 
     @Column(nullable = false, unique = true, length = 20)
     private String documento;
@@ -53,6 +65,10 @@ public class Paciente {
     public Paciente(String nombre, String documento) {
         this.nombre = nombre;
         this.documento = documento;
+    }
+
+    public long getVersion() {
+        return version;
     }
 
     public Long getId() {

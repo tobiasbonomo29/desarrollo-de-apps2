@@ -38,9 +38,11 @@ import java.util.logging.Logger;
  *
  * <p><b>Secreto.</b> Se toma, en este orden, de la propiedad del sistema
  * {@code mediconecta.jwt.secreto} o de la variable de entorno
- * {@code MEDICONECTA_JWT_SECRETO}. Si no hay ninguna se genera uno aleatorio
- * al arrancar y se avisa en el log: sirve para la demo (los tokens no
- * sobreviven un reinicio) y evita tener un secreto fijo en el repositorio.</p>
+ * {@code MEDICONECTA_JWT_SECRETO}, y tiene que tener al menos 32 bytes. En el
+ * codigo <b>no hay ningun secreto por defecto</b>: si no se configuro, se
+ * genera uno aleatorio al arrancar (con {@link SecureRandom}) y se avisa en el
+ * log. Asi nadie puede fabricar un token conociendo el repositorio; el costo es
+ * que los tokens dejan de valer al reiniciar el servidor.</p>
  *
  * <p><b>Validez.</b> {@code mediconecta.jwt.minutos} (120 por omision).</p>
  */
@@ -54,6 +56,9 @@ public class ServicioJwt {
     private static final String ALGORITMO_JWT = "HS256";
 
     private static final String ALGORITMO_MAC = "HmacSHA256";
+
+    /** Largo del secreto aleatorio que se genera si no se configuro ninguno. */
+    static final int BYTES_SECRETO_ALEATORIO = 32;
 
     private static final Base64.Encoder B64 = Base64.getUrlEncoder().withoutPadding();
 
@@ -202,17 +207,23 @@ public class ServicioJwt {
         if (valor == null || valor.isBlank()) {
             valor = System.getenv("MEDICONECTA_JWT_SECRETO");
         }
-        if (valor == null || valor.isBlank()) {
-            // Sin secreto configurado se genera uno al azar en cada arranque: la
-            // demo funciona igual, pero los tokens dejan de valer al reiniciar.
-            // Asi no hay ningun secreto fijo versionado en el repositorio.
+        return resolverSecreto(valor);
+    }
+
+    /**
+     * Devuelve el secreto configurado o, si no hay ninguno, uno aleatorio.
+     * Separado de la lectura del entorno para poder probarlo.
+     */
+    static byte[] resolverSecreto(String configurado) {
+        if (configurado == null || configurado.isBlank()) {
             LOG.warning("[JWT] No se configuro mediconecta.jwt.secreto / MEDICONECTA_JWT_SECRETO: se genero "
-                    + "un secreto aleatorio para esta ejecucion (los tokens no sobreviven un reinicio).");
-            byte[] aleatorio = new byte[48];
+                    + "un secreto aleatorio para esta ejecucion. Los tokens emitidos dejan de valer al "
+                    + "reiniciar el servidor.");
+            byte[] aleatorio = new byte[BYTES_SECRETO_ALEATORIO];
             new SecureRandom().nextBytes(aleatorio);
             return aleatorio;
         }
-        return valor.getBytes(StandardCharsets.UTF_8);
+        return configurado.getBytes(StandardCharsets.UTF_8);
     }
 
     private static Duration validezConfigurada() {

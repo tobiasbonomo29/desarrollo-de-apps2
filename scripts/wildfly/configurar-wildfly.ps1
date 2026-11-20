@@ -8,11 +8,15 @@
        1. descarga el driver JDBC de PostgreSQL desde Maven Central;
        2. lo instala como modulo de WildFly (org.postgresql);
        3. crea el datasource java:/jdbc/MediConectaDS;
-       4. prepara la seguridad JWT (integrated-jaspi=false) y recarga.
+       4. aplica las migraciones de la base (Flyway, mvn flyway:migrate);
+       5. configura reintentos y DLQ de JMS, y los timeouts del servidor;
+       6. guarda los secretos de la aplicacion (JWT y contrasena demo) como
+          propiedades del sistema de WildFly, fuera del repositorio;
+       7. prepara la seguridad JWT (integrated-jaspi=false) y recarga.
 
-     Los usuarios de demostracion ya NO se crean en WildFly: desde la
-     Entrega 2 viven en la tabla "usuarios" (contrasena con hash PBKDF2) y los
-     carga la aplicacion al desplegar.
+     Los usuarios de demostracion ya NO se crean en WildFly: viven en la tabla
+     "usuarios" (contrasena con hash PBKDF2) y los carga la aplicacion al
+     desplegar, con la contrasena de -ClaveDemo.
 
      Uso (PowerShell, desde cualquier carpeta):
 
@@ -24,7 +28,10 @@
 
      Las credenciales de PostgreSQL se pueden pasar por parametro; el valor por
      omision es el del contenedor Docker de scripts/db/levantar-postgres.ps1.
-     No hay ninguna contrasena de base de datos dentro del codigo Java.
+     No hay ninguna contrasena ni secreto dentro del codigo Java: si no se pasa
+     -SecretoJwt, se genera uno aleatorio y queda guardado en el servidor.
+
+     El paso 4 necesita Maven en el PATH (es el mismo "mvn" que compila el WAR).
     =========================================================================
 #>
 
@@ -36,8 +43,11 @@ param(
     [string] $UsuarioBase   = "mediconecta",
     [string] $ClaveBase     = "mediconecta",
     [string] $UrlBase       = "jdbc:postgresql://localhost:5432/mediconecta",
+    [string] $ClaveDemo     = "Demo.2026",
+    [string] $SecretoJwt    = "",
     [switch] $SoloSeguridad,
-    [switch] $SoloDatasource
+    [switch] $SoloDatasource,
+    [switch] $SinMigraciones
 )
 
 $ErrorActionPreference = "Stop"
@@ -99,19 +109,55 @@ if (-not $SoloSeguridad) {
 }
 
 # ------------------------------------------------------------------- 4 ------
+if (-not $SoloSeguridad -and -not $SinMigraciones) {
+
+    Paso "Aplicando las migraciones de la base (Flyway)"
+
+    $raiz = Resolve-Path (Join-Path $PSScriptRoot "..\..")
+    Push-Location $raiz
+    try {
+        & mvn -B -q flyway:migrate "-Dflyway.url=$UrlBase" "-Dflyway.user=$UsuarioBase" "-Dflyway.password=$ClaveBase"
+        if ($LASTEXITCODE -ne 0) { throw "Fallaron las migraciones. Verifica que PostgreSQL responda en $UrlBase." }
+    } finally {
+        Pop-Location
+    }
+}
+
+# ------------------------------------------------------------------- 5 ------
+if (-not $SoloDatasource) {
+
+    Paso "Configurando reintentos/DLQ de JMS y timeouts del servidor"
+
+    foreach ($archivo in @("configurar-mensajeria.cli", "configurar-limites.cli", "configurar-endurecimiento.cli")) {
+        & $cli --connect "--file=$(Join-Path $PSScriptRoot $archivo)"
+        if ($LASTEXITCODE -ne 0) { throw "Fallo $archivo. Verifica que WildFly este levantado con standalone-full.xml." }
+    }
+
+    # --------------------------------------------------------------- 6 ------
+    Paso "Guardando los secretos de la aplicacion en WildFly"
+
+    if (-not $SecretoJwt) {
+        $bytes = New-Object byte[] 48
+        [System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($bytes)
+        $SecretoJwt = [Convert]::ToBase64String($bytes)
+        Write-Host "   Se genero un secreto JWT aleatorio."
+    }
+    if ($SecretoJwt.Length -lt 32) { throw "El secreto JWT debe tener al menos 32 caracteres." }
+    if ($ClaveDemo.Length -lt 8) { throw "La contrasena de demostracion debe tener al menos 8 caracteres." }
+
+    & $cli --connect --resolve-parameter-values `
+        "-Dmediconecta.cli.jwt=$SecretoJwt" `
+        "-Dmediconecta.cli.demo=$ClaveDemo" `
+        "--file=$(Join-Path $PSScriptRoot 'configurar-propiedades.cli')"
+    if ($LASTEXITCODE -ne 0) { throw "No se pudieron guardar las propiedades del sistema." }
+}
+
+# ------------------------------------------------------------------- 7 ------
 Paso "Preparando la seguridad JWT (integrated-jaspi=false)"
 
 & $cli --connect "--file=$(Join-Path $PSScriptRoot 'configurar-seguridad.cli')"
 if ($LASTEXITCODE -ne 0) {
     throw "No se pudo configurar la seguridad. Verifica que WildFly este levantado."
-}
-
-# ------------------------------------------------------------------- 5 ------
-Paso "Configurando la mensajeria (journal persistente, reintentos y DLQ)"
-
-& $cli --connect "--file=$(Join-Path $PSScriptRoot 'configurar-mensajeria.cli')"
-if ($LASTEXITCODE -ne 0) {
-    throw "No se pudo configurar la mensajeria. El servidor tiene que estar levantado con -c standalone-full.xml."
 }
 
 Write-Host ""

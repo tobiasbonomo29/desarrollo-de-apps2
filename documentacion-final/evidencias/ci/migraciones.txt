@@ -1,0 +1,10 @@
+[INFO] Successfully validated 3 migrations (execution time 00:00.015s)
+[INFO] Migrating schema "public" to version "1 - esquema inicial"
+[INFO] Migrating schema "public" to version "2 - indices mensajeria e idempotencia"
+[INFO] Migrating schema "public" to version "3 - version para etag"
+[INFO] Successfully applied 3 migrations to schema "public", now at version v3 (execution time 00:00.047s)
+[INFO] BUILD SUCCESS
+[INFO] Successfully validated 3 migrations (execution time 00:00.029s)
+[INFO] Schema "public" is up to date. No migration necessary.
+[INFO] Successfully validated 3 migrations (execution time 00:00.004s)
+[INFO] BUILD SUCCESS

@@ -10,69 +10,54 @@ import com.mediconecta.modelo.Paciente;
 import com.mediconecta.modelo.Profesional;
 import com.mediconecta.modelo.Turno;
 
-import jakarta.ejb.SessionContext;
-
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 /**
- * Los componentes de negocio cableados entre si como lo haria el contenedor,
- * sobre los repositorios en memoria y con un llamador que se puede cambiar.
+ * Los componentes de negocio armados como los arma el contenedor, pero sobre
+ * los repositorios en memoria y con un productor JMS que solo anota.
  *
- * <p>Datos: Dra. Laura Fernandez (Cardiologia, usuario "medico", lunes a
- * viernes de 9 a 13, turnos de 30 min), Dr. Martin Ruiz (Traumatologia, sin
- * usuario), Ana Gomez (30111222, usuario "paciente", OSDE 210) y Bruno Diaz
- * (28999888, Swiss Medical SMG02).</p>
+ * <p>Datos: Ana Gomez (usuario "paciente"), Bruno Diaz (sin usuario), la
+ * Dra. Laura Fernandez (Cardiologia, lunes a viernes de 9 a 13 cada 30 minutos,
+ * usuario "medico") y el Dr. Martin Ruiz (Traumatologia, sin usuario).</p>
  */
-public final class Escenario {
+final class Escenario {
 
-    public final RepositorioTurnosEnMemoria repoTurnos = new RepositorioTurnosEnMemoria();
-    public final RepositorioPacientesEnMemoria repoPacientes = new RepositorioPacientesEnMemoria();
-    public final RepositorioProfesionalesEnMemoria repoProfesionales = new RepositorioProfesionalesEnMemoria();
-    public final RepositorioIdempotenciaEnMemoria repoIdempotencia = new RepositorioIdempotenciaEnMemoria();
+    final RepositorioTurnosEnMemoria turnos = new RepositorioTurnosEnMemoria();
 
-    public final FabricaTurnos fabrica = new FabricaTurnos();
-    public final GestionTurnos gestionTurnos = new GestionTurnos();
-    public final GestionPacientes gestionPacientes = new GestionPacientes();
-    public final GestionProfesionales gestionProfesionales = new GestionProfesionales();
-    public final FachadaReservas fachada = new FachadaReservas();
-    public final NotificadorDePrueba notificador = new NotificadorDePrueba();
+    final RepositorioPacientesEnMemoria pacientes = new RepositorioPacientesEnMemoria();
 
-    public final SessionContext contexto;
+    final RepositorioProfesionalesEnMemoria profesionales = new RepositorioProfesionalesEnMemoria();
 
-    public final Paciente ana;
-    public final Paciente bruno;
-    public final Profesional laura;
-    public final Profesional martin;
+    final RepositorioIdempotenciaEnMemoria claves = new RepositorioIdempotenciaEnMemoria();
 
-    private String usuario = "recepcion";
-    private Set<String> roles = Set.of(Roles.RECEPCION);
+    /** Turnos por los que se habria mandado un mensaje JMS. */
+    final List<Turno> notificados = new ArrayList<>();
 
-    public Escenario() {
-        contexto = Inyeccion.llamadorVariable(() -> usuario, () -> roles);
+    final GestionTurnos gestionTurnos = new GestionTurnos();
 
-        Inyeccion.campo(gestionTurnos, "repositorio", repoTurnos);
-        Inyeccion.campo(gestionTurnos, "fabricaTurnos", fabrica);
-        Inyeccion.campo(gestionTurnos, "contexto", contexto);
+    final GestionPacientes gestionPacientes = new GestionPacientes();
 
-        Inyeccion.campo(gestionPacientes, "repositorio", repoPacientes);
-        Inyeccion.campo(gestionPacientes, "gestionTurnos", gestionTurnos);
-        Inyeccion.campo(gestionPacientes, "contexto", contexto);
+    final GestionProfesionales gestionProfesionales = new GestionProfesionales();
 
-        Inyeccion.campo(gestionProfesionales, "repositorio", repoProfesionales);
-        Inyeccion.campo(gestionProfesionales, "gestionTurnos", gestionTurnos);
-        Inyeccion.campo(gestionProfesionales, "contexto", contexto);
+    final FachadaReservas fachada = new FachadaReservas();
 
-        Inyeccion.campo(fachada, "gestionTurnos", gestionTurnos);
-        Inyeccion.campo(fachada, "gestionPacientes", gestionPacientes);
-        Inyeccion.campo(fachada, "gestionProfesionales", gestionProfesionales);
-        Inyeccion.campo(fachada, "notificadorTurnos", notificador);
-        Inyeccion.campo(fachada, "repositorioIdempotencia", repoIdempotencia);
-        Inyeccion.campo(fachada, "contexto", contexto);
+    final Paciente ana;
+
+    final Paciente bruno;
+
+    final Profesional laura;
+
+    final Profesional martin;
+
+    Escenario() {
+        ana = new Paciente("Ana Gomez", "30111222");
+        ana.setUsuario("paciente");
+        pacientes.guardar(ana);
+        bruno = pacientes.guardar(new Paciente("Bruno Diaz", "28999888"));
 
         laura = new Profesional("Dra. Laura Fernandez", "Cardiologia", "MP-10234");
         laura.setUsuario("medico");
@@ -80,68 +65,58 @@ public final class Escenario {
                 DayOfWeek.THURSDAY, DayOfWeek.FRIDAY)) {
             laura.getDisponibilidades().add(new Disponibilidad(dia, LocalTime.of(9, 0), LocalTime.of(13, 0), 30));
         }
-        laura.setActivo(true);
-        repoProfesionales.guardar(laura);
+        profesionales.guardar(laura);
+        martin = profesionales.guardar(new Profesional("Dr. Martin Ruiz", "Traumatologia", "MP-20876"));
 
-        martin = new Profesional("Dr. Martin Ruiz", "Traumatologia", "MP-20876");
-        martin.getDisponibilidades().add(new Disponibilidad(DayOfWeek.MONDAY, LocalTime.of(14, 0), LocalTime.of(18, 0), 30));
-        martin.setActivo(true);
-        repoProfesionales.guardar(martin);
+        Inyeccion.campo(gestionTurnos, "repositorio", turnos);
+        Inyeccion.campo(gestionTurnos, "fabricaTurnos", new FabricaTurnos());
 
-        ana = new Paciente("Ana Gomez", "30111222");
-        ana.setUsuario("paciente");
-        ana.setCobertura("OSDE 210");
-        ana.setActivo(true);
-        repoPacientes.guardar(ana);
+        Inyeccion.campo(gestionPacientes, "repositorio", pacientes);
+        Inyeccion.campo(gestionPacientes, "gestionTurnos", gestionTurnos);
 
-        bruno = new Paciente("Bruno Diaz", "28999888");
-        bruno.setCobertura("Swiss Medical SMG02");
-        bruno.setActivo(true);
-        repoPacientes.guardar(bruno);
+        Inyeccion.campo(gestionProfesionales, "repositorio", profesionales);
+        Inyeccion.campo(gestionProfesionales, "gestionTurnos", gestionTurnos);
+
+        Inyeccion.campo(fachada, "gestionTurnos", gestionTurnos);
+        Inyeccion.campo(fachada, "gestionPacientes", gestionPacientes);
+        Inyeccion.campo(fachada, "gestionProfesionales", gestionProfesionales);
+        Inyeccion.campo(fachada, "repositorioIdempotencia", claves);
+        Inyeccion.campo(fachada, "notificadorTurnos", new NotificadorTurnos() {
+            @Override
+            public void turnoConfirmado(Turno turno) {
+                notificados.add(turno);
+            }
+        });
+
+        comoUsuario("recepcion", Roles.RECEPCION);
     }
 
-    /** Cambia el usuario que "llama" a los EJB. */
-    public void como(String usuario, String... roles) {
-        this.usuario = usuario;
-        this.roles = Set.of(roles);
+    /** Cambia el usuario autenticado en todos los componentes a la vez. */
+    void comoUsuario(String usuario, String... roles) {
+        var llamador = Inyeccion.llamador(usuario, roles);
+        Inyeccion.campo(gestionTurnos, "contexto", llamador);
+        Inyeccion.campo(gestionPacientes, "contexto", llamador);
+        Inyeccion.campo(gestionProfesionales, "contexto", llamador);
+        Inyeccion.campo(fachada, "contexto", llamador);
     }
 
-    public void comoRecepcion() {
-        como("recepcion", Roles.RECEPCION);
+    /** Un asistente recien creado, como lo deja el contenedor despues de @PostConstruct. */
+    AsistenteReservaTurno asistente() {
+        AsistenteReservaTurno asistente = new AsistenteReservaTurno();
+        Inyeccion.campo(asistente, "fachadaReservas", fachada);
+        Inyeccion.campo(asistente, "gestionPacientes", gestionPacientes);
+        Inyeccion.campo(asistente, "gestionProfesionales", gestionProfesionales);
+        Inyeccion.campo(asistente, "fabricaTurnos", new FabricaTurnos());
+        asistente.alCrear();
+        return asistente;
     }
 
-    public void comoPaciente() {
-        como("paciente", Roles.PACIENTE);
-    }
-
-    /** El proximo dia habil (a partir de manana) a la hora indicada, en el formato de la API. */
-    public static String proximoHabil(int hora, int minuto) {
+    /** El proximo dia habil a partir de manana (Laura atiende de lunes a viernes). */
+    static LocalDate proximoDiaHabil() {
         LocalDate dia = LocalDate.now().plusDays(1);
         while (dia.getDayOfWeek() == DayOfWeek.SATURDAY || dia.getDayOfWeek() == DayOfWeek.SUNDAY) {
             dia = dia.plusDays(1);
         }
-        return dia.atTime(hora, minuto).format(Turno.FORMATO_FECHA_HORA);
-    }
-
-    /** Pedido valido de turno para Ana con la Dra. Fernandez. */
-    public SolicitudTurno solicitudParaAna(String fechaHora) {
-        SolicitudTurno solicitud = new SolicitudTurno();
-        solicitud.setDocumentoPaciente(ana.getDocumento());
-        solicitud.setProfesionalId(laura.getId());
-        solicitud.setEspecialidad("Cardiologia");
-        solicitud.setFechaHora(fechaHora);
-        solicitud.setMotivo("Control");
-        return solicitud;
-    }
-
-    /** Doble de prueba del productor JMS: anota los turnos en lugar de enviarlos. */
-    public static final class NotificadorDePrueba extends NotificadorTurnos {
-
-        public final List<Turno> enviados = new ArrayList<>();
-
-        @Override
-        public void turnoConfirmado(Turno turno) {
-            enviados.add(turno);
-        }
+        return dia;
     }
 }

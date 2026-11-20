@@ -16,7 +16,8 @@ const ICONOS = {
     turnos: 'M7 3v3M17 3v3M4 8.5h16M5 5.5h14a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6.5a1 1 0 0 1 1-1Z',
     pacientes: 'M16 20v-1.5a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4V20M9.5 10.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM21 20v-1.5a4 4 0 0 0-3-3.87',
     profesionales: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM5 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1',
-    reserva: 'M9 12.5l2 2 4.5-4.5M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z'
+    reserva: 'M9 12.5l2 2 4.5-4.5M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z',
+    api: 'M8 7l-5 5 5 5M16 7l5 5-5 5M13.5 4l-3 16'
 };
 
 const MENU = [
@@ -77,9 +78,16 @@ function dibujarSidebar(sesion, pagina) {
             + icono(item.icono) + '<span>' + esc(item.texto) + '</span></a>';
     }).join('');
 
+    // La documentacion de la API (Swagger UI) es publica, pero solo se ofrece
+    // en el menu a quien administra el sistema.
+    const documentacion = tieneRol(sesion, 'ADMIN')
+        ? '<a class="sidebar__link" href="' + contexto + '/api-docs.html" target="_blank" rel="noopener">'
+            + icono('api') + '<span>API (OpenAPI)</span></a>'
+        : '';
+
     sidebar.innerHTML =
         '<div class="sidebar__logo">' + logo('#FFFFFF') + '<span>MediConecta</span></div>'
-        + '<nav class="sidebar__nav" aria-label="Secciones">' + enlaces + '</nav>';
+        + '<nav class="sidebar__nav" aria-label="Secciones">' + enlaces + documentacion + '</nav>';
 }
 
 function dibujarNavInferior(sesion, pagina) {

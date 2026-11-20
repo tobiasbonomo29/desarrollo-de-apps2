@@ -1,0 +1,40 @@
+[INFO] --- checkstyle:3.6.0:check (linter) @ mediconecta-turnos ---
+[INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/puppycrawl/tools/checkstyle/10.26.1/checkstyle-10.26.1.pom
+[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/puppycrawl/tools/checkstyle/10.26.1/checkstyle-10.26.1.pom (240 kB at 7.1 MB/s)
+[INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/puppycrawl/tools/checkstyle/10.26.1/checkstyle-10.26.1.jar
+[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/puppycrawl/tools/checkstyle/10.26.1/checkstyle-10.26.1.jar (2.2 MB at 58 MB/s)
+[INFO] You have 0 Checkstyle violations.
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.188 s -- in com.mediconecta.integraciones.FallbacksTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.003 s -- in com.mediconecta.integraciones.GestorCoberturaTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.013 s -- in com.mediconecta.integraciones.GestorOrientacionTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.016 s -- in com.mediconecta.integraciones.TiemposDeEsperaTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.069 s -- in com.mediconecta.integraciones.AdaptadorIaGroqTest
+[INFO] Tests run: 12, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.045 s -- in com.mediconecta.presentacion.ProblemasTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.008 s -- in com.mediconecta.presentacion.EtiquetasTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.009 s -- in com.mediconecta.presentacion.PedidoTurnoTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.059 s -- in com.mediconecta.presentacion.ContratoOpenApiTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.007 s -- in com.mediconecta.modelo.estado.EstadoDelTurnoTest$DesdeAtendido
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.006 s -- in com.mediconecta.modelo.estado.EstadoDelTurnoTest$DesdeCancelado
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.004 s -- in com.mediconecta.modelo.estado.EstadoDelTurnoTest$DesdeProgramado
+[INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.022 s -- in com.mediconecta.modelo.estado.EstadoDelTurnoTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.003 s -- in com.mediconecta.negocio.IntegracionExternaExceptionTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.530 s -- in com.mediconecta.negocio.CargaDeDatosDemoTest
+[INFO] Tests run: 15, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.036 s -- in com.mediconecta.negocio.FachadaReservasTest
+[INFO] Tests run: 14, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.016 s -- in com.mediconecta.negocio.GestionTurnosTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.008 s -- in com.mediconecta.negocio.GestionProfesionalesTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.004 s -- in com.mediconecta.negocio.FabricaTurnosTest
+[INFO] Tests run: 12, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.022 s -- in com.mediconecta.negocio.GestionNotificacionesTest
+[INFO] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.010 s -- in com.mediconecta.negocio.GestionPacientesTest
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.438 s -- in com.mediconecta.negocio.ServicioAutenticacionTest
+[INFO] Tests run: 11, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.028 s -- in com.mediconecta.negocio.AsistenteReservaTurnoTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.008 s -- in com.mediconecta.negocio.MonitorSaludTest
+[INFO] Tests run: 10, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.027 s -- in com.mediconecta.seguridad.ServicioJwtTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.013 s -- in com.mediconecta.seguridad.MecanismoAutenticacionJwtTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.016 s -- in com.mediconecta.seguridad.CabecerasSeguridadTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.215 s -- in com.mediconecta.seguridad.HashDeClavesTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.003 s -- in com.mediconecta.seguridad.LimitadorDeFrecuenciaTest
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.035 s -- in com.mediconecta.mensajeria.ConsumoDeEventosTest
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.012 s -- in com.mediconecta.mensajeria.EventoTurnoTest
+[INFO] Tests run: 195, Failures: 0, Errors: 0, Skipped: 0
+[INFO] All coverage checks have been met.
+[INFO] BUILD SUCCESS

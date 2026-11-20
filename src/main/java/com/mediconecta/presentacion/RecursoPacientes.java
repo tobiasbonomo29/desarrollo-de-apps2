@@ -7,6 +7,7 @@ import com.mediconecta.negocio.GestionPacientes;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
@@ -37,10 +38,7 @@ public class RecursoPacientes {
     private UriInfo uriInfo;
 
     @Context
-    private Request pedidoHttp;
-
-    @Context
-    private HttpHeaders cabeceras;
+    private Request request;
 
     @GET
     public List<Paciente> listar(@QueryParam("q") String texto) {
@@ -54,45 +52,40 @@ public class RecursoPacientes {
         return gestionPacientes.miFicha();
     }
 
-    /** Ficha con {@code ETag}; {@code 304} si el cliente ya tiene la version vigente. */
+    /** La ficha, con ETag ({@code If-None-Match} -> 304). Un PACIENTE solo la propia. */
     @GET
     @Path("/{documento}")
     public Response obtener(@PathParam("documento") String documento) {
-        Paciente paciente = gestionPacientes.buscarPorDocumento(documento);
-        EntityTag etiqueta = Etiquetas.de(paciente);
-        Response corte = Etiquetas.precondicionFallida(pedidoHttp, etiqueta, uriInfo);
-        return corte != null ? corte : Etiquetas.ok(paciente, etiqueta);
+        Paciente paciente = gestionPacientes.consultarFicha(documento);
+        EntityTag etiqueta = Etiquetas.de("paciente", paciente.getDocumento(), paciente.getVersion());
+        Response.ResponseBuilder noCambio = request.evaluatePreconditions(etiqueta);
+        if (noCambio != null) {
+            return noCambio.tag(etiqueta).build();
+        }
+        return Response.ok(paciente).tag(etiqueta).build();
     }
 
     @POST
     public Response registrar(Paciente paciente) {
         Paciente creado = gestionPacientes.registrarPaciente(paciente);
 
-        // Plantilla + build(valor): UriBuilder codifica el documento en lugar de
-        // interpretarlo como parte de la ruta (con path(texto) un "{" rompia el URI).
         URI ubicacion = uriInfo.getAbsolutePathBuilder()
-                .path("{documento}")
-                .build(creado.getDocumento());
+                .path(creado.getDocumento())
+                .build();
 
         return Response.created(ubicacion).entity(creado).build();
     }
 
-    /**
-     * Actualiza los datos de contacto. Con {@code If-Match} evita pisar los
-     * cambios que otro usuario hizo despues de que este leyo la ficha (412).
-     */
+    /** Con {@code If-Match} (opcional) solo actualiza si la ficha sigue en esa version; si no, 412. */
     @PUT
     @Path("/{documento}")
-    public Response actualizar(@PathParam("documento") String documento, Paciente datos) {
-        if (Etiquetas.tieneCondicion(cabeceras)) {
-            Response corte = Etiquetas.precondicionFallida(pedidoHttp,
-                    Etiquetas.de(gestionPacientes.buscarPorDocumento(documento)), uriInfo);
-            if (corte != null) {
-                return corte;
-            }
-        }
-        Paciente actualizado = gestionPacientes.actualizarDatos(documento, datos);
-        return Etiquetas.ok(actualizado, Etiquetas.de(actualizado));
+    public Response actualizar(@PathParam("documento") String documento, Paciente datos,
+                               @HeaderParam(HttpHeaders.IF_MATCH) String siCoincide) {
+        Paciente paciente = gestionPacientes.actualizarDatos(documento, datos,
+                Etiquetas.versionEsperada(siCoincide, "paciente", documento));
+        return Response.ok(paciente)
+                .tag(Etiquetas.de("paciente", paciente.getDocumento(), paciente.getVersion()))
+                .build();
     }
 
     @GET

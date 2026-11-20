@@ -3,12 +3,14 @@ package com.mediconecta.negocio;
 import com.mediconecta.datos.RepositorioUsuarios;
 import com.mediconecta.modelo.Usuario;
 import com.mediconecta.seguridad.HashDeClaves;
-import com.mediconecta.seguridad.ProteccionAbuso;
+import com.mediconecta.seguridad.LimitadorDeFrecuencia;
 
 import jakarta.annotation.security.PermitAll;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 
+import java.time.Duration;
+import java.util.Locale;
 import java.util.Optional;
 
 /**
@@ -19,50 +21,68 @@ import java.util.Optional;
  * detalle del transporte HTTP y lo hace la presentacion con
  * {@code seguridad.ServicioJwt}. Asi el negocio sigue sin saber nada de HTTP ni
  * de JWT.</p>
+ *
+ * <p><b>Fuerza bruta.</b> Despues de {@value #MAXIMO_FALLOS_POR_USUARIO}
+ * intentos fallidos para un mismo usuario, o {@value #MAXIMO_FALLOS_POR_ORIGEN}
+ * desde una misma IP, en {@link #VENTANA}, se rechaza con
+ * {@link DemasiadasSolicitudesException} ({@code 429}) sin mirar la contrasena,
+ * hasta que pase la ventana. Un login correcto borra los fallos del usuario.</p>
  */
 @Stateless
 public class ServicioAutenticacion {
+
+    static final int MAXIMO_FALLOS_POR_USUARIO = 5;
+
+    static final int MAXIMO_FALLOS_POR_ORIGEN = 30;
+
+    static final Duration VENTANA = Duration.ofMinutes(5);
+
+    private static final String HASH_FICTICIO = HashDeClaves.calcular("clave-ficticia-de-tiempo");
 
     @Inject
     private RepositorioUsuarios repositorio;
 
     @Inject
-    private ProteccionAbuso proteccion;
+    private LimitadorDeFrecuencia limitador;
 
-    /**
-     * @return el usuario autenticado, con sus roles
-     * @throws CredencialesInvalidasException si el usuario no existe, esta
-     *                                        inactivo o la contrasena no coincide
-     */
     @PermitAll
     public Usuario autenticar(String usuario, String clave) {
         return autenticar(usuario, clave, null);
     }
 
     /**
-     * Igual que {@link #autenticar(String, String)}, con proteccion contra
-     * fuerza bruta: despues de varios fallos seguidos para la misma cuenta o
-     * desde el mismo origen, rechaza los intentos con
-     * {@link DemasiadosIntentosException} (429) <b>sin verificar la
-     * contrasena</b>, asi el atacante no puede seguir probando aunque acierte.
-     *
-     * @param origen direccion IP del cliente, o {@code null} si no se conoce
+     * @param origen direccion IP del cliente (puede ser {@code null})
+     * @return el usuario autenticado, con sus roles
+     * @throws CredencialesInvalidasException si el usuario no existe, esta
+     *                                        inactivo o la contrasena no coincide
+     * @throws DemasiadasSolicitudesException si se superaron los intentos permitidos
      */
     @PermitAll
     public Usuario autenticar(String usuario, String clave, String origen) {
-        long espera = proteccion.bloqueoDeLogin(usuario, origen);
-        if (espera > 0) {
-            throw new DemasiadosIntentosException(
-                    "Demasiados intentos fallidos. Espere " + minutos(espera) + " antes de volver a intentar.", espera);
+        String claveUsuario = "login:usuario:" + (usuario == null ? "" : usuario.trim().toLowerCase(Locale.ROOT));
+        String claveOrigen = origen == null ? null : "login:origen:" + origen;
+        exigirNoBloqueado(claveUsuario, MAXIMO_FALLOS_POR_USUARIO);
+        if (claveOrigen != null) {
+            exigirNoBloqueado(claveOrigen, MAXIMO_FALLOS_POR_ORIGEN);
         }
         try {
             Usuario cuenta = verificar(usuario, clave);
-            proteccion.loginCorrecto(usuario);
+            limitador.limpiar(claveUsuario);
             return cuenta;
         } catch (CredencialesInvalidasException fallo) {
-            proteccion.loginFallido(usuario, origen);
+            limitador.registrar(claveUsuario);
+            if (claveOrigen != null) {
+                limitador.registrar(claveOrigen);
+            }
             throw fallo;
         }
+    }
+
+    private void exigirNoBloqueado(String clave, int maximo) {
+        limitador.bloqueo(clave, maximo, VENTANA).ifPresent(espera -> {
+            throw new DemasiadasSolicitudesException(
+                    "Demasiados intentos fallidos de inicio de sesion. Espere unos minutos y vuelva a intentar.", espera);
+        });
     }
 
     private Usuario verificar(String usuario, String clave) {
@@ -82,11 +102,4 @@ public class ServicioAutenticacion {
         }
         return cuenta;
     }
-
-    private static String minutos(long segundos) {
-        long minutos = (segundos + 59) / 60;
-        return minutos == 1 ? "1 minuto" : minutos + " minutos";
-    }
-
-    private static final String HASH_FICTICIO = HashDeClaves.calcular("clave-ficticia-de-tiempo");
 }

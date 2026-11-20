@@ -26,6 +26,7 @@ public class ServicioObraSocialLegadoImpl implements ServicioObraSocialLegado {
 
     @Override
     public boolean consultarVigencia(String obraSocial, String numeroAfiliado) {
+        DemoraSimulada.aplicar();
         return obraSocial != null && PLANES.containsKey(obraSocial.trim().toUpperCase())
                 && numeroAfiliado != null && !numeroAfiliado.isBlank();
     }
